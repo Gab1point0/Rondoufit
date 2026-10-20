@@ -6,10 +6,10 @@
   <title>From Grosdoudou to Rondoudou</title>
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="apple-touch-icon" href="icon.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
   <style>
     body { background-color: #020617; color: #f8fafc; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -344,6 +344,21 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       { id: 'weight_loss_5', title: 'Cinq Kilos Envolés', desc: 'Perdre 5 kg par rapport à votre poids de départ', icon: '🪽', xpBonus: 300 }
     ];
 
+    // Série en cours : jours consécutifs avec séance (jusqu'à aujourd'hui, ou hier si rien aujourd'hui)
+    function computeCurrentStreak(quests) {
+      const days = new Set();
+      (quests || []).forEach(q =>
+        (q.history || []).forEach(h => {
+          if (h.date && !String(h.note || '').startsWith('Point de départ')) days.add(h.date);
+        })
+      );
+      const d = new Date();
+      if (!days.has(toLocalISODate(d))) d.setDate(d.getDate() - 1);
+      let streak = 0;
+      while (days.has(toLocalISODate(d))) { streak++; d.setDate(d.getDate() - 1); }
+      return streak;
+    }
+
     // Trophées calculés automatiquement à partir de l’historique (rétroactifs)
     function computeDerivedAchievements(state) {
       const met = [];
@@ -395,12 +410,14 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     // ==========================================
     // FONCTIONS UTILITAIRES
     // ==========================================
-    const getTodayISODate = () => new Date().toISOString().split('T')[0];
+    const toLocalISODate = d =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const getTodayISODate = () => toLocalISODate(new Date());
 
     function getYesterdayISODate() {
       const d = new Date();
       d.setDate(d.getDate() - 1);
-      return d.toISOString().split('T')[0];
+      return toLocalISODate(d);
     }
 
     function getSetDetailsArray(item, fallbackSets = 3, fallbackReps = 6) {
@@ -422,6 +439,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       return (setDetails || []).filter(r => Number(r) >= target).length;
     }
 
+    // Calories NETTES (hors métabolisme de repos : 1 MET = 1 kcal/kg/h retiré)
     function calculateStrengthCalories({ unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82 }) {
       const numSets = Math.max(1, setDetails.length);
       const totalReps = setDetails.reduce((acc, r) => acc + (Number(r) || 0), 0);
@@ -430,38 +448,34 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
         ? Math.max(15, userWeightKg * 0.78 - (Number(assistanceKg) || 0))
         : Math.max(5, Number(weightKg) || 0);
       const loadRatio = effectiveLoad / Math.max(45, userWeightKg);
-      const met = 3.8 + (rpe - 5) * 0.55 + Math.min(2.8, loadRatio * 1.45);
-      const metabolicKcal = met * userWeightKg * durationHours;
-      const mechanicalBonus = totalReps * effectiveLoad * 0.014;
-      return Math.max(12, Math.round(metabolicKcal + mechanicalBonus));
+      const grossMet = Math.min(6.0, 3.8 + (rpe - 5) * 0.55 + Math.min(2.8, loadRatio * 1.45));
+      return Math.max(10, Math.round((grossMet - 1) * userWeightKg * durationHours));
     }
 
     function calculateCardioCalories({ cardioMode = 'run', distanceKm = 5, durationMin = 30, elevationM = 0, rpe = 7, userWeightKg = 82 }) {
       const durMin = Math.max(1, Number(durationMin) || 20);
       const distKm = Math.max(0.1, Number(distanceKm) || 0);
       const elevM = Math.max(0, Number(elevationM) || 0);
-      const speedKmh = distKm / (durMin / 60);
-
+      const w = Math.max(30, Number(userWeightKg) || 82);
+      const hours = durMin / 60;
       let kcal = 0;
-      if (cardioMode === 'run' || cardioMode === 'interval') {
-        const intensityFactor = cardioMode === 'interval' ? 1.14 : 1.02 + (rpe - 6) * 0.03;
-        const distanceCost = userWeightKg * distKm * 1.03 * intensityFactor;
-        const elevationCost = userWeightKg * elevM * 0.019;
-        kcal = distanceCost + elevationCost;
-} else if (cardioMode === 'volleyball') {
-        // RPE 4-5 (Entraînement modéré) = ~4.0 à 4.5 METs
-        // RPE 8 (Match compétitif) = ~6.0 METs
-        const baseMet = 2.0 + (rpe * 0.5);
-        kcal = baseMet * userWeightKg * (durMin / 60);
-      } else if (cardioMode === 'walk' || cardioMode === 'incline_walk') {
-        const baseMet = cardioMode === 'incline_walk' ? 6.2 : speedKmh > 5.5 ? 4.8 : 3.8;
-        const met = baseMet + (rpe - 6) * 0.35;
-        const elevationCost = userWeightKg * elevM * 0.022;
-        kcal = met * userWeightKg * (durMin / 60) + elevationCost;
+
+      if (cardioMode === 'volleyball') {
+        // ~3 MET à RPE 4, ~4,8 à RPE 7, ~6 à RPE 9 (valeurs brutes), temps morts inclus
+        const grossMet = Math.max(2, 3 + (Math.min(10, Math.max(1, rpe)) - 4) * 0.6);
+        kcal = (grossMet - 1) * w * hours;
+      } else if (['run', 'interval', 'walk', 'incline_walk'].includes(cardioMode)) {
+        // Équations ACSM (vitesse + pente), VO2 en ml/kg/min, 1 L O2 ≈ 5 kcal
+        const speed = (distKm * 1000) / durMin; // m/min
+        const grade = Math.min(0.25, elevM / (distKm * 1000));
+        const isRunning = cardioMode === 'run' || cardioMode === 'interval' || speed >= 120;
+        const vo2 = isRunning
+          ? 0.2 * speed + 0.9 * speed * grade + 3.5
+          : 0.1 * speed + 1.8 * speed * grade + 3.5;
+        kcal = (vo2 - 3.5) * w * durMin / 1000 * 5; // net : repos retiré
       } else {
-        const met = 6.8 + (rpe - 6) * 0.5;
-        const elevationCost = userWeightKg * elevM * 0.015;
-        kcal = met * userWeightKg * (durMin / 60) + elevationCost;
+        const grossMet = 6.8 + (rpe - 6) * 0.5;
+        kcal = (grossMet - 1) * w * hours + w * elevM * 0.01;
       }
       return Math.max(20, Math.round(kcal));
     }
@@ -1470,7 +1484,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             cardioMode: ref.cardioMode || 'run',
             distanceKm: dist,
             durationMin: dur,
-            elevationM: 20,
+            elevationM: 0,
             rpe: 7,
             userWeightKg
           });
@@ -1678,7 +1692,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                   date: selectedDate,
                   value: item.unit === 'min' ? item.durationMin : item.distanceKm,
                   durationMin: item.durationMin,
-                  elevationM: 20,
+                  elevationM: 0,
                   rpe: 7,
                   calories: item.calories,
                   goalBeaten: false,
@@ -2100,6 +2114,8 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         return { level, currentLevelXp, nextLevelXp: 250, progressPct, rank };
       }, [gameState.xp]);
 
+      const currentStreak = useMemo(() => computeCurrentStreak(gameState.quests), [gameState.quests]);
+
       const arenaLevels = useMemo(() => {
         return ARENA_GROUPS.map(arena => {
           const matchingQuests = gameState.quests.filter(
@@ -2366,7 +2382,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setGameState(prev => ({
           ...prev,
           xp: prev.xp + 300,
-          unlockedAchievements: Array.from(newUnlocked),
+          unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
           quests: prev.quests.map(item => {
             if (item.id !== q.id) return item;
             if (item.type === 'cardio') {
@@ -2528,7 +2544,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
           const reducedAssistance =
             q.unit === 'reps' &&
-            assistanceUsed < (Number(q.currentAssistanceKg) ?? 999);
+            assistanceUsed < (Number.isFinite(Number(q.currentAssistanceKg)) ? Number(q.currentAssistanceKg) : 0);
           const moreSetsValidated = validatedSetsNow > prevValidatedSets;
           const increasedLoad =
             q.unit === 'kg' && effectiveValue > (Number(q.currentValue) || 0);
@@ -2624,7 +2640,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setGameState(prev => ({
           ...prev,
           xp: prev.xp + xpEarned,
-          unlockedAchievements: Array.from(newUnlocked),
+          unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
           quests: updatedQuests
         }));
 
@@ -2712,7 +2728,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setGameState(prev => ({
           ...prev,
           xp: prev.xp + xpGain,
-          unlockedAchievements: Array.from(newUnlocked),
+          unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
           quests: updatedQuests
         }));
 
@@ -3028,7 +3044,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           ...prev,
           userWeightKg: w,
           xp: prev.xp + 25,
-          unlockedAchievements: Array.from(newUnlocked),
+          unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
           weightHistory: [...(prev.weightHistory || []), entry].sort((a, b) =>
             a.date.localeCompare(b.date)
           )
@@ -3057,6 +3073,43 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           quests: prev.quests.filter(q => q.id !== questId)
         }));
         triggerToast('Quête retirée', 'L’exercice a été retiré du Pokédex.', 0, '🗑️');
+      };
+
+      const importInputRef = useRef(null);
+      const handleExportJSON = () => {
+        const blob = new Blob([JSON.stringify(gameState, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rondoufit-sauvegarde-${getTodayISODate()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        triggerToast('Sauvegarde exportée', 'Fichier JSON téléchargé sur votre appareil.', 0, '💾');
+      };
+      const handleImportJSON = e => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            if (!parsed || !Array.isArray(parsed.quests)) throw new Error('format');
+            if (!window.confirm('Remplacer toute votre progression actuelle par cette sauvegarde ?')) return;
+            paidAchievementsRef.current = new Set(parsed.unlockedAchievements || []);
+            setGameState({
+              ...INITIAL_STATE,
+              ...parsed,
+              weightHistory: Array.isArray(parsed.weightHistory) ? parsed.weightHistory : INITIAL_STATE.weightHistory
+            });
+            triggerToast('Sauvegarde restaurée', 'Votre progression a été rechargée.', 0, '📥');
+          } catch (err) {
+            triggerToast('Import impossible', 'Ce fichier n’est pas une sauvegarde Rondoufit valide.', 0, '⚠️');
+          }
+        };
+        reader.readAsText(file);
       };
 
       const handleResetAll = (blankMode = false) => {
@@ -3169,7 +3222,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         {levelInfo.rank.badge} {levelInfo.rank.title}
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                        <Flame className="w-3.5 h-3.5 text-amber-400" /> Série : {gameState.streak} j
+                        <Flame className="w-3.5 h-3.5 text-amber-400" /> Série : {currentStreak} j
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1">
                         🔥 {lifetimeStats.totalKcal} kcal brûlées
@@ -3267,6 +3320,24 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                       <VolumeX className="w-4 h-4 text-slate-500" />
                     )}
                   </button>
+
+                  <button
+                    onClick={handleExportJSON}
+                    title="Exporter une sauvegarde (JSON)"
+                    className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition"
+                  >
+                    <span>💾</span>
+                    <span className="hidden sm:inline">Exporter</span>
+                  </button>
+                  <button
+                    onClick={() => importInputRef.current && importInputRef.current.click()}
+                    title="Importer une sauvegarde (JSON)"
+                    className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition"
+                  >
+                    <span>📥</span>
+                    <span className="hidden sm:inline">Importer</span>
+                  </button>
+                  <input ref={importInputRef} type="file" accept="application/json,.json" onChange={handleImportJSON} className="hidden" />
 
                   <button
                     onClick={() => setConfirmResetOpen(true)}
