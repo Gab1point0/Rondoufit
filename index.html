@@ -274,7 +274,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     // ==========================================
     // BIBLIOTHÈQUE COMPLÈTE D'EXERCICES (AVEC ABDOMINAUX & COURSE)
     // ==========================================
-    const EXERCISE_CATALOG = [
+    const BASE_EXERCISE_CATALOG = [
       { id: 'pullups', name: 'Tractions Pronation', category: 'Dos', type: 'strength', unit: 'reps', defaultGoalMode: 'sets_reps', defaultStart: 4, defaultGoal: 6, defaultGoalSets: 3, defaultGoalReps: 6, defaultStartAssistance: 15, defaultGoalAssistance: 0, icon: '🦅' },
       { id: 'chinups', name: 'Tractions Supination', category: 'Dos', type: 'strength', unit: 'reps', defaultGoalMode: 'sets_reps', defaultStart: 5, defaultGoal: 8, defaultGoalSets: 3, defaultGoalReps: 8, defaultStartAssistance: 15, defaultGoalAssistance: 0, icon: '🔱' },
       { id: 'lat_pulldown', name: 'Tirage Vertical Poulie Haute', category: 'Dos', type: 'strength', unit: 'kg', defaultGoalMode: 'sets_reps', defaultStart: 35, defaultGoal: 55, defaultGoalSets: 3, defaultGoalReps: 10, defaultStartAssistance: 0, defaultGoalAssistance: 0, icon: '🏹' },
@@ -299,6 +299,222 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       { id: 'incline_walk', name: 'Marche Inclinée (Tapis)', category: 'Course & Cardio', type: 'cardio', unit: 'min', cardioMode: 'incline_walk', defaultStart: 15, defaultGoal: 45, defaultDurationMin: 20, defaultElevationM: 180, icon: '⛰️' },
 { id: 'volleyball', name: 'Volley-ball', category: 'Volley-ball', type: 'cardio', unit: 'min', cardioMode: 'volleyball', defaultStart: 60, defaultGoal: 120, defaultDurationMin: 60, defaultElevationM: 0, icon: '🏐' }
 ];
+
+    // ------------------------------------------------------------------
+    // CATALOGUE ÉTENDU (machines Technogym / Hammer Strength, charges libres, poulies, Smith, poids du corps, cardio)
+    // Format : [id, nom, catégorie, équipement, unité, départ, objectif, séries, reps, icône, mode?, aide de départ (kg)?]
+    // ------------------------------------------------------------------
+    const NEW_STRENGTH_ROWS = [
+      // DOS
+      ['fp_seated_row','Tirage Horizontal Poulie Basse','Dos','Poulie','kg',35,60,3,10,'🚣'],
+      ['fp_low_row_machine','Low Row Machine Assise','Dos','Machine guidée','kg',35,65,3,10,'🛶'],
+      ['fp_hammer_row','Rowing Iso-Latéral (Hammer Strength)','Dos','Hammer Strength','kg',40,90,3,10,'🦍'],
+      ['fp_tbar_row','Rowing T-Bar','Dos','Barre','kg',30,70,3,10,'🔱'],
+      ['fp_db_row','Rowing Haltère Unilatéral','Dos','Haltères','kg',14,30,3,10,'💪'],
+      ['fp_vertical_traction','Traction Verticale Machine (Vertical Traction)','Dos','Machine guidée','kg',35,70,3,10,'🏹'],
+      ['fp_hammer_pulldown','Tirage Vertical Hammer Strength','Dos','Hammer Strength','kg',30,80,3,10,'🏹'],
+      ['fp_close_pulldown','Tirage Poitrine Prise Serrée','Dos','Poulie','kg',35,60,3,10,'🏹'],
+      ['fp_straight_arm_pd','Pull-over Poulie Haute (Bras Tendus)','Dos','Poulie','kg',15,35,3,12,'🌊'],
+      ['fp_assisted_pullup','Traction Assistée Machine','Dos','Machine guidée','reps',5,8,3,8,'🦅','sets_reps',40],
+      ['fp_back_extension','Extensions Lombaires (Banc 45°)','Dos','Poids du corps','reps',10,20,3,15,'🧗'],
+      ['fp_lumbar_machine','Extension Lombaires Machine','Dos','Machine guidée','kg',20,50,3,12,'🧗'],
+      ['fp_shrugs_db','Shrugs Haltères (Trapèzes)','Dos','Haltères','kg',20,40,3,12,'🗻'],
+      ['fp_shrugs_bar','Shrugs Barre (Trapèzes)','Dos','Barre','kg',40,80,3,12,'🗻'],
+      ['fp_inverted_row','Rowing Inversé (Barre Basse Smith)','Dos','Smith','reps',6,12,3,12,'🪂'],
+      // PECTORAUX
+      ['fp_db_bench','Développé Couché Haltères','Pectoraux','Haltères','kg',18,34,3,10,'🏋️'],
+      ['fp_incline_barbell','Développé Incliné Barre','Pectoraux','Barre','kg',30,65,3,8,'🔥'],
+      ['fp_decline_barbell','Développé Décliné Barre','Pectoraux','Barre','kg',40,75,3,8,'🔥'],
+      ['fp_smith_bench','Développé Couché Smith Machine','Pectoraux','Smith','kg',40,80,3,8,'🏋️'],
+      ['fp_smith_incline','Développé Incliné Smith Machine','Pectoraux','Smith','kg',30,65,3,8,'🔥'],
+      ['fp_chest_press','Chest Press Machine Assise','Pectoraux','Machine guidée','kg',30,75,3,10,'🛡️'],
+      ['fp_hammer_chest','Chest Press Iso-Latéral (Hammer Strength)','Pectoraux','Hammer Strength','kg',40,90,3,10,'🛡️'],
+      ['fp_hammer_incline','Développé Incliné Hammer Strength','Pectoraux','Hammer Strength','kg',40,90,3,10,'🛡️'],
+      ['fp_pec_deck','Pec Deck (Butterfly Machine)','Pectoraux','Machine guidée','kg',30,60,3,12,'🦋'],
+      ['fp_cable_fly','Écartés Poulie Vis-à-Vis (Crossover)','Pectoraux','Poulie','kg',10,25,3,12,'🦋'],
+      ['fp_db_fly','Écartés Haltères sur Banc','Pectoraux','Haltères','kg',8,18,3,12,'🦋'],
+      ['fp_incline_fly','Écartés Inclinés Haltères','Pectoraux','Haltères','kg',8,16,3,12,'🦋'],
+      ['fp_db_pullover','Pull-over Haltère','Pectoraux','Haltères','kg',14,28,3,10,'🌊'],
+      ['fp_decline_pushups','Pompes Pieds Surélevés','Pectoraux','Poids du corps','reps',8,20,3,15,'🛡️'],
+      ['fp_diamond_pushups','Pompes Diamant','Pectoraux','Poids du corps','reps',6,15,3,12,'💎'],
+      // JAMBES
+      ['fp_smith_squat','Squat Smith Machine','Jambes','Smith','kg',40,90,3,8,'🦵'],
+      ['fp_front_squat','Front Squat Barre','Jambes','Barre','kg',30,70,3,6,'🦵'],
+      ['fp_goblet','Squat Goblet (Haltère / Kettlebell)','Jambes','Kettlebell','kg',12,32,3,12,'🏺'],
+      ['fp_bulgarian','Squat Bulgare Haltères','Jambes','Haltères','kg',8,22,3,8,'🇧🇬'],
+      ['fp_hack_squat','Hack Squat Machine','Jambes','Machine à plaques','kg',40,120,3,10,'⚡'],
+      ['fp_leg_press_h','Presse à Cuisses Horizontale','Jambes','Machine guidée','kg',60,140,3,10,'⚡'],
+      ['fp_leg_press_45','Presse à Cuisses 45° (Plaques)','Jambes','Hammer Strength','kg',100,220,3,10,'⚡'],
+      ['fp_leg_ext','Leg Extension (Quadriceps)','Jambes','Machine guidée','kg',25,65,3,12,'🦿'],
+      ['fp_leg_curl_seat','Leg Curl Assis (Ischio-jambiers)','Jambes','Machine guidée','kg',25,60,3,12,'🦿'],
+      ['fp_leg_curl_lying','Leg Curl Allongé (Ischio-jambiers)','Jambes','Machine guidée','kg',20,55,3,12,'🦿'],
+      ['fp_adductors','Adducteurs Machine','Jambes','Machine guidée','kg',30,70,3,15,'🦵'],
+      ['fp_abductors','Abducteurs Machine','Jambes','Machine guidée','kg',30,70,3,15,'🦵'],
+      ['fp_calf_press','Mollets à la Presse','Jambes','Machine guidée','kg',50,120,3,15,'🐐'],
+      ['fp_calf_standing','Mollets Debout Machine','Jambes','Machine guidée','kg',40,100,3,15,'🐐'],
+      ['fp_calf_seated','Mollets Assis Machine','Jambes','Machine guidée','kg',30,80,3,15,'🐐'],
+      ['fp_walking_lunge','Fentes Marchées Haltères','Jambes','Haltères','kg',8,22,3,10,'🚶'],
+      ['fp_barbell_lunge','Fentes Barre','Jambes','Barre','kg',20,55,3,8,'🚶'],
+      ['fp_rdl','Soulevé de Terre Roumain','Jambes','Barre','kg',40,100,3,8,'🦍'],
+      ['fp_sumo','Soulevé de Terre Sumo','Jambes','Barre','kg',60,120,3,5,'🦍'],
+      ['fp_trapbar','Soulevé de Terre Trap Bar','Jambes','Barre','kg',60,130,3,5,'🦍'],
+      ['fp_hip_thrust_bar','Hip Thrust Barre','Jambes','Barre','kg',40,110,3,10,'🍑'],
+      ['fp_hip_thrust_machine','Hip Thrust Machine','Jambes','Machine guidée','kg',40,110,3,10,'🍑'],
+      ['fp_glute_kickback','Kickback Fessiers Poulie','Jambes','Poulie','kg',10,25,3,12,'🍑'],
+      ['fp_glute_bridge','Pont Fessier (Glute Bridge)','Jambes','Poids du corps','reps',12,25,3,20,'🍑'],
+      ['fp_multihip','Multi-Hanche (Multi-Hip) Machine','Jambes','Machine guidée','kg',15,40,3,12,'🍑'],
+      ['fp_good_morning','Good Morning Barre','Jambes','Barre','kg',20,55,3,10,'🌅'],
+      ['fp_step_up','Step-Up Haltères','Jambes','Haltères','kg',8,22,3,10,'🪜'],
+      ['fp_wall_ball','Wall Ball (HYROX)','Jambes','Ballon lesté','kg',6,9,3,20,'🏐'],
+      ['fp_burpees','Burpees','Jambes','Poids du corps','reps',10,25,3,15,'🔥'],
+      // ÉPAULES & BRAS
+      ['fp_db_shoulder','Développé Épaules Haltères Assis','Épaules & Bras','Haltères','kg',12,28,3,10,'⚔️'],
+      ['fp_machine_shoulder','Développé Épaules Machine','Épaules & Bras','Machine guidée','kg',25,60,3,10,'⚔️'],
+      ['fp_hammer_shoulder','Développé Épaules Hammer Strength','Épaules & Bras','Hammer Strength','kg',30,80,3,10,'⚔️'],
+      ['fp_smith_shoulder','Développé Militaire Smith Machine','Épaules & Bras','Smith','kg',20,55,3,8,'⚔️'],
+      ['fp_arnold','Développé Arnold','Épaules & Bras','Haltères','kg',10,24,3,10,'🧔'],
+      ['fp_lateral_db','Élévations Latérales Haltères','Épaules & Bras','Haltères','kg',6,16,3,12,'🕊️'],
+      ['fp_lateral_machine','Élévations Latérales Machine','Épaules & Bras','Machine guidée','kg',15,40,3,12,'🕊️'],
+      ['fp_lateral_cable','Élévations Latérales Poulie','Épaules & Bras','Poulie','kg',4,12,3,12,'🕊️'],
+      ['fp_front_raise','Élévations Frontales Haltères','Épaules & Bras','Haltères','kg',6,14,3,12,'🕊️'],
+      ['fp_rear_fly_db','Oiseau Haltères (Deltoïdes Postérieurs)','Épaules & Bras','Haltères','kg',5,14,3,12,'🦜'],
+      ['fp_reverse_pec_deck','Oiseau Machine (Reverse Pec Deck)','Épaules & Bras','Machine guidée','kg',20,50,3,12,'🦜'],
+      ['fp_face_pull','Face Pull Poulie','Épaules & Bras','Poulie','kg',15,35,3,15,'🎯'],
+      ['fp_upright_row','Tirage Menton Barre EZ','Épaules & Bras','Barre','kg',15,40,3,10,'🪝'],
+      ['fp_ext_rotation','Rotation Externe Poulie (Coiffe)','Épaules & Bras','Poulie','kg',3,10,3,15,'🔄'],
+      ['fp_db_curl','Curl Haltères Alterné','Épaules & Bras','Haltères','kg',8,20,3,10,'💥'],
+      ['fp_hammer_curl','Curl Marteau','Épaules & Bras','Haltères','kg',8,20,3,10,'🔨'],
+      ['fp_preacher_bar','Curl Pupitre Barre EZ','Épaules & Bras','Barre','kg',15,40,3,10,'💥'],
+      ['fp_preacher_machine','Curl Pupitre Machine','Épaules & Bras','Machine guidée','kg',15,45,3,10,'💥'],
+      ['fp_cable_curl','Curl Poulie Basse','Épaules & Bras','Poulie','kg',15,40,3,12,'💥'],
+      ['fp_incline_curl','Curl Incliné Haltères','Épaules & Bras','Haltères','kg',6,16,3,10,'💥'],
+      ['fp_concentration_curl','Curl Concentré','Épaules & Bras','Haltères','kg',8,18,3,10,'💥'],
+      ['fp_biceps_machine','Biceps Curl Machine','Épaules & Bras','Machine guidée','kg',20,55,3,12,'💥'],
+      ['fp_pushdown','Extension Triceps Poulie Haute (Corde)','Épaules & Bras','Poulie','kg',15,45,3,12,'🔻'],
+      ['fp_pushdown_bar','Extension Triceps Poulie Barre Droite','Épaules & Bras','Poulie','kg',15,50,3,12,'🔻'],
+      ['fp_skull','Barre au Front (Skull Crusher)','Épaules & Bras','Barre','kg',15,40,3,10,'💀'],
+      ['fp_overhead_ext_db','Extension Triceps Nuque Haltère','Épaules & Bras','Haltères','kg',10,28,3,10,'🔻'],
+      ['fp_overhead_ext_cable','Extension Triceps Nuque Poulie','Épaules & Bras','Poulie','kg',15,40,3,12,'🔻'],
+      ['fp_kickback','Kickback Triceps Haltère','Épaules & Bras','Haltères','kg',4,14,3,12,'🔻'],
+      ['fp_triceps_machine','Triceps Extension Machine','Épaules & Bras','Machine guidée','kg',20,60,3,12,'🔻'],
+      ['fp_close_grip_bench','Développé Couché Prise Serrée','Épaules & Bras','Barre','kg',30,70,3,8,'🔻'],
+      ['fp_dip_machine','Dips Machine Assise','Épaules & Bras','Machine guidée','kg',30,70,3,10,'💎'],
+      ['fp_bench_dips','Dips sur Banc','Épaules & Bras','Poids du corps','reps',8,20,3,15,'💎'],
+      ['fp_wrist_curl','Curl Poignets (Avant-Bras)','Épaules & Bras','Barre','kg',10,30,3,15,'✊'],
+      // ABDOMINAUX
+      ['fp_ab_machine','Crunch Machine (Abdominal Crunch)','Abdominaux','Machine guidée','kg',20,60,3,15,'🍫'],
+      ['fp_rotary_torso','Rotary Torso Machine (Obliques)','Abdominaux','Machine guidée','kg',20,55,3,15,'🌪️'],
+      ['fp_captain_knee','Relevé de Genoux Chaise Romaine','Abdominaux','Poids du corps','reps',8,15,3,12,'🦿'],
+      ['fp_toes_to_bar','Toes to Bar','Abdominaux','Poids du corps','reps',3,10,3,8,'🦿'],
+      ['fp_plank','Gainage Planche (en secondes)','Abdominaux','Poids du corps','reps',30,90,3,60,'🧱'],
+      ['fp_side_plank','Gainage Latéral (en secondes)','Abdominaux','Poids du corps','reps',20,60,3,45,'🧱'],
+      ['fp_mountain','Mountain Climbers','Abdominaux','Poids du corps','reps',20,50,3,30,'⛰️'],
+      ['fp_bicycle','Crunch Vélo (Bicycle Crunch)','Abdominaux','Poids du corps','reps',16,40,3,30,'🚲'],
+      ['fp_reverse_crunch','Crunch Inversé','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
+      ['fp_leg_raise_floor','Relevé de Jambes au Sol','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
+      ['fp_situp','Sit-Ups','Abdominaux','Poids du corps','reps',12,25,3,20,'🍫'],
+      ['fp_decline_crunch','Crunch Décliné (Banc)','Abdominaux','Banc','reps',10,20,3,15,'🍫'],
+      ['fp_woodchop','Wood Chop Poulie (Rotation)','Abdominaux','Poulie','kg',8,25,3,12,'🪓'],
+      ['fp_pallof','Pallof Press Poulie','Abdominaux','Poulie','kg',8,25,3,12,'🧘']
+    ];
+    const mkCardio = (id, name, unit, mode, start, goal, dur, icon) => ({
+      id, name, category: 'Course & Cardio', type: 'cardio', unit, cardioMode: mode, equip: 'Cardio',
+      defaultStart: start, defaultGoal: goal, defaultDurationMin: dur, defaultElevationM: 0, icon
+    });
+    const NEW_CARDIO = [
+      mkCardio('fp_bike', 'Vélo Stationnaire / Biking', 'min', 'bike', 20, 60, 30, '🚴'),
+      mkCardio('fp_assault_bike', 'Assault Bike', 'min', 'bike', 10, 30, 15, '🌬️'),
+      mkCardio('fp_elliptical', 'Vélo Elliptique (Cross-Trainer)', 'min', 'elliptical', 20, 45, 30, '🌀'),
+      mkCardio('fp_rower', 'Rameur', 'km', 'rower', 2, 6, 20, '🚣'),
+      mkCardio('fp_stairs', 'Stairmaster / Escalier', 'min', 'stairs', 10, 30, 15, '🪜'),
+      mkCardio('fp_skierg', 'Ski-Erg (HYROX)', 'km', 'skierg', 1, 3, 10, '⛷️'),
+      mkCardio('fp_jumprope', 'Corde à Sauter', 'min', 'jumprope', 5, 15, 10, '🪢'),
+      mkCardio('fp_hiit', 'Cross-Training / HIIT', 'min', 'hiit', 15, 40, 25, '🔥'),
+      mkCardio('fp_boxing', 'Boxe / Sac de Frappe', 'min', 'boxing', 15, 45, 30, '🥊'),
+      mkCardio('fp_group_class', 'Cours Collectif', 'min', 'group_class', 30, 60, 45, '🧑‍🤝‍🧑')
+    ];
+    const normSearch = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const __existingNames = new Set(BASE_EXERCISE_CATALOG.map(c => normSearch(c.name)));
+    const EXERCISE_CATALOG = [
+      ...BASE_EXERCISE_CATALOG,
+      ...NEW_STRENGTH_ROWS.map(r => ({
+        id: r[0], name: r[1], category: r[2], equip: r[3], type: 'strength', unit: r[4],
+        defaultGoalMode: r[10] || 'sets_reps', defaultStart: r[5], defaultGoal: r[6],
+        defaultGoalSets: r[7], defaultGoalReps: r[8], defaultStartAssistance: r[11] || 0,
+        defaultGoalAssistance: 0, icon: r[9]
+      })),
+      ...NEW_CARDIO
+    ].filter((c, i, arr) => i < BASE_EXERCISE_CATALOG.length || !__existingNames.has(normSearch(c.name)));
+
+    // Sélecteur d'exercice avec barre de recherche
+    function ExercisePicker({ value, onSelect }) {
+      const [query, setQuery] = useState('');
+      const [filter, setFilter] = useState('all');
+      const FILTERS = [['all', 'Tous'], ['Dos', '🦅 Dos'], ['Pectoraux', '🛡️ Pecs'], ['Jambes', '🦵 Jambes'], ['Épaules & Bras', '💪 Épaules/Bras'], ['Abdominaux', '🍫 Abdos'], ['cardio', '🏃 Cardio']];
+      const ORDER = ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
+      const tokens = normSearch(query).split(/\s+/).filter(Boolean);
+      const results = EXERCISE_CATALOG
+        .filter(c => {
+          const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : c.category === filter && c.type !== 'cardio');
+          if (!inFilter) return false;
+          const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''}`);
+          return tokens.every(t => hay.includes(t));
+        })
+        .sort((a, b) => ORDER.indexOf(a.category) - ORDER.indexOf(b.category));
+      const selected = EXERCISE_CATALOG.find(c => c.id === value);
+      return (
+        <div className="space-y-2">
+          <div className="text-xs text-pink-300 font-bold">
+            Sélection : {selected ? `${selected.icon} ${selected.name}` : String(value).startsWith('custom') ? '✨ Exercice personnalisé' : '—'}
+          </div>
+          <input
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
+            placeholder="🔍 Rechercher : pec deck, hammer, haltères, mollets, poulie…"
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {FILTERS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFilter(id)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                  filter === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="text-[11px] text-slate-500">{results.length} exercice(s)</div>
+          <div className="max-h-56 overflow-y-auto space-y-1 pr-1 border border-slate-800 rounded-xl p-1.5 bg-slate-950">
+            {results.map(c => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onSelect(c.id)}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-sm flex items-center justify-between gap-2 border ${
+                  c.id === value ? 'bg-pink-600/20 border-pink-500 text-white' : 'border-transparent hover:bg-slate-800 text-slate-200'
+                }`}
+              >
+                <span className="font-semibold truncate">{c.icon} {c.name}</span>
+                <span className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
+              </button>
+            ))}
+            {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat. Créez un exercice personnalisé ci-dessous.</p>}
+            <button type="button" onClick={() => onSelect('custom_bodyweight')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
+              ✨ Autre exercice au poids du corps personnalisé…
+            </button>
+            <button type="button" onClick={() => onSelect('custom_strength')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
+              ✨ Autre exercice avec charge (kg) personnalisé…
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     const SETS_REPS_PRESETS = [
       { label: '3 × 6 reps', sets: 3, reps: 6 },
@@ -341,7 +557,10 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       { id: 'polyvalent', title: 'Dresseur Polyvalent', desc: 'Pratiquer 4 groupes musculaires / arènes différents', icon: '🧭', xpBonus: 150 },
       { id: 'veteran_20', title: 'Vétéran des Arènes', desc: 'Enregistrer 20 séances au total', icon: '🏅', xpBonus: 250 },
       { id: 'calorie_inferno', title: 'Éruption Volcanique', desc: 'Brûler plus de 5 000 kcal cumulées', icon: '🌋', xpBonus: 300 },
-      { id: 'weight_loss_5', title: 'Cinq Kilos Envolés', desc: 'Perdre 5 kg par rapport à votre poids de départ', icon: '🪽', xpBonus: 300 }
+      { id: 'weight_loss_5', title: 'Cinq Kilos Envolés', desc: 'Perdre 5 kg par rapport à votre poids de départ', icon: '🪽', xpBonus: 300 },
+      { id: 'sunday_warrior', title: 'Guerrier du Dimanche', desc: 'S’entraîner un dimanche', icon: '☀️', xpBonus: 120, secret: true },
+      { id: 'marathon_km', title: 'Marathonien', desc: 'Cumuler 42,2 km de course à pied', icon: '🏁', xpBonus: 400, secret: true },
+      { id: 'all_arenas', title: 'Maître des 7 Arènes', desc: 'Pratiquer les 7 groupes / arènes', icon: '🌈', xpBonus: 500, secret: true }
     ];
 
     // Série en cours : jours consécutifs avec séance (jusqu'à aujourd'hui, ou hier si rien aujourd'hui)
@@ -359,52 +578,204 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       return streak;
     }
 
-    // Trophées calculés automatiquement à partir de l’historique (rétroactifs)
-    function computeDerivedAchievements(state) {
-      const met = [];
-      const quests = state.quests || [];
-      const isStart = h => String(h.note || '').startsWith('Point de départ');
-      const entries = quests.flatMap(q =>
-        (q.history || []).filter(h => !isStart(h)).map(h => ({ ...h, quest: q }))
-      );
+    // ---------- Données dérivées (stats, semaine, défis, records) ----------
+    const isStartEntry = h => String(h.note || '').startsWith('Point de départ');
+    const isVolleyQuest = q => /volley/i.test(`${q.category || ''} ${q.catalogId || ''} ${q.name || ''}`);
+    const getAllEntries = state =>
+      (state.quests || []).flatMap(q => (q.history || []).filter(h => !isStartEntry(h)).map(h => ({ ...h, quest: q })));
+    const entryReps = e =>
+      Array.isArray(e.setDetails)
+        ? e.setDetails.reduce((a, r) => a + (Number(r) || 0), 0)
+        : e.quest.type === 'strength' ? (Number(e.sets) || 0) * (Number(e.reps) || 0) : 0;
+    const entryVolume = e => (e.quest.type === 'strength' && e.quest.unit === 'kg' ? entryReps(e) * (Number(e.value) || 0) : 0);
+    const entryKm = e =>
+      e.quest.type !== 'cardio' ? 0 : Number(e.distanceKm) || (e.quest.unit === 'km' ? Number(e.value) || 0 : 0);
+    const isRunQuest = q => ['run', 'interval'].includes(q.cardioMode) || /course|running/i.test(`${q.catalogId || ''} ${q.name || ''}`);
 
-      if (entries.some(e => /volley/i.test(`${e.quest.category || ''} ${e.quest.catalogId || ''} ${e.quest.name || ''}`))) {
-        met.push('volley_rookie');
-      }
-
-      const perDay = {};
-      entries.forEach(e => {
-        if (!e.date) return;
-        (perDay[e.date] = perDay[e.date] || new Set()).add(e.quest.id);
+    function addDaysISO(dateStr, n) {
+      const d = new Date(dateStr + 'T00:00:00');
+      d.setDate(d.getDate() + n);
+      return toLocalISODate(d);
+    }
+    function getWeekStart(dateStr) {
+      const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      return toLocalISODate(d);
+    }
+    function computeWeekStats(entries, weekStart) {
+      const end = addDaysISO(weekStart, 6);
+      const wk = entries.filter(e => e.date >= weekStart && e.date <= end);
+      return {
+        sessions: wk.length,
+        days: new Set(wk.map(e => e.date)).size,
+        kcal: wk.reduce((s, e) => s + (Number(e.calories) || 0), 0),
+        km: Math.round(wk.reduce((s, e) => s + entryKm(e), 0) * 10) / 10,
+        volume: Math.round(wk.reduce((s, e) => s + entryVolume(e), 0)),
+        reps: wk.reduce((s, e) => s + entryReps(e), 0),
+        arenas: new Set(wk.map(e => normalizeArenaGroup(e.quest.category || '', e.quest.type))).size,
+        volley: wk.filter(e => isVolleyQuest(e.quest)).length
+      };
+    }
+    const CHALLENGE_POOL = [
+      { id: 'sessions', icon: '💪', title: 'Assidu', desc: 'Enregistrer 4 séances', key: 'sessions', target: 4, xp: 150 },
+      { id: 'days', icon: '📆', title: 'Régulier', desc: 'S’entraîner 3 jours différents', key: 'days', target: 3, xp: 150 },
+      { id: 'kcal', icon: '🔥', title: 'Fournaise', desc: 'Brûler 800 kcal', key: 'kcal', target: 800, xp: 200 },
+      { id: 'km', icon: '🏃', title: 'Globe-trotteur', desc: 'Parcourir 10 km', key: 'km', target: 10, xp: 200 },
+      { id: 'arenas', icon: '🧭', title: 'Touche-à-tout', desc: 'Travailler 3 groupes différents', key: 'arenas', target: 3, xp: 150 },
+      { id: 'reps', icon: '🔁', title: 'Marathon de reps', desc: 'Cumuler 150 répétitions', key: 'reps', target: 150, xp: 150 },
+      { id: 'volley', icon: '🏐', title: 'Match de la semaine', desc: 'Jouer 1 séance de volley', key: 'volley', target: 1, xp: 120 }
+    ];
+    function getWeekChallenges(weekStart) {
+      const n = Math.floor(Date.parse(weekStart + 'T00:00:00Z') / 604800000);
+      return [0, 1, 2].map(k => {
+        const c = CHALLENGE_POOL[(n + k * 2) % CHALLENGE_POOL.length];
+        return { ...c, uid: `${weekStart}:${c.id}` };
       });
-      if (Object.values(perDay).some(set => set.size >= 3)) met.push('triple_combo');
+    }
 
-      const days = Object.keys(perDay).sort();
-      let run = 0, best = 0, prev = null;
-      days.forEach(d => {
+    function computePersonalRecords(state) {
+      const out = [];
+      (state.quests || []).forEach(q => {
+        const es = (q.history || []).filter(h => !isStartEntry(h));
+        if (!es.length) return;
+        const pick = get => es.reduce((b, h) => { const v = get(h); return b === null || v > b.v ? { v, date: h.date } : b; }, null);
+        const recs = [];
+        if (q.type === 'cardio') {
+          const m = pick(h => Number(h.value) || 0);
+          recs.push({ key: `${q.id}:main`, label: q.unit === 'km' ? 'Plus longue distance' : 'Plus longue durée', text: `${m.v} ${q.unit}`, score: m.v, date: m.date });
+        } else {
+          const setMax = h => (Array.isArray(h.setDetails) ? Math.max(0, ...h.setDetails.map(Number)) : Number(h.reps) || 0);
+          if (q.unit === 'kg') {
+            const k = pick(h => Number(h.value) || 0);
+            recs.push({ key: `${q.id}:kg`, label: 'Charge max', text: `${k.v} kg`, score: k.v, date: k.date });
+          }
+          const r = pick(setMax);
+          recs.push({ key: `${q.id}:reps`, label: 'Meilleure série', text: `${r.v} reps`, score: r.v, date: r.date });
+          if (q.unit === 'reps') {
+            const wa = es.filter(h => h.assistanceKg !== undefined && h.assistanceKg !== null);
+            if (wa.length) {
+              const m = wa.reduce((b, h) => (Number(h.assistanceKg) < Number(b.assistanceKg) ? h : b));
+              recs.push({ key: `${q.id}:assist`, label: 'Aide minimale', text: Number(m.assistanceKg) === 0 ? 'Strict (0 kg)' : `${m.assistanceKg} kg d’aide`, score: -Number(m.assistanceKg), date: m.date });
+            }
+          }
+        }
+        out.push({ id: q.id, name: q.name, icon: q.icon, recs });
+      });
+      return out;
+    }
+
+    function computeAchievementStats(state) {
+      const entries = getAllEntries(state);
+      const perDay = {};
+      entries.forEach(e => { if (e.date) (perDay[e.date] = perDay[e.date] || new Set()).add(e.quest.id); });
+      let run = 0, bestRun = 0, prev = null;
+      Object.keys(perDay).sort().forEach(d => {
         const t = Date.parse(d + 'T00:00:00Z');
         run = prev !== null && Math.round((t - prev) / 86400000) === 1 ? run + 1 : 1;
         prev = t;
-        if (run > best) best = run;
+        if (run > bestRun) bestRun = run;
       });
-      if (best >= 3) met.push('streak_3');
+      const arenaIds = ARENA_GROUPS.map(g => g.id);
+      return {
+        sessions: entries.length,
+        kcal: entries.reduce((s, e) => s + (Number(e.calories) || 0), 0),
+        maxPerDay: Math.max(0, ...Object.values(perDay).map(x => x.size)),
+        bestRun,
+        arenaCount: new Set(entries.map(e => normalizeArenaGroup(e.quest.category || '', e.quest.type)).filter(a => arenaIds.includes(a))).size,
+        lost: Math.max(0, (Number(state.startWeightKg) || 0) - (Number(state.userWeightKg) || 0)),
+        runKm: Math.round(entries.filter(e => e.quest.type === 'cardio' && isRunQuest(e.quest)).reduce((s, e) => s + entryKm(e), 0) * 10) / 10,
+        sunday: entries.some(e => e.date && new Date(e.date + 'T00:00:00').getDay() === 0),
+        volley: entries.some(e => isVolleyQuest(e.quest))
+      };
+    }
+    const ACH_PROGRESS = {
+      veteran_20: { key: 'sessions', max: 20 }, calorie_furnace: { key: 'kcal', max: 1000 }, calorie_inferno: { key: 'kcal', max: 5000 },
+      polyvalent: { key: 'arenaCount', max: 4 }, all_arenas: { key: 'arenaCount', max: 7 }, triple_combo: { key: 'maxPerDay', max: 3 },
+      streak_3: { key: 'bestRun', max: 3 }, weight_loss_5: { key: 'lost', max: 5 }, marathon_km: { key: 'runKm', max: 42.2 }
+    };
 
-      const arenas = new Set(
-        quests
-          .filter(q => (q.history || []).some(h => !isStart(h)))
-          .map(q => normalizeArenaGroup(q.category || '', q.type))
-      );
-      if (arenas.size >= 4) met.push('polyvalent');
-
-      if (entries.length >= 20) met.push('veteran_20');
-
-      const kcal = entries.reduce((sum, e) => sum + (Number(e.calories) || 0), 0);
-      if (kcal >= 5000) met.push('calorie_inferno');
-
-      const lost = (Number(state.startWeightKg) || 0) - (Number(state.userWeightKg) || 0);
-      if (lost >= 5) met.push('weight_loss_5');
-
+    // Trophées calculés automatiquement à partir de l’historique (rétroactifs)
+    function computeDerivedAchievements(state) {
+      const st = computeAchievementStats(state);
+      const met = [];
+      if (st.volley) met.push('volley_rookie');
+      if (st.maxPerDay >= 3) met.push('triple_combo');
+      if (st.bestRun >= 3) met.push('streak_3');
+      if (st.arenaCount >= 4) met.push('polyvalent');
+      if (st.sessions >= 20) met.push('veteran_20');
+      if (st.kcal >= 5000) met.push('calorie_inferno');
+      if (st.lost >= 5) met.push('weight_loss_5');
+      if (st.sunday) met.push('sunday_warrior');
+      if (st.runKm >= 42.2) met.push('marathon_km');
+      if (st.arenaCount >= ARENA_GROUPS.length) met.push('all_arenas');
       return met;
+    }
+
+    // Minuteur de repos flottant
+    function RestTimer({ soundEnabled }) {
+      const [open, setOpen] = useState(false);
+      const [endAt, setEndAt] = useState(null);
+      const [left, setLeft] = useState(0);
+      const [total, setTotal] = useState(90);
+      useEffect(() => {
+        if (!endAt) return;
+        const id = setInterval(() => {
+          const l = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+          setLeft(l);
+          if (l === 0) {
+            clearInterval(id);
+            setEndAt(null);
+            playGameSound('boss', soundEnabled);
+            try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+          }
+        }, 250);
+        return () => clearInterval(id);
+      }, [endAt]);
+      const start = sec => { setTotal(sec); setLeft(sec); setEndAt(Date.now() + sec * 1000); };
+      const addTime = () => { setTotal(t => t + 30); setLeft(l => l + 30); setEndAt(e => (e || Date.now()) + 30000); };
+      const stop = () => { setEndAt(null); setLeft(0); };
+      const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+      const running = !!endAt;
+      return (
+        <div className="fixed bottom-28 right-4 z-40 flex flex-col items-end gap-2">
+          {open && (
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-pink-300">⏱ Repos entre séries</span>
+                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white text-sm">✕</button>
+              </div>
+              {running && (
+                <div>
+                  <div className="text-3xl font-black text-white text-center tabular-nums">{fmt(left)}</div>
+                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
+                    <div className="h-full bg-pink-500 transition-all" style={{ width: `${Math.min(100, (left / total) * 100)}%` }} />
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={addTime} className="flex-1 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700">+30 s</button>
+                    <button onClick={stop} className="flex-1 py-1.5 rounded-lg bg-rose-900/60 text-xs font-bold text-rose-200 hover:bg-rose-800">Stop</button>
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-3 gap-2">
+                {[60, 90, 120].map(sec => (
+                  <button key={sec} onClick={() => start(sec)} className="py-2 rounded-lg bg-pink-600/80 hover:bg-pink-600 text-white text-xs font-black">
+                    {sec} s
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setOpen(o => !o)}
+            title="Minuteur de repos"
+            className={`h-12 min-w-12 px-3 rounded-full shadow-xl border text-sm font-black flex items-center justify-center gap-1.5 ${
+              running ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-200'
+            }`}
+          >
+            ⏱{running && <span className="tabular-nums">{fmt(left)}</span>}
+          </button>
+        </div>
+      );
     }
 
     // ==========================================
@@ -474,8 +845,9 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
           : 0.1 * speed + 1.8 * speed * grade + 3.5;
         kcal = (vo2 - 3.5) * w * durMin / 1000 * 5; // net : repos retiré
       } else {
-        const grossMet = 6.8 + (rpe - 6) * 0.5;
-        kcal = (grossMet - 1) * w * hours + w * elevM * 0.01;
+        const MET_BY_MODE = { bike: 6.8, elliptical: 5.0, rower: 7.0, stairs: 8.8, skierg: 7.5, jumprope: 10.5, hiit: 8.0, boxing: 7.5, group_class: 6.0 };
+        const grossMet = (MET_BY_MODE[cardioMode] || 6.8) + (rpe - 6) * 0.5;
+        kcal = (grossMet - 1) * w * hours + (cardioMode === 'other' ? w * elevM * 0.01 : 0);
       }
       return Math.max(20, Math.round(kcal));
     }
@@ -701,6 +1073,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       streak: 2,
       soundEnabled: true,
       unlockedAchievements: ['first_blood', 'weight_tracker'],
+      claimedChallenges: [],
       quests: [
         {
           id: 'q_pullups_3x6',
@@ -1273,15 +1646,175 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 {
         id: 'volleyball',
         name: 'Volley-ball',
-        category: 'Course & Cardio',
+        category: 'Volley-ball',
         type: 'cardio',
         unit: 'min',
-        cardioMode: 'other',
+        cardioMode: 'volleyball',
         icon: '🏐',
         defaultGoal: 120,
         aliases: ['volley', 'volleyball', 'volley-ball', 'match de volley', 'entrainement de volley']
       },
     ];
+
+    // ------------------------------------------------------------------
+    // DICTÉE VOCALE : alias pour les exercices du catalogue étendu (Fitness Park)
+    // Chaque phrase fait 3 mots maximum (limite de la fenêtre d'analyse).
+    // ------------------------------------------------------------------
+    const VOICE_ALIASES_EXTRA = {
+      fp_seated_row: ['tirage horizontal', 'rowing poulie basse', 'tirage poulie basse', 'rowing assis', 'row assis'],
+      fp_low_row_machine: ['low row', 'low row machine', 'rowing machine assise'],
+      fp_hammer_row: ['rowing hammer', 'rowing hammer strength', 'row hammer', 'rowing iso lateral', 'iso lateral row'],
+      fp_tbar_row: ['t bar', 'tbar', 'rowing t bar', 'rowing tbar', 'ti bar'],
+      fp_db_row: ['rowing haltere', 'rowing haltere unilateral', 'tirage haltere', 'rowing unilateral'],
+      fp_vertical_traction: ['vertical traction', 'traction verticale', 'traction machine'],
+      fp_hammer_pulldown: ['tirage hammer', 'tirage vertical hammer', 'pulldown hammer'],
+      fp_close_pulldown: ['tirage prise serree', 'tirage poitrine', 'tirage serre'],
+      fp_straight_arm_pd: ['pull over poulie', 'pullover poulie', 'pull over haute', 'bras tendus'],
+      fp_assisted_pullup: ['traction assistee', 'tractions assistees', 'traction machine assistee', 'assisted pull up'],
+      fp_back_extension: ['extension lombaires', 'lombaires', 'banc a lombaires', 'hyperextension', 'hyper extension'],
+      fp_lumbar_machine: ['lombaires machine', 'extension lombaire machine'],
+      fp_shrugs_db: ['shrugs haltere', 'shrug haltere', 'trapezes haltere', 'haussements epaules'],
+      fp_shrugs_bar: ['shrugs barre', 'shrug barre', 'trapezes barre', 'shrugs', 'shrug', 'trapezes'],
+      fp_inverted_row: ['rowing inverse', 'tirage inverse', 'inverted row'],
+
+      fp_db_bench: ['developpe couche haltere', 'developpe haltere', 'couche haltere', 'developpe couche halteres'],
+      fp_incline_barbell: ['developpe incline barre', 'incline barre', 'incline barbell'],
+      fp_decline_barbell: ['developpe decline', 'decline barre', 'developpe decline barre'],
+      fp_smith_bench: ['developpe couche smith', 'bench smith', 'smith couche'],
+      fp_smith_incline: ['developpe incline smith', 'incline smith'],
+      fp_chest_press: ['chest press', 'chest press machine', 'developpe machine', 'pec press'],
+      fp_hammer_chest: ['chest press hammer', 'developpe hammer', 'hammer chest', 'hammer pecs'],
+      fp_hammer_incline: ['incline hammer', 'developpe incline hammer', 'hammer incline'],
+      fp_pec_deck: ['pec deck', 'peck deck', 'pec dec', 'butterfly', 'papillon', 'machine papillon'],
+      fp_cable_fly: ['ecartes poulie', 'ecarte poulie', 'crossover', 'cross over', 'vis a vis', 'poulies vis a vis'],
+      fp_db_fly: ['ecartes haltere', 'ecartes halteres', 'ecartes couche'],
+      fp_incline_fly: ['ecartes inclines', 'ecartes incline'],
+      fp_db_pullover: ['pull over haltere', 'pullover haltere', 'pull over', 'pullover'],
+      fp_decline_pushups: ['pompes pieds surleves', 'pompes declinees', 'pompes declines'],
+      fp_diamond_pushups: ['pompes diamant', 'pompe diamant', 'diamond pushups'],
+
+      fp_smith_squat: ['squat smith', 'smith squat', 'squat a la smith'],
+      fp_front_squat: ['front squat', 'squat avant', 'squat frontal'],
+      fp_goblet: ['goblet squat', 'squat goblet', 'goblet', 'gobelet'],
+      fp_bulgarian: ['squat bulgare', 'bulgarian', 'bulgare', 'fentes bulgares'],
+      fp_hack_squat: ['hack squat', 'hack', 'hacksquat'],
+      fp_leg_press_h: ['presse horizontale', 'presse cuisses horizontale'],
+      fp_leg_press_45: ['presse inclinee', 'presse plaques', 'presse hammer'],
+      fp_leg_ext: ['leg extension', 'extension de jambes', 'extension jambes', 'extension quadriceps', 'quadriceps machine'],
+      fp_leg_curl_seat: ['leg curl assis', 'curl ischio assis', 'ischio assis'],
+      fp_leg_curl_lying: ['leg curl allonge', 'curl ischio allonge', 'ischio allonge', 'leg curl', 'ischios', 'ischio jambiers'],
+      fp_adductors: ['adducteurs', 'adducteur', 'machine adducteurs'],
+      fp_abductors: ['abducteurs', 'abducteur', 'machine abducteurs'],
+      fp_calf_press: ['mollets presse', 'mollets a la presse', 'mollet presse'],
+      fp_calf_standing: ['mollets debout', 'mollet debout', 'calf debout', 'mollets', 'mollet'],
+      fp_calf_seated: ['mollets assis', 'mollet assis', 'calf assis'],
+      fp_walking_lunge: ['fentes marchees', 'fentes marchee', 'fentes haltere', 'fentes', 'lunges', 'walking lunge'],
+      fp_barbell_lunge: ['fentes barre', 'fente barre', 'lunges barre'],
+      fp_rdl: ['roumain', 'terre roumain', 'souleve roumain', 'rdl', 'romanian deadlift'],
+      fp_sumo: ['souleve sumo', 'sumo', 'deadlift sumo', 'terre sumo'],
+      fp_trapbar: ['trap bar', 'trapbar', 'hex bar', 'souleve trap bar'],
+      fp_hip_thrust_machine: ['hip thrust machine', 'hip trust machine'],
+      fp_glute_kickback: ['kickback fessiers', 'kick back fessiers', 'kickback poulie', 'fessiers poulie'],
+      fp_glute_bridge: ['glute bridge', 'bridge fessiers', 'pont fessiers'],
+      fp_multihip: ['multi hip', 'multihip', 'multi hanche', 'multihanche'],
+      fp_good_morning: ['good morning', 'good mornings', 'goodmorning'],
+      fp_step_up: ['step up', 'step ups', 'montees de banc', 'montee banc'],
+      fp_wall_ball: ['wall ball', 'wallball', 'wall balls'],
+      fp_burpees: ['burpees', 'burpee'],
+
+      fp_db_shoulder: ['developpe epaules haltere', 'developpe epaules', 'shoulder press haltere', 'developpe assis haltere'],
+      fp_machine_shoulder: ['shoulder press', 'shoulder press machine', 'developpe epaules machine'],
+      fp_hammer_shoulder: ['shoulder press hammer', 'developpe epaules hammer', 'hammer epaules'],
+      fp_smith_shoulder: ['militaire smith', 'developpe militaire smith', 'shoulder press smith'],
+      fp_arnold: ['arnold press', 'developpe arnold', 'arnold'],
+      fp_lateral_db: ['elevations laterales', 'elevation laterale', 'laterales haltere', 'lateral raise', 'laterales'],
+      fp_lateral_machine: ['laterales machine', 'elevations laterales machine'],
+      fp_lateral_cable: ['laterales poulie', 'elevations laterales poulie'],
+      fp_front_raise: ['elevations frontales', 'elevation frontale', 'frontales haltere', 'frontales'],
+      fp_rear_fly_db: ['oiseau haltere', 'oiseau', 'oiseaux', 'deltoides posterieurs', 'rear delt'],
+      fp_reverse_pec_deck: ['oiseau machine', 'reverse pec deck', 'reverse pec', 'pec deck inverse'],
+      fp_face_pull: ['face pull', 'face pulls', 'facepull', 'tirage visage'],
+      fp_upright_row: ['tirage menton', 'upright row', 'rowing menton', 'tirage au menton'],
+      fp_ext_rotation: ['rotation externe', 'rotation externe poulie', 'coiffe des rotateurs', 'coiffe rotateurs'],
+      fp_db_curl: ['curl haltere', 'curl halteres', 'curl alterne', 'curl biceps haltere', 'biceps haltere'],
+      fp_hammer_curl: ['curl marteau', 'hammer curl', 'curls marteau', 'marteau'],
+      fp_preacher_bar: ['curl pupitre', 'curl pupitre barre', 'pupitre barre', 'preacher curl', 'larry scott'],
+      fp_preacher_machine: ['curl pupitre machine', 'pupitre machine', 'preacher machine'],
+      fp_cable_curl: ['curl poulie', 'curl poulie basse', 'biceps poulie'],
+      fp_incline_curl: ['curl incline', 'curl incline haltere', 'incline curl'],
+      fp_concentration_curl: ['curl concentre', 'concentration curl', 'curl concentration'],
+      fp_biceps_machine: ['biceps curl machine', 'biceps machine', 'curl machine', 'machine biceps'],
+      fp_pushdown: ['extension triceps poulie', 'triceps poulie', 'triceps corde', 'pushdown', 'push down', 'poulie corde', 'extension triceps'],
+      fp_pushdown_bar: ['triceps barre droite', 'triceps poulie barre', 'pushdown barre'],
+      fp_skull: ['barre au front', 'skull crusher', 'skullcrusher', 'skull crushers', 'barre front'],
+      fp_overhead_ext_db: ['triceps nuque', 'extension nuque', 'extension nuque haltere', 'triceps nuque haltere'],
+      fp_overhead_ext_cable: ['triceps nuque poulie', 'extension nuque poulie', 'overhead extension'],
+      fp_kickback: ['kickback triceps', 'kick back triceps', 'kickback haltere'],
+      fp_triceps_machine: ['triceps machine', 'extension triceps machine', 'machine triceps'],
+      fp_close_grip_bench: ['developpe prise serree', 'couche prise serree', 'close grip bench', 'close grip'],
+      fp_dip_machine: ['dips machine', 'dip machine', 'dips assis machine'],
+      fp_bench_dips: ['dips banc', 'dips sur banc', 'bench dips'],
+      fp_wrist_curl: ['curl poignets', 'curl poignet', 'avant bras', 'wrist curl'],
+
+      fp_ab_machine: ['crunch machine', 'abdos machine', 'machine abdos', 'ab crunch'],
+      fp_rotary_torso: ['rotary torso', 'rotary', 'rotation tronc', 'machine obliques', 'obliques machine'],
+      fp_captain_knee: ['releves de genoux', 'releve genoux', 'chaise romaine', 'captain chair', 'releves genoux'],
+      fp_toes_to_bar: ['toes to bar', 'toes bar', 'ttb', 'orteils barre'],
+      fp_plank: ['gainage', 'planche', 'plank', 'gainage planche'],
+      fp_side_plank: ['gainage lateral', 'planche laterale', 'side plank'],
+      fp_mountain: ['mountain climbers', 'mountain climber', 'grimpeurs'],
+      fp_bicycle: ['crunch velo', 'bicycle crunch', 'abdos velo', 'bicycle crunchs'],
+      fp_reverse_crunch: ['crunch inverse', 'reverse crunch', 'crunchs inverses'],
+      fp_leg_raise_floor: ['releves de jambes sol', 'releve jambes sol', 'leg raise sol', 'releves jambes'],
+      fp_situp: ['sit up', 'sit ups', 'situp', 'situps'],
+      fp_decline_crunch: ['crunch decline', 'crunch banc', 'abdos decline', 'crunchs declines'],
+      fp_woodchop: ['wood chop', 'woodchop', 'bucheron', 'rotation poulie'],
+      fp_pallof: ['pallof press', 'pallof', 'pallof presse'],
+
+      fp_bike: ['velo', 'biking', 'velo stationnaire', 'cycling', 'velo de salle', 'cycle park'],
+      fp_assault_bike: ['assault bike', 'air bike', 'velo assault', 'assault'],
+      fp_elliptical: ['elliptique', 'velo elliptique', 'cross trainer', 'crosstrainer'],
+      fp_rower: ['rameur', 'aviron', 'concept 2', 'rowerg'],
+      fp_stairs: ['stairmaster', 'escalier', 'stair master', 'machine escalier', 'stepper'],
+      fp_skierg: ['ski erg', 'skierg', 'ski ergometre', 'machine ski'],
+      fp_jumprope: ['corde a sauter', 'corde sauter', 'jump rope'],
+      fp_hiit: ['hiit', 'cross training', 'crossfit', 'circuit training', 'crosstraining'],
+      fp_boxing: ['boxe', 'sac de frappe', 'sac frappe', 'boxing', 'punching ball'],
+      fp_group_class: ['cours collectif', 'cours collectifs', 'cours de groupe', 'zumba', 'body pump']
+    };
+
+    // Ajoute au dictionnaire vocal une entrée par exercice du catalogue étendu
+    (function extendVoiceDictionary() {
+      const clean = t => stripAccents(t).replace(/[^a-z0-9]+/g, ' ').trim();
+      const seen = new Set();
+      VOICE_DICTIONARY.forEach(d => d.aliases.forEach(a => seen.add(clean(a))));
+      EXERCISE_CATALOG.forEach(c => {
+        const list = VOICE_ALIASES_EXTRA[c.id];
+        if (!list) return;
+        const aliases = [];
+        list.forEach(a => {
+          const n = clean(a);
+          if (!n || n.split(' ').length > 3 || seen.has(n)) return;
+          seen.add(n);
+          aliases.push(n);
+        });
+        if (aliases.length === 0) return;
+        VOICE_DICTIONARY.push({
+          id: c.id,
+          name: c.name,
+          category: c.category,
+          type: c.type,
+          unit: c.unit,
+          cardioMode: c.cardioMode,
+          icon: c.icon,
+          defaultGoal: c.defaultGoal,
+          defaultGoalSets: c.defaultGoalSets || 3,
+          defaultGoalReps: c.defaultGoalReps || 8,
+          strict: true,
+          aliases
+        });
+      });
+    })();
 
     // Supprime les accents et normalise pour comparer facilement les mots mal retranscrits
     function stripAccents(str = '') {
@@ -1342,6 +1875,15 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         .replace(/\bcent\b/gi, '100');
     }
 
+    // Mots courants du langage de salle : ils ne peuvent déclencher un exercice que s'ils sont dits exactement
+    const VOICE_COMMON_WORDS = new Set([
+      'des', 'dos', 'les', 'une', 'avec', 'sans', 'pour', 'dans', 'puis', 'ensuite', 'apres', 'avant',
+      'fait', 'faire', 'fais', 'passe', 'passes', 'sport', 'sports', 'salle', 'machine', 'machines',
+      'elastique', 'elastiques', 'series', 'serie', 'repetitions', 'repetition', 'kilos', 'kilo',
+      'fois', 'minutes', 'minute', 'heure', 'heures', 'kilometres', 'kilometre', 'aide', 'seance',
+      'matin', 'soir', 'fini', 'fin', 'derniere', 'premier'
+    ]);
+
     // Repère TOUS les exercices présents dans une même phrase et découpe automatiquement
     function parseSpokenWorkout(rawText, existingQuests = [], userWeightKg = 82) {
       if (!rawText || !rawText.trim()) return [];
@@ -1369,7 +1911,8 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           candidates.push({
             phrase: stripAccents(alias),
             quest: linkedQuest || null,
-            catalog: dictItem
+            catalog: dictItem,
+            strict: !!dictItem.strict
           });
         });
       });
@@ -1404,6 +1947,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           if (i + len > wordTokens.length) continue;
           const sliceTokens = wordTokens.slice(i, i + len);
           const spokenPhrase = sliceTokens.map(t => t.word).join(' ');
+          const startsWithCommon = VOICE_COMMON_WORDS.has(sliceTokens[0].word);
 
           for (const cand of candidates) {
             const target = cand.phrase;
@@ -1411,7 +1955,13 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             if (Math.abs(targetWordsCount - len) > 1) continue;
 
             const dist = levenshteinDistance(spokenPhrase, target);
-            const maxAllowedDist = target.length >= 10 ? 3 : target.length >= 5 ? 2 : 0;
+            if (dist > 0 && startsWithCommon) continue;
+            let maxAllowedDist = target.length >= 10 ? 3 : target.length >= 5 ? 2 : 0;
+            if (cand.strict) {
+              // Exercices du catalogue étendu : tolérance réduite, même première lettre
+              maxAllowedDist = target.length >= 12 ? 2 : target.length >= 6 ? 1 : 0;
+              if (dist > 0 && spokenPhrase[0] !== target[0]) continue;
+            }
 
             if (dist <= maxAllowedDist) {
               if (!bestMatch || dist < bestMatch.dist || (dist === bestMatch.dist && target.length > bestMatch.targetLen)) {
@@ -1460,8 +2010,16 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
       // Extraction des paramètres (kg, élastique, séries, reps, km) pour chaque segment d'exercice
       return cleanedAnchors.map((anchor, idx) => {
-        const segStart = idx === 0 ? 0 : Math.floor((cleanedAnchors[idx - 1].startChar + anchor.startChar) / 2);
         const segEnd = idx + 1 < cleanedAnchors.length ? cleanedAnchors[idx + 1].startChar : normText.length;
+        // Les chiffres suivent en général le nom de l'exercice : on part du nom s'il y a des chiffres après,
+        // sinon on garde l'ancien découpage au milieu des deux exercices.
+        const ownText = normText.slice(anchor.startChar, segEnd);
+        const segStart =
+          idx === 0
+            ? 0
+            : /\d/.test(ownText)
+              ? anchor.startChar
+              : Math.floor((cleanedAnchors[idx - 1].startChar + anchor.startChar) / 2);
         const seg = normText.slice(segStart, segEnd);
 
         const ref = anchor.quest || anchor.catalog;
@@ -1676,6 +2234,25 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           setIsListening(false);
         }
 
+        const knownArenas = new Set(gameState.quests.map(q => normalizeArenaGroup(q.category, q.type)));
+        const createdNames = [];
+        const newArenas = [];
+        editableItems.forEach(item => {
+          const exists = gameState.quests.some(
+            q =>
+              q.id === item.questId ||
+              stripAccents(q.name) === stripAccents(item.name) ||
+              (item.catalogRef && q.catalogId === item.catalogRef.id)
+          );
+          if (exists) return;
+          createdNames.push(item.name);
+          const arena = normalizeArenaGroup(item.category, item.type);
+          if (!knownArenas.has(arena)) {
+            knownArenas.add(arena);
+            newArenas.push(arena);
+          }
+        });
+
         let totalXpGain = 0;
         let totalKcalGain = 0;
 
@@ -1713,7 +2290,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 };
 
             const existingIdx = updatedQuests.findIndex(
-              q => q.id === item.questId || stripAccents(q.name) === stripAccents(item.name)
+              q =>
+                q.id === item.questId ||
+                stripAccents(q.name) === stripAccents(item.name) ||
+                (item.catalogRef && q.catalogId === item.catalogRef.id)
             );
 
             if (existingIdx !== -1) {
@@ -1734,13 +2314,16 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 type: item.type,
                 unit: item.unit,
                 goalMode: 'sets_reps',
+                cardioMode: item.type === 'cardio' ? (item.catalogRef?.cardioMode || 'run') : undefined,
+                durationMin: item.type === 'cardio' ? item.durationMin : undefined,
+                elevationM: item.type === 'cardio' ? 0 : undefined,
                 level: 1,
                 icon: item.icon,
                 startValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
                 currentValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
                 goalValue: item.catalogRef?.defaultGoal || (item.unit === 'kg' ? item.weightKg + 15 : 10),
-                goalSets: item.setDetails?.length || 3,
-                goalReps: item.setDetails?.[0] || 8,
+                goalSets: item.catalogRef?.defaultGoalSets || item.setDetails?.length || 3,
+                goalReps: item.catalogRef?.defaultGoalReps || item.setDetails?.[0] || 8,
                 setDetails: item.setDetails || [8, 8, 8],
                 startAssistanceKg: item.assistanceKg || 0,
                 currentAssistanceKg: item.assistanceKg || 0,
@@ -1760,7 +2343,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         playGameSound('boss', gameState.soundEnabled);
         triggerToast(
           `🎤 ${editableItems.length} exercice(s) validé(s) d'un coup !`,
-          `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}`,
+          `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}` +
+            (createdNames.length ? ` • ${createdNames.length} nouvel(s) objectif(s) ajouté(s)` : '') +
+            (newArenas.length ? ` • Arène débloquée : ${newArenas.join(', ')}` : ''),
           totalXpGain,
           '🎤'
         );
@@ -1997,12 +2582,18 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
       // Toast RPG Pokémon
       const [toast, setToast] = useState(null);
+      const toastQueueRef = useRef([]);
       const triggerToast = (title, subtitle, xpGain = 0, badge = '🎵') => {
-        setToast({ title, subtitle, xpGain, badge, id: Date.now() });
+        const t = { title, subtitle, xpGain, badge, id: Date.now() + Math.random() };
+        setToast(cur => {
+          if (cur) { toastQueueRef.current.push(t); return cur; }
+          return t;
+        });
       };
+      const dismissToast = () => setToast(toastQueueRef.current.shift() || null);
       useEffect(() => {
         if (!toast) return;
-        const t = setTimeout(() => setToast(null), 5000);
+        const t = setTimeout(dismissToast, 4500);
         return () => clearTimeout(t);
       }, [toast]);
 
@@ -2032,7 +2623,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           )
         }));
 
-        setTimeout(() => {
+        {
           playGameSound('boss', gameState.soundEnabled);
           triggerToast(
             fresh.length === 1 ? `🏆 Trophée : ${fresh[0].title}` : `🏆 ${fresh.length} trophées débloqués !`,
@@ -2040,8 +2631,63 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             bonus,
             fresh[0].icon
           );
-        }, 3500);
+        }
       }, [gameState, cloudStatus]);
+
+      // Annuler après suppression
+      const skipPRRef = useRef(false);
+      const [undoInfo, setUndoInfo] = useState(null);
+      const registerUndo = label => setUndoInfo({ label, snapshot: gameState, id: Date.now() });
+      useEffect(() => {
+        if (!undoInfo) return;
+        const t = setTimeout(() => setUndoInfo(null), 8000);
+        return () => clearTimeout(t);
+      }, [undoInfo]);
+      const handleUndo = () => {
+        if (!undoInfo) return;
+        skipPRRef.current = true;
+        setGameState(undoInfo.snapshot);
+        setUndoInfo(null);
+        triggerToast('Suppression annulée', 'Les données ont été restaurées.', 0, '↩️');
+      };
+
+      // Détection des nouveaux records personnels
+      const prRef = useRef(null);
+      useEffect(() => {
+        if (!isLoaded.current) return;
+        const flat = {};
+        computePersonalRecords(gameState).forEach(g =>
+          g.recs.forEach(r => { flat[r.key] = { ...r, name: g.name }; })
+        );
+        const prev = prRef.current;
+        prRef.current = flat;
+        if (prev === null) return;
+        if (skipPRRef.current) { skipPRRef.current = false; return; }
+        const broken = Object.keys(flat).filter(k => prev[k] !== undefined && flat[k].score > prev[k].score);
+        if (broken.length === 0) return;
+        const r = flat[broken[0]];
+        playGameSound('boss', gameState.soundEnabled);
+        triggerToast(
+          `Nouveau record : ${r.name}`,
+          `${r.label} : ${r.text}${broken.length > 1 ? ` (+${broken.length - 1} autre(s) record(s))` : ''}`,
+          0,
+          '🏅'
+        );
+      }, [gameState, cloudStatus]);
+
+      const weekData = useMemo(() => {
+        const entries = getAllEntries(gameState);
+        const ws = getWeekStart();
+        return { ws, cur: computeWeekStats(entries, ws), prev: computeWeekStats(entries, addDaysISO(ws, -7)), challenges: getWeekChallenges(ws) };
+      }, [gameState.quests]);
+      const records = useMemo(() => computePersonalRecords(gameState), [gameState.quests]);
+      const achStats = useMemo(() => computeAchievementStats(gameState), [gameState]);
+      const handleClaimChallenge = c => {
+        if ((gameState.claimedChallenges || []).includes(c.uid)) return;
+        setGameState(prev => ({ ...prev, xp: prev.xp + c.xp, claimedChallenges: [...(prev.claimedChallenges || []), c.uid] }));
+        playGameSound('boss', gameState.soundEnabled);
+        triggerToast(`Défi relevé : ${c.title}`, c.desc, c.xp, c.icon);
+      };
 
       // Modale "Noter Séance"
       const [logModalQuest, setLogModalQuest] = useState(null);
@@ -2748,6 +3394,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       // ACTION : SUPPRIMER UNE SÉANCE (BILAN DU JOUR OU JOURNAL)
       // ==========================================
       const handleDeleteSessionEntry = (questId, entryId) => {
+        registerUndo('Séance supprimée');
         playGameSound('click', gameState.soundEnabled);
         let deletedQuestName = 'Séance';
 
@@ -3056,6 +3703,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       };
 
       const handleDeleteWeightEntry = id => {
+        registerUndo('Pesée supprimée');
         setGameState(prev => {
           const filtered = (prev.weightHistory || []).filter(item => item.id !== id);
           const latest = filtered.length > 0 ? filtered[filtered.length - 1].weightKg : prev.userWeightKg;
@@ -3068,6 +3716,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       };
 
       const handleDeleteQuest = questId => {
+        registerUndo('Quête retirée');
         setGameState(prev => ({
           ...prev,
           quests: prev.quests.filter(q => q.id !== questId)
@@ -3099,6 +3748,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             if (!parsed || !Array.isArray(parsed.quests)) throw new Error('format');
             if (!window.confirm('Remplacer toute votre progression actuelle par cette sauvegarde ?')) return;
             paidAchievementsRef.current = new Set(parsed.unlockedAchievements || []);
+            skipPRRef.current = true;
             setGameState({
               ...INITIAL_STATE,
               ...parsed,
@@ -3170,7 +3820,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           {toast && (
             <div className="fixed bottom-5 right-5 z-50 max-w-md bg-slate-900/95 border-2 border-pink-400/80 shadow-2xl shadow-pink-500/20 rounded-2xl p-4 flex items-center gap-3.5 animate-bounce">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
-                {toast.badge}
+                <span className={toast.badge === '🏅' ? 'inline-block animate-bounce' : ''}>{toast.badge}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -3186,11 +3836,18 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 <p className="text-xs text-slate-300 mt-0.5 line-clamp-2">{toast.subtitle}</p>
               </div>
               <button
-                onClick={() => setToast(null)}
+                onClick={dismissToast}
                 className="text-slate-400 hover:text-white p-1"
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+          )}
+
+          {undoInfo && (
+            <div className="fixed bottom-4 left-4 z-50 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3 text-sm">
+              <span className="text-slate-200">🗑️ {undoInfo.label}</span>
+              <button onClick={handleUndo} className="font-black text-pink-300 hover:text-pink-200 underline">Annuler</button>
             </div>
           )}
 
@@ -3410,6 +4067,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           {/* CONTENU PRINCIPAL */}
           <main className="max-w-6xl mx-auto px-4 pt-6 space-y-6">
 <VoiceWorkoutAssistant gameState={gameState} setGameState={setGameState} selectedDate={selectedDate} triggerToast={triggerToast} playGameSound={playGameSound} />
+<RestTimer soundEnabled={gameState.soundEnabled} />
             {/* BANNIÈRE BILAN ÉNERGÉTIQUE & SÉANCE DU JOUR (AVEC SUPPRESSION D'UNE SÉANCE) */}
             <section className="bg-gradient-to-r from-slate-900 via-slate-900/95 to-pink-950/30 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -3558,6 +4216,17 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 >
                   <Scale className="w-4 h-4" />
                   <span>⚖️ Suivi du Poids</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('bilan')}
+                  className={`px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
+                    activeTab === 'bilan'
+                      ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <span>📊 Bilan</span>
                 </button>
 
                 <button
@@ -4503,6 +5172,31 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
                     const pts = wHist.map((w, i) => `${getX(i)},${getY(w.weightKg)}`).join(' ');
                     const targetY = getY(targetW);
+                    const trend = weights.map((_, i) => {
+                      const sl = weights.slice(Math.max(0, i - 6), i + 1);
+                      return sl.reduce((x, y) => x + y, 0) / sl.length;
+                    });
+                    const trendPts = trend.map((v, i) => `${getX(i)},${getY(v)}`).join(' ');
+                    const eta = (() => {
+                      const rc = wHist.slice(-8);
+                      if (rc.length < 3) return null;
+                      const t0 = Date.parse(rc[0].date + 'T00:00:00Z');
+                      const xs = rc.map(w => (Date.parse(w.date + 'T00:00:00Z') - t0) / 86400000);
+                      const ys = rc.map(w => Number(w.weightKg) || 0);
+                      const n = xs.length;
+                      const mx = xs.reduce((x, y) => x + y, 0) / n;
+                      const my = ys.reduce((x, y) => x + y, 0) / n;
+                      const den = xs.reduce((x, v) => x + (v - mx) ** 2, 0);
+                      if (den === 0) return null;
+                      const slope = xs.reduce((x, v, i) => x + (v - mx) * (ys[i] - my), 0) / den;
+                      const cur = ys[n - 1];
+                      if (cur <= targetW) return { done: true };
+                      if (slope >= -0.005) return { stalled: true };
+                      const days = Math.ceil((cur - targetW) / -slope);
+                      const d = new Date();
+                      d.setDate(d.getDate() + days);
+                      return { perWeek: Math.round(slope * 7 * 100) / 100, days, date: d.toLocaleDateString('fr-FR') };
+                    })();
 
                     return (
                       <div className="w-full overflow-x-auto bg-slate-950 border border-slate-800 rounded-xl p-3">
@@ -4533,6 +5227,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                               points={pts}
                             />
                           )}
+                          {wHist.length > 1 && (
+                            <polyline fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeDasharray="2 5" strokeLinecap="round" points={trendPts} />
+                          )}
 
                           {wHist.map((w, idx) => (
                             <g key={w.id || idx}>
@@ -4561,6 +5258,13 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                             </g>
                           ))}
                         </svg>
+                        <p className="text-[11px] text-slate-400 mt-2">
+                          <span className="text-sky-300 font-bold">- - -</span> Tendance (moyenne glissante sur 7 pesées).{' '}
+                          {eta === null && 'Ajoutez au moins 3 pesées pour obtenir une estimation.'}
+                          {eta && eta.done && '🎉 Objectif de poids atteint !'}
+                          {eta && eta.stalled && 'Poids stable ou en hausse : pas d’estimation possible pour l’instant.'}
+                          {eta && eta.days && `Au rythme actuel (${eta.perWeek} kg/sem.), objectif estimé vers le ${eta.date} (~${eta.days} j).`}
+                        </p>
                       </div>
                     );
                   })()}
@@ -4591,6 +5295,99 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
               </div>
             )}
 
+            {/* ONGLET : BILAN (défis, semaine, records) */}
+            {activeTab === 'bilan' && (
+              <div className="space-y-6">
+                <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <h3 className="font-black text-white">
+                    🎯 Défis de la semaine{' '}
+                    <span className="text-xs text-slate-400 font-semibold">
+                      (du {weekData.ws.slice(8)}/{weekData.ws.slice(5, 7)} au {addDaysISO(weekData.ws, 6).slice(8)}/{addDaysISO(weekData.ws, 6).slice(5, 7)})
+                    </span>
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {weekData.challenges.map(c => {
+                      const cur = Math.min(c.target, weekData.cur[c.key] || 0);
+                      const done = cur >= c.target;
+                      const claimed = (gameState.claimedChallenges || []).includes(c.uid);
+                      return (
+                        <div key={c.uid} className={`p-3.5 rounded-xl border ${done ? 'border-amber-500/50 bg-amber-950/10' : 'border-slate-800 bg-slate-950'}`}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{c.icon}</span>
+                            <div>
+                              <p className="font-extrabold text-white text-sm">{c.title}</p>
+                              <p className="text-xs text-slate-400">{c.desc}</p>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-slate-800 rounded-full overflow-hidden mt-3">
+                            <div className="h-full bg-pink-500" style={{ width: `${(cur / c.target) * 100}%` }} />
+                          </div>
+                          <div className="flex items-center justify-between mt-2 text-xs">
+                            <span className="text-slate-300 font-bold">{Math.round(cur * 10) / 10} / {c.target}</span>
+                            {claimed ? (
+                              <span className="text-emerald-400 font-bold">✅ Réclamé</span>
+                            ) : done ? (
+                              <button onClick={() => handleClaimChallenge(c)} className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black hover:bg-amber-400">
+                                Réclamer +{c.xp} EXP
+                              </button>
+                            ) : (
+                              <span className="text-pink-300 font-bold">+{c.xp} EXP</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <h3 className="font-black text-white">📊 Bilan de la semaine <span className="text-xs text-slate-400 font-semibold">(vs semaine précédente)</span></h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { k: 'sessions', l: 'Séances', u: '' },
+                      { k: 'days', l: 'Jours actifs', u: '' },
+                      { k: 'kcal', l: 'Calories brûlées', u: ' kcal' },
+                      { k: 'km', l: 'Distance', u: ' km' },
+                      { k: 'volume', l: 'Volume soulevé', u: ' kg' },
+                      { k: 'reps', l: 'Répétitions', u: '' }
+                    ].map(m => {
+                      const diff = Math.round((weekData.cur[m.k] - weekData.prev[m.k]) * 10) / 10;
+                      return (
+                        <div key={m.k} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                          <span className="text-[10px] font-bold uppercase text-slate-400 block">{m.l}</span>
+                          <span className="text-xl font-black text-white">{weekData.cur[m.k]}{m.u}</span>
+                          <span className={`block text-xs font-bold ${diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
+                            {diff > 0 ? '▲ +' : diff < 0 ? '▼ ' : '＝ '}{diff !== 0 ? diff : 'stable'}{diff !== 0 ? m.u : ''}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                  <h3 className="font-black text-white">🏅 Records personnels</h3>
+                  {records.length === 0 && <p className="text-xs text-slate-400">Enregistrez une séance pour voir vos records apparaître.</p>}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {records.map(g => (
+                      <div key={g.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                        <p className="font-extrabold text-white text-sm mb-1.5">{g.icon} {g.name}</p>
+                        {g.recs.map(r => (
+                          <div key={r.key} className="flex items-center justify-between text-xs py-0.5">
+                            <span className="text-slate-400">{r.label}</span>
+                            <span className="text-right">
+                              <b className="text-pink-300">{r.text}</b>
+                              <span className="text-slate-500 ml-1.5">{r.date ? r.date.slice(8, 10) + '/' + r.date.slice(5, 7) : ''}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            )}
+
             {/* ONGLET 5 : TROPHÉES */}
             {activeTab === 'trophies' && (
               <div className="space-y-6">
@@ -4607,16 +5404,30 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         }`}
                       >
                         <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-2xl shrink-0">
-                          {ach.icon}
+                          {ach.secret && !unlocked ? '❔' : ach.icon}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-extrabold text-white text-sm">{ach.title}</h4>
+                            <h4 className="font-extrabold text-white text-sm">{ach.secret && !unlocked ? 'Trophée secret' : ach.title}</h4>
                             {unlocked && (
                               <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 mt-1">{ach.desc}</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {ach.secret && !unlocked ? 'Continuez à vous entraîner pour le découvrir…' : ach.desc}
+                          </p>
+                          {!unlocked && ACH_PROGRESS[ach.id] && !ach.secret && (() => {
+                            const pr = ACH_PROGRESS[ach.id];
+                            const cur = Math.min(pr.max, Number(achStats[pr.key]) || 0);
+                            return (
+                              <div className="mt-2">
+                                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-pink-500" style={{ width: `${(cur / pr.max) * 100}%` }} />
+                                </div>
+                                <span className="text-[10px] text-slate-400">{Math.round(cur * 10) / 10} / {pr.max}</span>
+                              </div>
+                            );
+                          })()}
                           <span className="inline-block mt-2 text-[11px] font-bold text-pink-300">
                             Bonus : +{ach.xpBonus} EXP
                           </span>
@@ -4652,6 +5463,20 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                     <X className="w-5 h-5" />
                   </button>
                 </div>
+
+                {(() => {
+                  const hs = (logModalQuest.history || []).filter(h => !isStartEntry(h));
+                  const last = hs[hs.length - 1];
+                  if (!last) return null;
+                  const txt = logModalQuest.type === 'cardio'
+                    ? `${last.value} ${logModalQuest.unit}${last.durationMin ? ` en ${last.durationMin} min` : ''}`
+                    : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} reps${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
+                  return (
+                    <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 py-2 text-xs text-indigo-100">
+                      🕘 Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
+                    </div>
+                  );
+                })()}
 
                 <form onSubmit={handleSaveSession} className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
@@ -5285,60 +6110,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                       <label className="block text-xs font-bold text-slate-300 mb-1.5">
                         Choisir un exercice dans le Pokédex
                       </label>
-                      <select
-                        value={formCatalogId}
-                        onChange={e => handleSelectCatalogExercise(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white"
-                      >
-                        <optgroup label="🦅 Dos & Poids du Corps">
-                          {EXERCISE_CATALOG.filter(c => c.category === 'Dos').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name}
-                            </option>
-                          ))}
-                          <option value="custom_bodyweight">
-                            ✨ Autre exercice au poids du corps personnalisé...
-                          </option>
-                        </optgroup>
-                        <optgroup label="🛡️ Pectoraux">
-                          {EXERCISE_CATALOG.filter(c => c.category === 'Pectoraux').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="🦵 Jambes">
-                          {EXERCISE_CATALOG.filter(c => c.category === 'Jambes').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="💪 Épaules & Bras">
-                          {EXERCISE_CATALOG.filter(c => c.category === 'Épaules & Bras').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name}
-                            </option>
-                          ))}
-                          <option value="custom_strength">
-                            ✨ Autre exercice avec charge (kg) personnalisé...
-                          </option>
-                        </optgroup>
-                        <optgroup label="🍫 Abdominaux & Gainage">
-                          {EXERCISE_CATALOG.filter(c => c.category === 'Abdominaux').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="🏃 Course à pied, Marche & Cardio">
-                          {EXERCISE_CATALOG.filter(c => c.type === 'cardio').map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.icon} {c.name} ({c.unit})
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
+                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
                     </div>
                   )}
 
