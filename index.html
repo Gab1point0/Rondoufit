@@ -721,7 +721,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     //  - Spiering 2021 : dose minimale pour conserver la force/le muscle (déficit calorique).
     //  - Garthe 2011 : perte de poids ≈ 0,5-1 % du poids de corps par semaine pour préserver la masse maigre.
     // ==========================================================================
-    const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [], cycleWeeks: 0, cycleStart: null, weeklyClaimed: [], profile: { heightCm: '', age: '', sex: 'm' }, readiness: null, plan: null };
+    const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [], volleySkips: [], volleyExtra: [], cycleWeeks: 0, cycleStart: null, weeklyClaimed: [], profile: { heightCm: '', age: '', sex: 'm' }, readiness: null, plan: null };
     const getCoachSettings = state => ({ ...COACH_DEFAULTS, ...((state && state.coach) || {}) });
     const COACH_ARENAS = ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'];
     const COACH_DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -915,16 +915,22 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     }
 
     // Contraintes d'un jour : volley (jeudi/vendredi par défaut), match, récupération
+    // Volley un jour donné : jours habituels, sauf les dates « pas de volley », plus les volleys exceptionnels
+    function coachHasVolley(coach, iso) {
+      if ((coach.volleyExtra || []).includes(iso)) return true;
+      if ((coach.volleySkips || []).includes(iso)) return false;
+      return (coach.volleyDays || []).includes(coachDow(iso));
+    }
     function coachDayInfo(iso, coach) {
       const volleyDays = coach.volleyDays || [];
       const matches = new Set(coach.matchDates || []);
       const dow = coachDow(iso);
-      const isVolley = volleyDays.includes(dow);
+      const isVolley = coachHasVolley(coach, iso);
       const isMatch = matches.has(iso);
       const next1 = addDaysISO(iso, 1);
       const next2 = addDaysISO(iso, 2);
       const prev1 = addDaysISO(iso, -1);
-      const volleyNext = volleyDays.includes(coachDow(next1)) || matches.has(next1);
+      const volleyNext = coachHasVolley(coach, next1) || matches.has(next1);
       const matchSoon = matches.has(next1) || matches.has(next2);
       const afterMatch = matches.has(prev1);
       const legsOk = !isVolley && !isMatch && !volleyNext && !matchSoon && !afterMatch;
@@ -1613,6 +1619,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       const [matchInput, setMatchInput] = useState('');
       const [serie, setSerie] = useState({ dow: 0, from: today, to: addDaysISO(today, 364) });
       const [addSel, setAddSel] = useState('');
+      const [extraVolleyInput, setExtraVolleyInput] = useState('');
       const [shortMode, setShortMode] = useState(false);
       const [swapFor, setSwapFor] = useState(null);
 
@@ -1656,6 +1663,16 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       };
 
       const weekStart0 = getWeekStart(today);
+      const upcomingVolley = [];
+      for (let i = 0; i < 28 && upcomingVolley.length < 12; i++) {
+        const d = addDaysISO(today, i);
+        if ((coach.volleyDays || []).includes(coachDow(d))) upcomingVolley.push(d);
+      }
+      const toggleVolleySkip = d => {
+        const set = new Set(coach.volleySkips || []);
+        if (set.has(d)) set.delete(d); else set.add(d);
+        updateCoach({ volleySkips: Array.from(set).sort() });
+      };
       const matchList = (coach.matchDates || []).filter(d => d >= today).slice().sort();
       const addMatches = list => {
         const set = new Set(coach.matchDates || []);
@@ -2154,6 +2171,29 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                   {dayShort[dow]}
                 </button>
               ))}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-300 font-bold">🏐 Pas de volley (ou volley en plus)</p>
+              <p className="text-[11px] text-slate-500">Touche un jour d’entraînement habituel pour dire que tu n’as pas volley ce jour-là : le coach te laisse alors faire des jambes la veille et planifier la muscu ce jour-là.</p>
+              <div className="flex flex-wrap gap-1.5">
+                {upcomingVolley.map(d => {
+                  const skipped = (coach.volleySkips || []).includes(d);
+                  return (
+                    <button key={d} onClick={() => toggleVolleySkip(d)}
+                      className={`px-2 py-1 rounded-lg border text-[11px] font-bold ${skipped ? 'bg-slate-800 border-slate-600 text-slate-500 line-through' : 'bg-sky-600/80 border-sky-400 text-white'}`}>
+                      🏐 {coachDayLabel(d)}{skipped ? ' · annulé' : ''}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-slate-400">Volley exceptionnel :</span>
+                <input type="date" value={extraVolleyInput} min={today} onChange={e => setExtraVolleyInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
+                <button disabled={!extraVolleyInput} onClick={() => { updateCoach({ volleyExtra: Array.from(new Set([...(coach.volleyExtra || []), extraVolleyInput])).sort() }); setExtraVolleyInput(''); }} className="px-3 py-1.5 rounded-lg bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black">Ajouter</button>
+                {(coach.volleyExtra || []).filter(d => d >= today).map(d => (
+                  <button key={d} onClick={() => updateCoach({ volleyExtra: (coach.volleyExtra || []).filter(x => x !== d) })} className="px-2 py-1 rounded-lg bg-sky-600/80 text-white text-[11px] font-bold">🏐 {coachDayLabel(d)} ✕</button>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
               <p className="text-xs text-slate-300 font-bold">🏆 Jours de match</p>
