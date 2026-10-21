@@ -408,6 +408,10 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       ['fp_toes_to_bar','Toes to Bar','Abdominaux','Poids du corps','reps',3,10,3,8,'🦿'],
       ['fp_plank','Gainage Planche (en secondes)','Abdominaux','Poids du corps','reps',30,90,3,60,'🧱'],
       ['fp_side_plank','Gainage Latéral (en secondes)','Abdominaux','Poids du corps','reps',20,60,3,45,'🧱'],
+      ['fp_hollow_hold','Hollow Body Hold (en secondes)','Abdominaux','Poids du corps','reps',15,45,3,30,'🍫'],
+      ['fp_wall_sit','Chaise Murale / Wall Sit (en secondes)','Jambes','Poids du corps','reps',30,90,3,60,'🪑'],
+      ['fp_dead_hang','Suspension à la Barre / Dead Hang (en secondes)','Dos','Poids du corps','reps',20,60,3,45,'🪝'],
+      ['fp_superman_hold','Superman Hold Lombaires (en secondes)','Dos','Poids du corps','reps',20,45,3,30,'🦸'],
       ['fp_mountain','Mountain Climbers','Abdominaux','Poids du corps','reps',20,50,3,30,'⛰️'],
       ['fp_bicycle','Crunch Vélo (Bicycle Crunch)','Abdominaux','Poids du corps','reps',16,40,3,30,'🚲'],
       ['fp_reverse_crunch','Crunch Inversé','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
@@ -516,6 +520,13 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       );
     }
 
+    const TIMED_PRESETS = [
+      { label: '3 × 20 s', sets: 3, reps: 20 },
+      { label: '3 × 30 s', sets: 3, reps: 30 },
+      { label: '3 × 45 s', sets: 3, reps: 45 },
+      { label: '3 × 60 s', sets: 3, reps: 60 },
+      { label: '4 × 30 s', sets: 4, reps: 30 }
+    ];
     const SETS_REPS_PRESETS = [
       { label: '3 × 6 reps', sets: 3, reps: 6 },
       { label: '3 × 8 reps', sets: 3, reps: 8 },
@@ -579,12 +590,34 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     }
 
     // ---------- Données dérivées (stats, semaine, défis, records) ----------
+    // Exercices chronométrés (gainage, planche, chaise murale…) : les « répétitions » sont des secondes
+    const TIMED_IDS = new Set(['fp_plank', 'fp_side_plank', 'fp_wall_sit', 'fp_dead_hang', 'fp_hollow_hold', 'fp_superman_hold']);
+    const TIMED_NAME_RE = /gainage|planche|plank|chaise murale|wall sit|dead hang|suspension [aà] la barre|hollow|superman|isometri/i;
+    const timedNameOf = name => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isTimedCatalog = c => !!c && c.type !== 'cardio' && (TIMED_IDS.has(c.id) || TIMED_NAME_RE.test(timedNameOf(c.name)));
+    const isTimedQuest = q => {
+      if (!q || q.type === 'cardio' || q.unit === 'kg') return false;
+      if (q.timed === true) return true;
+      if (q.timed === false) return false;
+      return TIMED_IDS.has(q.catalogId) || TIMED_NAME_RE.test(timedNameOf(q.name));
+    };
+    const repUnit = q => (isTimedQuest(q) ? 's' : 'reps');
+    // Valeurs conseillées à la création d'un exercice chronométré
+    function timedAdvice(name) {
+      const n = timedNameOf(name).toLowerCase();
+      if (/lateral|side/.test(n)) return { start: 20, sets: 3, reps: 45, tip: 'Gainage latéral : pars de ce que tu tiens proprement sur un côté (ex. 20 s) et vise 3 × 45 s par côté.' };
+      if (/hollow/.test(n)) return { start: 15, sets: 3, reps: 30, tip: 'Hollow hold : pars de 15 s et vise 3 × 30 s (dos bien plaqué au sol).' };
+      if (/superman/.test(n)) return { start: 20, sets: 3, reps: 30, tip: 'Superman hold : pars de 20 s et vise 3 × 30 s.' };
+      if (/dead hang|suspension/.test(n)) return { start: 20, sets: 3, reps: 45, tip: 'Suspension : pars de 20 s et vise 3 × 45 s.' };
+      if (/chaise|wall sit/.test(n)) return { start: 30, sets: 3, reps: 60, tip: 'Chaise murale : pars de 30 s et vise 3 × 60 s.' };
+      return { start: 30, sets: 3, reps: 60, tip: 'Gainage : pars de la durée que tu tiens proprement sur la 1re série (ex. 30 s) et vise 3 × 60 s.' };
+    }
     const isStartEntry = h => String(h.note || '').startsWith('Point de départ');
     const isVolleyQuest = q => /volley/i.test(`${q.category || ''} ${q.catalogId || ''} ${q.name || ''}`);
     const getAllEntries = state =>
       (state.quests || []).flatMap(q => (q.history || []).filter(h => !isStartEntry(h)).map(h => ({ ...h, quest: q })));
     const entryReps = e =>
-      Array.isArray(e.setDetails)
+      isTimedQuest(e.quest) ? 0 : Array.isArray(e.setDetails)
         ? e.setDetails.reduce((a, r) => a + (Number(r) || 0), 0)
         : e.quest.type === 'strength' ? (Number(e.sets) || 0) * (Number(e.reps) || 0) : 0;
     const entryVolume = e => (e.quest.type === 'strength' && e.quest.unit === 'kg' ? entryReps(e) * (Number(e.value) || 0) : 0);
@@ -650,8 +683,8 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
             recs.push({ key: `${q.id}:kg`, label: 'Charge max', text: `${k.v} kg`, score: k.v, date: k.date });
           }
           const r = pick(setMax);
-          recs.push({ key: `${q.id}:reps`, label: 'Meilleure série', text: `${r.v} reps`, score: r.v, date: r.date });
-          if (q.unit === 'reps') {
+          recs.push({ key: `${q.id}:reps`, label: isTimedQuest(q) ? 'Plus longue série' : 'Meilleure série', text: `${r.v} ${repUnit(q)}`, score: r.v, date: r.date });
+          if (q.unit === 'reps' && !isTimedQuest(q)) {
             const wa = es.filter(h => h.assistanceKg !== undefined && h.assistanceKg !== null);
             if (wa.length) {
               const m = wa.reduce((b, h) => (Number(h.assistanceKg) < Number(b.assistanceKg) ? h : b));
@@ -768,6 +801,8 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     function computeExerciseTarget(q, opts = {}) {
       const today = opts.today || getTodayISODate();
       const kind = coachKind(q);
+      const T = isTimedQuest(q);
+      const inc = T ? 5 : 1;
       let sets = Math.max(1, Math.min(6, Number(q.goalSets) || 3));
       const R = Math.max(1, Number(q.goalReps) || 6);
       const goalAssist = Number(q.goalAssistanceKg) || 0;
@@ -791,7 +826,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
             ? `Charge de départ : ${load} kg. Ajuste-la pendant la séance si c'est trop lourd ou trop léger.`
             : kind === 'assisted'
               ? `Départ avec ${assist} kg d'aide.`
-              : `Objectif : ${R} répétitions par série.`;
+              : T ? `Objectif : ${R} s par série. Pars de ce que tu tiens proprement et ajoute environ 5 s par séance.` : `Objectif : ${R} répétitions par série.`;
       } else {
         const prevSets = coachSetsOf(last, sets, R);
         const padded = Array.from({ length: sets }, (_, i) => Number(prevSets[i]) || 0);
@@ -842,13 +877,13 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
             }
           } else {
             change = 'goal';
-            reason = 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Quêtes.';
+            reason = T ? 'Objectif de durée atteint ! Valide le niveau suivant dans l’onglet Quêtes.' : 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Quêtes.';
           }
           reps = Array(sets).fill(R);
         } else {
           change = 'hold';
-          reps = padded.map(r => Math.min(R, Math.max(1, r + 1)));
-          reason = `Dernière fois : ${padded.join(' - ')}. On garde la même ${holdWord} et on vise +1 rép par série (objectif ${R}).`;
+          reps = padded.map(r => Math.min(R, Math.max(1, r + inc)));
+          reason = `Dernière fois : ${padded.join(' - ')}${T ? ' s' : ''}. On garde la même ${holdWord} et on vise +${inc}${T ? ' s' : ' rép'} par série (objectif ${R}${T ? ' s' : ''}).`;
           const prev = entries[entries.length - 2];
           if (prev) {
             const pSets = Array.from({ length: sets }, (_, i) => Number(coachSetsOf(prev, sets, R)[i]) || 0);
@@ -886,7 +921,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       return {
         questId: q.id, name: q.name, icon: q.icon, arena, kind, compound,
         restSec: compound ? 150 : 90, sets, targetReps: reps, goalReps: R,
-        load, assist, change, reason, unit: q.unit, equip: coachEquip(q)
+        load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T
       };
     }
 
@@ -1207,7 +1242,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       const w = Number(state.userWeightKg) || 82;
       const estMin = coachEstimateMin(exercises);
       const estKcal = exercises.reduce(
-        (sum, e) => sum + calculateStrengthCalories({ unit: e.unit, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
+        (sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
         0
       );
       const first = exercises.find(e => e.kind === 'load' && e.load >= 20);
@@ -1299,7 +1334,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       const w = Number(state.userWeightKg) || 82;
       const estMin = Math.round(5 + exercises.reduce((s, e) => s + e.sets * (0.75 + e.restSec / 60), 0));
       const estKcal = exercises.reduce(
-        (s, e) => s + calculateStrengthCalories({ unit: e.unit, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
+        (s, e) => s + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
         0
       );
       const first = exercises.find(e => e.kind === 'load' && e.load >= 20);
@@ -1571,7 +1606,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
         let pr = '';
         if (prior.length) {
           if (kind === 'load' && entry.value > Math.max(0, ...prior.map(h => Number(h.value) || 0))) pr = `nouveau record de charge : ${coachFmt(entry.value)} kg`;
-          else if (kind !== 'load' && best > Math.max(0, ...prior.map(h => Math.max(0, ...(h.setDetails || [0]))))) pr = `nouveau record : ${best} reps sur une série`;
+          else if (kind !== 'load' && best > Math.max(0, ...prior.map(h => Math.max(0, ...(h.setDetails || [0]))))) pr = `nouveau record : ${best} ${nq.timed === true || isTimedQuest(nq) ? 's' : 'reps'} sur une série`;
           else if (kind === 'assisted' && (Number(entry.assistanceKg) || 0) < Math.min(...prior.map(h => Number(h.assistanceKg) || 0))) pr = `moins d’aide qu’avant : ${coachFmt(entry.assistanceKg)} kg`;
         }
         if (pr) prs++;
@@ -1579,10 +1614,10 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
         const ton = kind === 'load' ? tonOf(entry) : 0;
         if (kind === 'load' && prior.length) { tonnage += ton; prevTonnage += tonOf(prior[prior.length - 1]); }
         const nt = computeExerciseTarget(nq, { today: addDaysISO(today, 3) });
-        const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, aide ${coachFmt(nt.assist)} kg` : `${nt.sets} × ${nt.goalReps} reps`;
+        const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, aide ${coachFmt(nt.assist)} kg` : `${nt.sets} × ${nt.goalReps} ${nt.timed ? 's' : 'reps'}`;
         rows.push({
           name: nq.name, icon: nq.icon, pr,
-          summary: `${(entry.setDetails || []).join(' - ')} reps${kind === 'load' ? ` à ${coachFmt(entry.value)} kg` : kind === 'assisted' ? ` · aide ${coachFmt(entry.assistanceKg)} kg` : ''}`,
+          summary: `${(entry.setDetails || []).join(' - ')} ${isTimedQuest(nq) ? 's' : 'reps'}${kind === 'load' ? ` à ${coachFmt(entry.value)} kg` : kind === 'assisted' ? ` · aide ${coachFmt(entry.assistanceKg)} kg` : ''}`,
           next: nextTxt, ton
         });
       });
@@ -2155,7 +2190,8 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                   {shownSession.exercises.map(e => {
                     const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
                     const uniform = e.targetReps.every(r => r === e.targetReps[0]);
-                    const repsTxt = uniform ? `${e.sets} × ${e.targetReps[0]} reps` : `${e.sets} séries : ${e.targetReps.join(' - ')} reps`;
+                    const ru = e.timed ? 's' : 'reps';
+                    const repsTxt = uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
                     const loadTxt = e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · aide ${coachFmt(e.assist)} kg` : '';
                     return (
                       <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
@@ -2503,7 +2539,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
             <div className="grid gap-2 sm:grid-cols-2">
               {questRows.map(r => {
                 const t = r.target;
-                const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `aide ${coachFmt(t.assist)} kg × ${t.goalReps}` : `${t.goalReps} reps`;
+                const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `aide ${coachFmt(t.assist)} kg × ${t.goalReps}` : `${t.goalReps} ${t.timed ? 's' : 'reps'}`;
                 const eta = r.eta.done ? '✅ Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : 'Estimation après 3 séances';
                 const sugg = r.plateau ? coachSuggestExercises(gameState, r.arena, 2) : [];
                 return (
@@ -2747,10 +2783,18 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
           if (!(isLastSet && isLastEx)) startRest(it.restSec);
         }
       };
+      const [sw, setSw] = useState(null);
+      const toggleSw = i => {
+        if (sw && sw.i === i) {
+          const sec = Math.max(1, Math.round((Date.now() - sw.start) / 1000));
+          patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? sec : r)) });
+          setSw(null);
+        } else setSw({ i, start: Date.now() });
+      };
       const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
       const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false] });
       const removeSet = () => { if (d.reps.length > 1) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1) }); };
-      const goto = idx => setG(prev => ({ ...prev, idx: Math.max(0, Math.min(items.length - 1, idx)), phase: 'run' }));
+      const goto = idx => { setSw(null); setG(prev => ({ ...prev, idx: Math.max(0, Math.min(items.length - 1, idx)), phase: 'run' })); };
       const doneCount = it ? d.done.filter(Boolean).length : 0;
       const step = it && it.kind === 'load' ? (it.equip === 'Haltères' ? (d.load < 10 ? 1 : 2) : d.load < 10 ? 1 : 2.5) : 2.5;
 
@@ -2830,12 +2874,17 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                     <div key={i} className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 ${d.done[i] ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-950 border-slate-800'}`}>
                       <div>
                         <p className="text-sm font-black text-white">Série {i + 1}</p>
-                        <p className="text-[10px] text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} reps</p>
+                        <p className="text-[10px] text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <button onClick={() => setReps(i, (Number(r) || 0) - 1)} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">−</button>
+                        <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">−</button>
                         <input type="number" value={r} onChange={e => setReps(i, Number(e.target.value) || 0)} className="w-14 text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-lg font-black text-white" />
-                        <button onClick={() => setReps(i, (Number(r) || 0) + 1)} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">+</button>
+                        <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">+</button>
+                        {it.timed && (
+                          <button onClick={() => toggleSw(i)} className={`px-2 h-9 rounded-lg text-xs font-black ${sw && sw.i === i ? 'bg-rose-600 text-white' : 'bg-cyan-700 text-white'}`}>
+                            {sw && sw.i === i ? `■ ${Math.max(0, Math.round((now - sw.start) / 1000))} s` : '⏱ Chrono'}
+                          </button>
+                        )}
                       </div>
                       <button onClick={() => toggleSet(i)} className={`px-3 py-2 rounded-lg text-sm font-black ${d.done[i] ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'}`}>
                         {d.done[i] ? '✔ Faite' : 'Faite'}
@@ -2861,7 +2910,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                     <div key={x.questId} className="flex items-center justify-between gap-2 text-sm bg-slate-950 border border-slate-800 rounded-xl p-2.5">
                       <span className="font-bold text-white truncate">{x.icon} {x.name}</span>
                       <span className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
-                        {reps.length ? `${reps.join(' - ')} reps${x.kind === 'load' ? ` · ${coachFmt(dd.load)} kg` : x.kind === 'assisted' ? ` · aide ${coachFmt(dd.assist)} kg` : ''}` : 'passé'}
+                        {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${coachFmt(dd.load)} kg` : x.kind === 'assisted' ? ` · aide ${coachFmt(dd.assist)} kg` : ''}` : 'passé'}
                       </span>
                     </div>
                   );
@@ -3047,9 +3096,9 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     }
 
     // Calories NETTES (hors métabolisme de repos : 1 MET = 1 kcal/kg/h retiré)
-    function calculateStrengthCalories({ unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82 }) {
+    function calculateStrengthCalories({ unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82, timed = false }) {
       const numSets = Math.max(1, setDetails.length);
-      const totalReps = setDetails.reduce((acc, r) => acc + (Number(r) || 0), 0);
+      const totalReps = setDetails.reduce((acc, r) => acc + (Number(r) || 0), 0) / (timed ? 3 : 1);
       const durationHours = (numSets * 2.2 + totalReps * 0.05) / 60;
       const effectiveLoad = unit === 'reps'
         ? Math.max(15, userWeightKg * 0.78 - (Number(assistanceKg) || 0))
@@ -3272,16 +3321,16 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
       if (currTotalReps > prevTotalReps) {
         improved = true;
-        badges.push(`🔁 +${currTotalReps - prevTotalReps} reps au volume total`);
+        badges.push(`🔁 +${currTotalReps - prevTotalReps} ${repUnit(quest)} au volume total`);
       }
 
       const prevSummary = quest.unit === 'kg'
         ? `${prevEntry.value} kg • [${formatSetsBreakdown(prevSetsArr)}]`
-        : `[${formatSetsBreakdown(prevSetsArr)}] (${Number(prevEntry.assistanceKg) > 0 ? `Aide ${prevEntry.assistanceKg}kg` : 'Strict 0kg'})`;
+        : isTimedQuest(quest) ? `[${formatSetsBreakdown(prevSetsArr)}] s` : `[${formatSetsBreakdown(prevSetsArr)}] (${Number(prevEntry.assistanceKg) > 0 ? `Aide ${prevEntry.assistanceKg}kg` : 'Strict 0kg'})`;
 
       const currSummary = quest.unit === 'kg'
         ? `${currentEntry.value} kg • [${formatSetsBreakdown(currSetsArr)}]`
-        : `[${formatSetsBreakdown(currSetsArr)}] (${Number(currentEntry.assistanceKg) > 0 ? `Aide ${currentEntry.assistanceKg}kg` : 'Strict 0kg'})`;
+        : isTimedQuest(quest) ? `[${formatSetsBreakdown(currSetsArr)}] s` : `[${formatSetsBreakdown(currSetsArr)}] (${Number(currentEntry.assistanceKg) > 0 ? `Aide ${currentEntry.assistanceKg}kg` : 'Strict 0kg'})`;
 
       return {
         isFirst: false,
@@ -3999,6 +4048,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       fp_toes_to_bar: ['toes to bar', 'toes bar', 'ttb', 'orteils barre'],
       fp_plank: ['gainage', 'planche', 'plank', 'gainage planche'],
       fp_side_plank: ['gainage lateral', 'planche laterale', 'side plank'],
+      fp_hollow_hold: ['hollow', 'hollow body', 'hollow hold'],
+      fp_wall_sit: ['chaise murale', 'wall sit', 'chaise au mur'],
+      fp_dead_hang: ['suspension barre', 'dead hang', 'suspension a la barre'],
+      fp_superman_hold: ['superman', 'superman hold'],
       fp_mountain: ['mountain climbers', 'mountain climber', 'grimpeurs'],
       fp_bicycle: ['crunch velo', 'bicycle crunch', 'abdos velo', 'bicycle crunchs'],
       fp_reverse_crunch: ['crunch inverse', 'reverse crunch', 'crunchs inverses'],
@@ -4311,6 +4364,15 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           segWithoutAssist = segWithoutAssist.replace(kgMatch[0], ' ');
         }
 
+        // 2bis. Exercice chronométré : « 45 secondes », « 1 minute », « 1 minute 30 »
+        const timedEx = anchor.quest ? isTimedQuest(anchor.quest) : isTimedCatalog(anchor.catalog || ref);
+        if (timedEx) {
+          segWithoutAssist = segWithoutAssist
+            .replace(/(\d+)\s*minutes?\s*(?:et\s*)?(\d+)\s*(?:secondes?|sec)\b/g, (m, a, b) => String(Number(a) * 60 + Number(b)))
+            .replace(/(\d+)\s*minutes?\b/g, (m, a) => String(Number(a) * 60))
+            .replace(/(\d+)\s*(?:secondes?|sec)\b/g, '$1');
+        }
+
         // 3. Extraction intelligente des séries et répétitions
         let setDetails = [];
         // Format uniforme : "3 séries de 10", "3 x 10", "3 fois 10", "4 par 8"
@@ -4331,7 +4393,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           const cleanedForReps = segWithoutAssist.replace(/(\d+)\s*series?(?!\s*(?:de|a|\d))/g, ' ');
           const allNums = (cleanedForReps.match(/\d+/g) || [])
             .map(Number)
-            .filter(n => n > 0 && n <= 100);
+            .filter(n => n > 0 && n <= (timedEx ? 600 : 100));
 
           if (allNums.length >= 2) {
             setDetails = allNums.slice(0, 8);
@@ -4348,6 +4410,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         const unit = anchor.quest?.unit || ref.unit || (kgMatch ? 'kg' : 'reps');
         const kcal = calculateStrengthCalories({
           unit,
+          timed: timedEx,
           weightKg: unit === 'kg' ? weightKg : 0,
           assistanceKg: unit === 'reps' ? assistanceKg : 0,
           setDetails,
@@ -4368,8 +4431,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           assistanceKg: unit === 'reps' ? assistanceKg : 0,
           setDetails,
           calories: kcal,
-          summary: `${unit === 'kg' ? `${weightKg} kg • ` : ''}[${setDetails.join(' - ')} reps]${
-            unit === 'reps' && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''
+          timed: timedEx,
+          summary: `${unit === 'kg' ? `${weightKg} kg • ` : ''}[${setDetails.join(' - ')} ${timedEx ? 's' : 'reps'}]${
+            unit === 'reps' && !timedEx && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''
           }`
         };
       });
@@ -4550,6 +4614,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 category: item.category,
                 type: item.type,
                 unit: item.unit,
+                timed: item.timed ? true : undefined,
                 goalMode: 'sets_reps',
                 cardioMode: item.type === 'cardio' ? (item.catalogRef?.cardioMode || 'run') : undefined,
                 durationMin: item.type === 'cardio' ? item.durationMin : undefined,
@@ -4957,6 +5022,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       const [formCategory, setFormCategory] = useState('Dos');
       const [formType, setFormType] = useState('strength');
       const [formUnit, setFormUnit] = useState('reps');
+      const [formTimed, setFormTimed] = useState(false);
       const [formGoalMode, setFormGoalMode] = useState('sets_reps');
       const [formCardioMode, setFormCardioMode] = useState('run');
       const [formIcon, setFormIcon] = useState('🦅');
@@ -5040,6 +5106,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 questIcon: quest.icon,
                 questType: quest.type,
                 questUnit: quest.unit,
+                questTimed: isTimedQuest(quest),
                 goalMode: quest.goalMode || 'sets_reps',
                 goalSets: quest.goalSets || 3,
                 goalReps: quest.goalReps || quest.goalValue || 6
@@ -5084,7 +5151,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
             byDate[dateKey].totalKcal += Number(entry.calories) || 0;
             byDate[dateKey].totalSets += setsArr.length;
-            byDate[dateKey].totalReps += setsArr.reduce((a, b) => a + b, 0);
+            if (!isTimedQuest(quest)) byDate[dateKey].totalReps += setsArr.reduce((a, b) => a + b, 0);
             if (comparison.improved) byDate[dateKey].improvedCount += 1;
             if (comparison.goalBeaten) byDate[dateKey].goalsBeatenCount += 1;
 
@@ -5145,6 +5212,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 );
           return calculateStrengthCalories({
             unit: logModalQuest.unit,
+            timed: isTimedQuest(logModalQuest),
             weightKg: logModalQuest.unit === 'kg' ? logValue : 0,
             assistanceKg:
               logModalQuest.unit === 'reps' && logUseAssistance ? logAssistanceKg : 0,
@@ -5246,7 +5314,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           const nextAssist = Math.max(0, currAssist - 5);
           setNextGoalAssistanceKg(nextAssist);
           setNextGoalSets(Number(quest.goalSets) || 3);
-          const nextReps = currAssist === 0 ? (Number(quest.goalReps) || 6) + 2 : Number(quest.goalReps) || 6;
+          const nextReps = currAssist === 0 ? (Number(quest.goalReps) || 6) + (isTimedQuest(quest) ? 10 : 2) : Number(quest.goalReps) || 6;
           setNextGoalReps(nextReps);
           setNextGoalValue(nextReps);
         }
@@ -5441,12 +5509,12 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             newUnlocked.add('sets_master');
             xpEarned += 150;
             bannerTitle = `Format ${goalSets}×${goalReps} Validé !`;
-            bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps}+ reps réussies (${formatSetsBreakdown(finalSetDetails)})`;
+            bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps}+ ${repUnit(q)} réussies (${formatSetsBreakdown(finalSetDetails)})`;
             bannerBadge = '🔴';
           } else if (moreSetsValidated || increasedLoad || reducedAssistance) {
             xpEarned += 120;
             bannerTitle = 'Progression sur l’Objectif !';
-            bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps} reps validées (${formatSetsBreakdown(finalSetDetails)})`;
+            bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps} ${repUnit(q)} validées (${formatSetsBreakdown(finalSetDetails)})`;
             bannerBadge = '🔥';
           }
 
@@ -5467,7 +5535,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           }
 
           const defaultNote =
-            q.unit === 'reps'
+            isTimedQuest(q)
+              ? `Séries : ${formatSetsBreakdown(finalSetDetails)} s • ${validatedSetsNow}/${goalSets} séries validées`
+              : q.unit === 'reps'
               ? `Séries : ${formatSetsBreakdown(finalSetDetails)} reps (${
                   assistanceUsed > 0 ? `Aide ${assistanceUsed} kg` : 'Strict 0 kg'
                 }) • ${validatedSetsNow}/${goalSets} séries validées`
@@ -5600,6 +5670,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           const assistanceUsed = !isKg && it.kind === 'assisted' ? Math.max(0, Number(dd.assist) || 0) : 0;
           const calories = calculateStrengthCalories({
             unit: q.unit,
+            timed: isTimedQuest(q),
             weightKg: isKg ? effectiveValue : 0,
             assistanceKg: assistanceUsed,
             setDetails,
@@ -5692,6 +5763,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           category: cat,
           type: 'strength',
           unit,
+          timed: isTimedCatalog(c) ? true : undefined,
           goalMode: c.defaultGoalMode || 'sets_reps',
           level: 1,
           icon: c.icon,
@@ -5888,6 +5960,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setFormCategory(def.category);
         setFormType(def.type);
         setFormUnit(def.unit);
+        setFormTimed(isTimedCatalog(def));
         setFormGoalMode(def.defaultGoalMode || 'sets_reps');
         setFormCardioMode(def.cardioMode || 'run');
         setFormIcon(def.icon);
@@ -5908,6 +5981,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setFormCategory(normalizeArenaGroup(quest.category, quest.type));
         setFormType(quest.type || 'strength');
         setFormUnit(quest.unit || 'reps');
+        setFormTimed(isTimedQuest(quest));
         setFormGoalMode(quest.goalMode || 'sets_reps');
         setFormCardioMode(quest.cardioMode || 'run');
         setFormIcon(quest.icon || '⚔️');
@@ -5928,6 +6002,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           setFormCategory('Pectoraux');
           setFormType('strength');
           setFormUnit('kg');
+          setFormTimed(false);
           setFormGoalMode('sets_reps');
           setFormIcon('⚔️');
           setFormStartValue(20);
@@ -5944,6 +6019,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
           setFormCategory('Dos');
           setFormType('strength');
           setFormUnit('reps');
+          setFormTimed(false);
           setFormGoalMode('sets_reps');
           setFormIcon('🦅');
           setFormStartValue(4);
@@ -5961,6 +6037,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         setFormCategory(normalizeArenaGroup(found.category, found.type));
         setFormType(found.type);
         setFormUnit(found.unit);
+        setFormTimed(isTimedCatalog(found));
         setFormGoalMode(found.defaultGoalMode || 'sets_reps');
         setFormCardioMode(found.cardioMode || 'run');
         setFormIcon(found.icon);
@@ -5996,6 +6073,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 category: formCategory,
                 type: formType,
                 unit: effectiveUnit,
+                timed: formType === 'strength' && effectiveUnit === 'reps' ? formTimed : undefined,
                 goalMode: formGoalMode,
                 cardioMode: formCardioMode,
                 icon: formIcon,
@@ -6005,9 +6083,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 goalSets: gSets,
                 goalReps: gReps,
                 startAssistanceKg:
-                  effectiveUnit === 'reps' ? Number(formStartAssistanceKg) || 0 : 0,
+                  effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
                 goalAssistanceKg:
-                  effectiveUnit === 'reps' ? Number(formGoalAssistanceKg) || 0 : 0
+                  effectiveUnit === 'reps' && !formTimed ? Number(formGoalAssistanceKg) || 0 : 0
               };
             })
           }));
@@ -6031,9 +6109,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 })
               : calculateStrengthCalories({
                   unit: effectiveUnit,
+                  timed: formTimed,
                   weightKg: effectiveUnit === 'kg' ? startRepsOrVal : 0,
                   assistanceKg:
-                    effectiveUnit === 'reps' ? Number(formStartAssistanceKg) || 0 : 0,
+                    effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
                   setDetails: initialSetDetails,
                   rpe: 7,
                   userWeightKg: gameState.userWeightKg
@@ -6047,6 +6126,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             type: formType,
             cardioMode: formCardioMode,
             unit: effectiveUnit,
+            timed: formType === 'strength' && effectiveUnit === 'reps' ? formTimed : undefined,
             goalMode: formGoalMode,
             level: 1,
             icon: formIcon,
@@ -6057,11 +6137,11 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             goalReps: gReps,
             setDetails: initialSetDetails,
             startAssistanceKg:
-              effectiveUnit === 'reps' ? Number(formStartAssistanceKg) || 0 : 0,
+              effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
             currentAssistanceKg:
-              effectiveUnit === 'reps' ? Number(formStartAssistanceKg) || 0 : 0,
+              effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
             goalAssistanceKg:
-              effectiveUnit === 'reps' ? Number(formGoalAssistanceKg) || 0 : 0,
+              effectiveUnit === 'reps' && !formTimed ? Number(formGoalAssistanceKg) || 0 : 0,
             history: [
               {
                 id: `h_start_${Date.now()}`,
@@ -6071,7 +6151,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                 reps: effectiveUnit === 'reps' ? startRepsOrVal : gReps,
                 setDetails: initialSetDetails,
                 assistanceKg:
-                  effectiveUnit === 'reps' ? Number(formStartAssistanceKg) || 0 : 0,
+                  effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
                 rpe: 7,
                 calories: initialCalories,
                 goalBeaten: false,
@@ -6570,8 +6650,8 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         ) : (
                           <span className="text-pink-300 font-semibold">
                             {act.questUnit === 'kg' ? `${act.value} kg • ` : ''}
-                            [{formatSetsBreakdown(setsArr)} reps]
-                            {act.questUnit === 'reps' && (
+                            [{formatSetsBreakdown(setsArr)} {act.questTimed ? 's' : 'reps'}]
+                            {act.questUnit === 'reps' && !act.questTimed && (
                               <span className="ml-1 text-violet-300">
                                 ({act.assistanceKg > 0 ? `Aide ${act.assistanceKg}kg` : 'Strict 0kg'})
                               </span>
@@ -6788,10 +6868,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                         {goalMode === 'weight_only'
                                           ? `🏋️ Objectif Poids : ${quest.goalValue} kg`
                                           : goalMode === 'reps_only'
-                                          ? `🔁 Objectif Reps : ${goalReps} reps`
+                                          ? `${isTimedQuest(quest) ? '⏱ Objectif Durée' : '🔁 Objectif Reps'} : ${goalReps} ${repUnit(quest)}`
                                           : goalMode === 'free_mode'
                                           ? `🕊️ Entraînement Libre`
-                                          : `🛡️ Objectif : ${goalSets} × ${goalReps} reps`}
+                                          : `🛡️ Objectif : ${goalSets} × ${goalReps} ${repUnit(quest)}`}
                                       </span>
                                     )}
                                   </div>
@@ -6836,21 +6916,25 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                       <span>
                                         Record :{' '}
                                         <strong className="text-white">
-                                          {Math.max(...currentSetsArray, Number(quest.currentValue) || 0)} reps
+                                          {Math.max(...currentSetsArray, Number(quest.currentValue) || 0)} {repUnit(quest)}
                                         </strong>{' '}
-                                        / Cible <strong className="text-amber-300">{goalReps} reps</strong>
+                                        / Cible <strong className="text-amber-300">{goalReps} {repUnit(quest)}</strong>
                                       </span>
                                     ) : (
                                       <span>
                                         Poké-Séries validées :{' '}
                                         <strong className="text-white">
-                                          {Math.min(evalState.validatedSets, goalSets)} / {goalSets} séries de {goalReps} reps
+                                          {Math.min(evalState.validatedSets, goalSets)} / {goalSets} séries de {goalReps} {repUnit(quest)}
                                         </strong>
                                       </span>
                                     )}
                                   </div>
 
-                                  {quest.unit === 'reps' ? (
+                                  {isTimedQuest(quest) ? (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                                      ⏱ Chronométré • Cible {quest.goalValue || goalReps} s
+                                    </span>
+                                  ) : quest.unit === 'reps' ? (
                                     <span
                                       className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
                                         (Number(quest.currentAssistanceKg) || 0) > 0
@@ -6914,9 +6998,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                     <span className="font-bold text-slate-200">
                                       {quest.unit === 'kg'
                                         ? `${quest.startValue} kg`
-                                        : `${quest.startValue} reps`}
+                                        : `${quest.startValue} ${repUnit(quest)}`}
                                     </span>
-                                    {quest.unit === 'reps' && (
+                                    {quest.unit === 'reps' && !isTimedQuest(quest) && (
                                       <span className="block text-[10px] text-violet-300">
                                         {Number(quest.startAssistanceKg) > 0
                                           ? `Aide ${quest.startAssistanceKg}kg`
@@ -6932,11 +7016,12 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                     <span className="font-extrabold text-white">
                                       {goalMode === 'weight_only'
                                         ? `${quest.currentValue} kg`
-                                        : `${formatSetsBreakdown(currentSetsArray)} reps`}
+                                        : `${formatSetsBreakdown(currentSetsArray)} ${repUnit(quest)}`}
                                     </span>
                                     <span className="block text-[10px] text-pink-300">
                                       {quest.unit === 'kg'
                                         ? `Barre à ${quest.currentValue} kg`
+                                        : isTimedQuest(quest) ? 'Chronométré'
                                         : Number(quest.currentAssistanceKg) > 0
                                         ? `Aide ${quest.currentAssistanceKg}kg`
                                         : 'Strict 0kg'}
@@ -6951,12 +7036,13 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                       {goalMode === 'weight_only'
                                         ? `${quest.goalValue} kg`
                                         : goalMode === 'reps_only'
-                                        ? `${goalReps} reps`
-                                        : `${goalSets} × ${goalReps} reps`}
+                                        ? `${goalReps} ${repUnit(quest)}`
+                                        : `${goalSets} × ${goalReps} ${repUnit(quest)}`}
                                     </span>
                                     <span className="block text-[10px] text-amber-200/80">
                                       {quest.unit === 'kg'
                                         ? `à ${quest.goalValue} kg`
+                                        : isTimedQuest(quest) ? 'par série'
                                         : Number(quest.goalAssistanceKg) > 0
                                         ? `Aide ${quest.goalAssistanceKg}kg`
                                         : 'Strict 0kg'}
@@ -7230,7 +7316,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                     🏋️ Charge : {entry.value} kg
                                   </span>
                                 )}
-                                {quest.unit === 'reps' && (
+                                {quest.unit === 'reps' && !isTimedQuest(quest) && (
                                   <span className="px-2.5 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-extrabold">
                                     {(Number(entry.assistanceKg) || 0) > 0
                                       ? `🪢 Aide élastique : -${entry.assistanceKg} kg`
@@ -7242,7 +7328,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                     key={sIdx}
                                     className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200"
                                   >
-                                    Série {sIdx + 1} : <strong className="text-pink-300">{r} reps</strong>
+                                    Série {sIdx + 1} : <strong className="text-pink-300">{r} {repUnit(quest)}</strong>
                                   </span>
                                 ))}
                               </div>
@@ -7441,7 +7527,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                         }[${formatSetsBreakdown(setsArr)}]`
                                       : `${h.value} ${activeChartQuest.unit}`}
                                   </text>
-                                  {activeChartQuest.unit === 'reps' && (
+                                  {activeChartQuest.unit === 'reps' && !isTimedQuest(activeChartQuest) && (
                                     <text
                                       x={cx}
                                       y={cy + 16}
@@ -7925,7 +8011,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                   if (!last) return null;
                   const txt = logModalQuest.type === 'cardio'
                     ? `${last.value} ${logModalQuest.unit}${last.durationMin ? ` en ${last.durationMin} min` : ''}`
-                    : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} reps${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
+                    : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} ${repUnit(logModalQuest)}${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : isTimedQuest(logModalQuest) ? '' : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
                   return (
                     <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 py-2 text-xs text-indigo-100">
                       🕘 Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
@@ -7990,7 +8076,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         </div>
                       )}
 
-                      {logModalQuest.unit === 'reps' && (
+                      {logModalQuest.unit === 'reps' && !isTimedQuest(logModalQuest) && (
                         <div className="bg-slate-950 border border-violet-500/40 rounded-xl p-3.5 space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-violet-200">
@@ -8084,7 +8170,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
                             <span className="text-xs font-extrabold uppercase tracking-wider text-pink-300 block">
-                              🔴 Vos Séries & Répétitions
+                              🔴 {isTimedQuest(logModalQuest) ? 'Vos Séries & Durées (secondes)' : 'Vos Séries & Répétitions'}
                             </span>
                           </div>
 
@@ -8128,7 +8214,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                 className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-[11px] font-extrabold transition"
                               >
                                 ✓ Tout remplir à l’objectif ({logModalQuest.goalSets || 3} ×{' '}
-                                {logModalQuest.goalReps || logModalQuest.goalValue || 6} reps)
+                                {logModalQuest.goalReps || logModalQuest.goalValue || 6} {repUnit(logModalQuest)})
                               </button>
 
                               <div className="flex items-center gap-1.5">
@@ -8175,7 +8261,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                         </span>
                                       ) : (
                                         <span className="text-[11px] text-slate-400">
-                                          Cible : {targetR} reps
+                                          Cible : {targetR} {repUnit(logModalQuest)}
                                         </span>
                                       )}
                                     </div>
@@ -8197,7 +8283,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                                         }
                                         className="w-12 bg-slate-950 border border-slate-700 rounded-lg py-1 text-center font-black text-white text-sm"
                                       />
-                                      <span className="text-xs text-slate-400 font-bold">reps</span>
+                                      <span className="text-xs text-slate-400 font-bold">{repUnit(logModalQuest)}</span>
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateSingleSetRep(idx, 1)}
@@ -8230,12 +8316,12 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                             </div>
                             <div>
                               <label className="block text-[11px] font-bold text-slate-400 mb-1">
-                                Répétitions par série
+                                {isTimedQuest(logModalQuest) ? 'Secondes par série' : 'Répétitions par série'}
                               </label>
                               <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max="600"
                                 value={logUniformReps}
                                 onChange={e =>
                                   handleApplyUniformToSets(logUniformSets, e.target.value)
@@ -8395,7 +8481,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                             </button>
                           </>
                         )}
-                        {levelUpModalQuest.unit === 'reps' && (
+                        {levelUpModalQuest.unit === 'reps' && !isTimedQuest(levelUpModalQuest) && (
                           <button
                             type="button"
                             onClick={() =>
@@ -8409,10 +8495,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         {nextGoalMode !== 'weight_only' && (
                           <button
                             type="button"
-                            onClick={() => setNextGoalReps(r => Number(r) + 2)}
+                            onClick={() => setNextGoalReps(r => Number(r) + (isTimedQuest(levelUpModalQuest) ? 10 : 2))}
                             className="px-2.5 py-1 rounded-lg bg-pink-500/20 text-pink-300 text-xs font-bold border border-pink-500/40"
                           >
-                            +2 reps
+                            {isTimedQuest(levelUpModalQuest) ? '+10 s' : '+2 reps'}
                           </button>
                         )}
                         {nextGoalMode === 'sets_reps' && (
@@ -8458,7 +8544,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                             </div>
                             <div>
                               <label className="block text-xs font-bold text-slate-300 mb-1">
-                                Répétitions par Série
+                                {isTimedQuest(levelUpModalQuest) ? 'Secondes par Série' : 'Répétitions par Série'}
                               </label>
                               <input
                                 type="number"
@@ -8474,7 +8560,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                         {nextGoalMode === 'reps_only' && (
                           <div>
                             <label className="block text-xs font-bold text-pink-300 mb-1">
-                              Nouvel Objectif de Répétitions
+                              {isTimedQuest(levelUpModalQuest) ? 'Nouvel Objectif de Durée (secondes)' : 'Nouvel Objectif de Répétitions'}
                             </label>
                             <input
                               type="number"
@@ -8486,7 +8572,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                           </div>
                         )}
 
-                        {levelUpModalQuest.unit === 'reps' && (
+                        {levelUpModalQuest.unit === 'reps' && !isTimedQuest(levelUpModalQuest) && (
                           <div>
                             <label className="block text-xs font-bold text-violet-300 mb-1">
                               🪢 Aide Élastique Cible en kg (0 = Strict)
@@ -8615,13 +8701,13 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                           },
                           {
                             id: 'reps_only',
-                            title: '🔁 Répétitions',
-                            desc: 'Nombre de reps cible'
+                            title: formTimed ? '⏱ Durée' : '🔁 Répétitions',
+                            desc: formTimed ? 'Secondes à tenir' : 'Nombre de reps cible'
                           },
                           {
                             id: 'sets_reps',
-                            title: '🛡️ Séries × Reps',
-                            desc: 'Ex: 3 séries de 6 reps'
+                            title: formTimed ? '🛡️ Séries × Secondes' : '🛡️ Séries × Reps',
+                            desc: formTimed ? 'Ex: 3 séries de 30 s' : 'Ex: 3 séries de 6 reps'
                           },
 			{
                             id: 'free_mode',
@@ -8651,7 +8737,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                       {formGoalMode === 'sets_reps' && (
                         <div className="space-y-2.5 pt-2">
                           <div className="flex flex-wrap gap-1.5">
-                            {SETS_REPS_PRESETS.map(preset => {
+                            {(formTimed ? TIMED_PRESETS : SETS_REPS_PRESETS).map(preset => {
                               const active =
                                 Number(formGoalSets) === preset.sets &&
                                 Number(formGoalReps) === preset.reps;
@@ -8692,12 +8778,12 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                             </div>
                             <div>
                               <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                                Répétitions par série
+                                {formTimed ? 'Secondes par série' : 'Répétitions par série'}
                               </label>
                               <input
                                 type="number"
                                 min="1"
-                                max="100"
+                                max="600"
                                 value={formGoalReps}
                                 onChange={e => {
                                   setFormGoalReps(e.target.value);
@@ -8713,7 +8799,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                       {formGoalMode === 'reps_only' && (
                         <div className="pt-2">
                           <label className="block text-[11px] font-bold text-pink-200 mb-1">
-                            Objectif de répétitions à atteindre
+                            {formTimed ? 'Durée à atteindre (secondes)' : 'Objectif de répétitions à atteindre'}
                           </label>
                           <input
                             type="number"
@@ -8732,6 +8818,43 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
                   )}
 
                   {formType === 'strength' && formUnit === 'reps' && formGoalMode !== 'weight_only' && (
+                    <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-4 space-y-3">
+                      <label className="flex items-center gap-2 text-xs font-bold text-cyan-200 cursor-pointer">
+                        <input type="checkbox" checked={formTimed} onChange={e => setFormTimed(e.target.checked)} className="w-4 h-4" />
+                        ⏱ Exercice chronométré (gainage, planche, chaise murale…) : la valeur est en secondes
+                      </label>
+                      {formTimed && (() => {
+                        const adv = timedAdvice(formCustomName);
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-[11px] text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
+                                <input type="number" min="1" max="600" value={formStartValue}
+                                  onChange={e => { setFormStartValue(e.target.value); if (!editingQuestId) setFormCurrentValue(e.target.value); }}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
+                              </div>
+                              <div className="flex items-end">
+                                <button type="button" onClick={() => {
+                                  setFormGoalMode('sets_reps');
+                                  setFormStartValue(adv.start);
+                                  if (!editingQuestId) setFormCurrentValue(adv.start);
+                                  setFormGoalSets(adv.sets);
+                                  setFormGoalReps(adv.reps);
+                                  setFormGoalValue(adv.reps);
+                                }} className="w-full py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black">
+                                  Appliquer les valeurs conseillées ({adv.sets} × {adv.reps} s, départ {adv.start} s)
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {formType === 'strength' && formUnit === 'reps' && !formTimed && formGoalMode !== 'weight_only' && (
                     <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
