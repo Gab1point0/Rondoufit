@@ -5,7 +5,12 @@ import { coachSuggestExercises } from '../../coach/suggest';
 import { normalizeArenaGroup } from '../../data/arenas';
 import { card } from './ui';
 
-export function CoachNextSession({ addSel, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp, onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating, sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession, startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach }) {
+export function CoachNextSession({
+  addSel, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
+  sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
+  startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
+}) {
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">

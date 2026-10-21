@@ -1,6 +1,9 @@
 import { Scale, Trash2 } from '../icons';
 
-export function WeightTab({ gameState, handleAddWeightEntry, handleDeleteWeightEntry, newWeightDate, newWeightInput, newWeightNote, setGameState, setNewWeightDate, setNewWeightInput, setNewWeightNote }) {
+export function WeightTab({
+  gameState, handleAddWeightEntry, handleDeleteWeightEntry, newWeightDate, newWeightInput,
+  newWeightNote, setGameState, setNewWeightDate, setNewWeightInput, setNewWeightNote,
+}) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">

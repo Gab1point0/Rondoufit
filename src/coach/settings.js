@@ -2,7 +2,6 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { isStartEntry } from '../lib/quests';
 import { stripAccents } from '../lib/text';
 
-// Minuteur de repos flottant
 // ==========================================================================
 // COACH : progression, planning de la semaine, équilibre, suivi du poids
 // Repères scientifiques utilisés (voir la section « Sources » de l'onglet Coach) :

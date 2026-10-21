@@ -1,5 +1,6 @@
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from './quests';
 
+// Progression d'un exercice (objectif atteint, niveau suivant) et comparaison avec la séance précédente.
 export function evaluateQuestProgress(quest) {
   if (quest.type === 'cardio') {
 if (quest.goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, validatedSets: 1, goalSets: 1, goalReps: 1, setDetails: [] };

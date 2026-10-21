@@ -2,3 +2,5 @@ node_modules
 dist
 .refonte
 *.log
+.claude/
+tests/ui/.sortie.js

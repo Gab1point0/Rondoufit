@@ -1,6 +1,9 @@
 import { Footprints, Plus, RefreshCw, Scale, Volume2, VolumeX } from '../../icons';
 
-export function HeaderActions({ gameState, handleExportJSON, handleImportJSON, importInputRef, openCreateQuestModal, selectedDate, setActiveTab, setConfirmResetOpen, setGameState, setQuickCardioDate, setQuickCardioModalOpen }) {
+export function HeaderActions({
+  gameState, handleExportJSON, handleImportJSON, importInputRef, openCreateQuestModal, selectedDate,
+  setActiveTab, setConfirmResetOpen, setGameState, setQuickCardioDate, setQuickCardioModalOpen,
+}) {
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       <button

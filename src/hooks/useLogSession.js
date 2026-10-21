@@ -5,7 +5,10 @@ import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQue
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
 
-export function useLogSession({ gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast }) {
+export function useLogSession({
+  gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay,
+  triggerToast,
+}) {
   // Modale "Noter Séance"
   const [logModalQuest, setLogModalQuest] = useState(null);
 

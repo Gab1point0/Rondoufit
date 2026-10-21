@@ -21,7 +21,10 @@ import { CoachWeek } from './CoachWeek';
 import { CoachWeeklyGoals } from './CoachWeeklyGoals';
 import { CoachWeightHealth } from './CoachWeightHealth';
 
-export function CoachPanel({ gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab, guidedActive, onResumeGuided, onClaimWeekly }) {
+export function CoachPanel({
+  gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
+  guidedActive, onResumeGuided, onClaimWeekly,
+}) {
   const today = getTodayISODate();
   const coach = getCoachSettings(gameState);
   const [showSources, setShowSources] = useState(false);

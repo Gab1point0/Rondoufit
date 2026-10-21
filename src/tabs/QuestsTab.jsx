@@ -4,7 +4,11 @@ import { formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 
-export function QuestsTab({ filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal, openLevelUpModal, openLogModal, questFilter, setActiveTab, setQuestFilter, setSelectedChartQuestId }) {
+export function QuestsTab({
+  filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
+  openLevelUpModal, openLogModal, questFilter, setActiveTab, setQuestFilter,
+  setSelectedChartQuestId,
+}) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-1.5">

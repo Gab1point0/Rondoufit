@@ -1,4 +1,4 @@
-// ---------- Données dérivées (stats, semaine, défis, records) ----------
+// Aides sur les exercices et leurs séances : exercices chronométrés, entrées d'historique, séries validées.
 // Exercices chronométrés (gainage, planche, chaise murale…) : les « répétitions » sont des secondes
 const TIMED_IDS = new Set(['fp_plank', 'fp_side_plank', 'fp_wall_sit', 'fp_dead_hang', 'fp_hollow_hold', 'fp_superman_hold']);
 

@@ -1,7 +1,10 @@
 import { coachDateFR, coachFmt } from '../../coach/labels';
 import { card } from './ui';
 
-export function CoachWeightHealth({ activity, coach, gameState, nutrition, onQuickCardio, pace, protein, setGameState, strengthTrend, updateCoach }) {
+export function CoachWeightHealth({
+  activity, coach, gameState, nutrition, onQuickCardio, pace, protein, setGameState, strengthTrend,
+  updateCoach,
+}) {
   return (
     <section className={card}>
       <h3 className="font-black text-white">⚖️ Poids & activité</h3>

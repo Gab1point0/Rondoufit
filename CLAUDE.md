@@ -1,39 +1,70 @@
 # Rondoufit — contexte du projet (à lire en premier)
 
-Application de fitness façon RPG Pokémon pour **un seul utilisateur** (français, Gabin). Publiée sur GitHub Pages depuis `main` (repo `gab1point0/rondoufit`).
+Application de fitness façon RPG Pokémon pour **un seul utilisateur** (français, Gabin). Publiée sur GitHub Pages depuis `main` (repo `gab1point0/rondoufit`) : https://gab1point0.github.io/Rondoufit/
 
 ## Règles de travail avec l'utilisateur
-- Parler **français**, réponses courtes, orientées résultat.
-- **Pousser sur `main` automatiquement** une fois les tests faits (autorisation permanente de l'utilisateur, 21/10/2026), puis **expliquer clairement ce qui a changé**. Ne pas publier de données personnelles.
-- Livrer aussi `index.html` à l'utilisateur quand il le demande (il teste souvent depuis son téléphone).
+- Parler **français**, réponses courtes, orientées résultat. L'utilisateur n'est pas développeur : instructions simples, pas de jargon.
+- **Pousser sur `main` automatiquement** une fois les tests faits (autorisation permanente de l'utilisateur, 21/10/2026), puis **expliquer clairement ce qui a changé**. Ne pas publier de données personnelles. Pour un gros chantier (refonte, changement de sauvegarde…), demander avant de publier.
 - Commits : message en français + trailers `Co-Authored-By` / `Claude-Session` demandés par l'environnement.
-- Les évolutions sont des demandes de fonctionnalités ; vérifier dans un navigateur (Playwright) avant de livrer.
+- Les évolutions sont des demandes de fonctionnalités ; lancer `npm test`, puis vérifier dans un navigateur (`npm run dev`) avant de livrer.
 
-## Architecture
-- **Un seul fichier `index.html`** (~520 Ko) : React 18 + Babel + Tailwind par CDN, tout le code dans `<script type="text/babel">`.
-- Sauvegarde : `localStorage` clé `rondoudou_save_v1` + horodatage `rondoudou_local_ts`, et **Google Sheets** via un Google Apps Script (`SCRIPT_URL` en haut du fichier). Feuille « Save RondouFIT », JSON complet en cellule A2 (champ `_savedAt` = horodatage ms).
-- **Photos souvenirs** : IndexedDB `rondoufit_photos` (hors synchro Google), export/import JSON dans l'onglet « 📸 Souvenirs ».
-- État principal `gameState` : `xp, quests, weightHistory, unlockedAchievements, claimedChallenges, userWeightKg, targetWeightKg, coach, …`. Fusionné avec `INITIAL_STATE` au chargement (les nouveaux champs doivent avoir un défaut).
-- Quête : `{id, catalogId, name, category, type:'strength'|'cardio', unit:'kg'|'reps'|'min'|'km', goalMode, goalSets, goalReps, startValue, currentValue, goalValue, setDetails, history[], timed?}`. Entrées « Point de départ » reconnues par `isStartEntry`.
-
-## Fonctions principales
-- **Catalogue d'exercices** (`BASE_EXERCISE_CATALOG`, `NEW_STRENGTH_ROWS`, alias vocaux). Salle de l'utilisateur : abdos obliques/transverses uniquement via les machines *Hammer Strength Oblique Crunch* (`hs_oblique_crunch`) et *Technogym Total Abdominal* (`tg_total_abdominal`).
-- **Exercices chronométrés** (planche, etc.) : `timed:true`, valeurs en secondes (`isTimedQuest`, `repUnit`, `timedAdvice`, `TIMED_PRESETS`) ; +5 s par progression ; chrono en séance guidée.
-- **🧠 Coach** (règles issues d'études : ACSM 2009, Schoenfeld 2016/2017, Spiering 2021, Garthe 2011, Morton 2018, Bell 2023, Mifflin 1990, Epley 1985) : progression auto (`computeExerciseTarget`), planning hebdo avec volley jeudi/vendredi, matchs, créneaux de salle, mode 3 séances (Full body / Jambes / Haut du corps), durée cible 60 min (repos inclus), séance guidée, bilan, nutrition, objectifs hebdo. Fonctions `coach*` insérées avant `function RestTimer`. Ce n'est pas un avis médical.
-- **Photos** : `PhotoDB`, `usePhotos`, `SessionPhoto` (bilan de fin de séance, rappel), `PhotoCalendar` (calendrier mensuel + export PNG), `PhotoReminder` (bandeau).
-- **Synchro sécurisée** (`App`, `loadCloud`) : ne jamais écrire sur le cloud s'il n'a pas pu être lu (`cloudOk`), la version la plus récente gagne (`_savedAt` vs `rondoudou_local_ts`), relecture au retour sur l'app. *Contexte : un téléphone avait écrasé le Sheets avec l'état de départ.*
-
-## Tester (environnement cloud sans CDN)
-Le cloud bloque les CDN et npm : `tools/uitest/` construit l'app avec esbuild + React installés dans `/opt/npm-tools` et la teste avec Playwright (Chromium dans `/opt/pw-browsers`).
+## Pile et commandes
+Vite 8 · React 18 · Tailwind 3 (compilé, plus de CDN) · JavaScript/JSX (pas de TypeScript) · Vitest + jsdom pour les tests.
 ```
-bash tools/uitest/build.sh          # extrait le babel de index.html -> app.js
-python3 tools/uitest/run.py         # séance guidée + bilan
-python3 tools/uitest/t9.py          # photos
-python3 tools/uitest/t10.py         # scénarios de synchro (faux serveur Google)
+npm run dev      # serveur local http://localhost:5173
+npm test         # tests : fusion/synchro (logique) + parcours complets de l'appli (faux navigateur)
+npm run build    # dist/ (c'est ce que GitHub Actions publie)
+npm run icons    # régénère public/icon-*.png depuis assets/icon-source.png
 ```
-Les requêtes `script.google.com` sont interceptées/avortées en test. Les scripts supposent `/tmp/uitest` (voir `build.sh`/`page.html`, à adapter si besoin).
+Déploiement : push sur `main` → `.github/workflows/deploy.yml` (tests + build + Pages). `vite.config.js` utilise `base: './'`. Application installable et utilisable hors ligne (`public/sw.js`, `public/manifest.webmanifest`).
+
+## Organisation du code (`src/`)
+```
+main.jsx            point d'entrée (monte <App/>, enregistre le service worker)
+App.jsx             assemble les hooks, l'en-tête, les onglets et les fenêtres
+hooks/              la logique de l'appli, un hook par sujet :
+                    useGameState (état + enregistrement local + synchro), useGithubSync, useToast, useRewards (trophées,
+                    records, annuler), useLogSession (« Noter séance »), useLevelUp, useQuestForm, useQuickCardio,
+                    useWeightLog, useGuidedSession, useDataTransfer (export/import/réinitialisation), useDerivedStats,
+                    useQuestActions
+tabs/               un fichier par onglet (Quêtes, Journal, Courbes, Poids, Bilan, Trophées)
+modals/             fenêtres (noter une séance, objectif, course du jour, niveau supérieur, réinitialisation, sauvegarde GitHub)
+components/         en-tête, bandeaux, séance guidée, minuteur de repos, dictée vocale, avatar, photos, coach/ (onglet Coach)
+coach/              règles du coach (progression, planning, séances, note, conseils) — fonctions pures, sans React
+voice/              dictée vocale : dictionnaire d'exercices + analyse de phrase
+lib/                dates, stats, trophées, calories, progression, photos (IndexedDB), sons
+data/               catalogue d'exercices, arènes, rangs/trophées, état de départ, normalisation de l'état
+sync/               github.js (API Contents), merge.js (fusion à 3 voies), engine.js (algorithme), storage.js (réglages locaux)
+legacy/             googleSheets.js : ancienne sauvegarde, gardée UNIQUEMENT pour la reprise unique des données
+```
+Pour modifier un écran : le fichier de `tabs/`, `modals/` ou `components/` correspondant. Pour une règle du coach : `coach/`. Pour ajouter un exercice : `data/catalog.js` (+ alias vocaux dans `voice/dictionary.js`).
+
+## Modèle de données
+État principal `gameState` : `xp, quests, weightHistory, unlockedAchievements, claimedChallenges, userWeightKg, targetWeightKg, coach, …`. Fusionné avec `INITIAL_STATE` (`data/initialState.js`) au chargement (`normalizeState`) : **tout nouveau champ doit avoir une valeur par défaut dans `INITIAL_STATE`**.
+
+Quête : `{id, catalogId, name, category, type:'strength'|'cardio', unit:'kg'|'reps'|'min'|'km', goalMode, goalSets, goalReps, startValue, currentValue, goalValue, setDetails, history[], timed?}`. Entrées « Point de départ » reconnues par `isStartEntry`. Chaque quête et chaque entrée d'historique / pesée a un `id` unique (la fusion de la sauvegarde s'appuie dessus).
+
+Exercices chronométrés (planche…) : `timed:true`, valeurs en secondes (`isTimedQuest`, `repUnit`, `timedAdvice`, `TIMED_PRESETS`), +5 s par progression. Salle de l'utilisateur : abdos obliques/transverses uniquement via *Hammer Strength Oblique Crunch* (`hs_oblique_crunch`) et *Technogym Total Abdominal* (`tg_total_abdominal`).
+
+Coach (`coach/`, repères : ACSM 2009, Schoenfeld 2016/2017, Spiering 2021, Garthe 2011, Morton 2018, Bell 2023, Mifflin 1990, Epley 1985) : progression auto (`computeExerciseTarget`), planning hebdo avec volley jeudi/vendredi, matchs, créneaux de salle, mode 3 séances, durée cible 60 min, séance guidée, bilan, nutrition, objectifs hebdo. Ce n'est pas un avis médical.
+
+## Sauvegarde : fichier JSON dans un dépôt GitHub privé
+- **Local** : `localStorage` clé `rondoudou_save_v1` (ne jamais la renommer : elle contient les données des appareils existants). **Photos souvenirs** : IndexedDB `rondoufit_photos`, hors synchro (export/import JSON dans l'onglet Souvenirs).
+- **GitHub** (remplace Google Sheets depuis la refonte) : `sync/` + `hooks/useGithubSync.js`. L'utilisateur renseigne dans l'appli (pastille ☁️ de l'en-tête → fenêtre « Sauvegarde GitHub ») compte, dépôt privé, fichier (`rondoufit-data.json`) et un **jeton fine-grained** (Contents : lecture/écriture) gardé uniquement dans son navigateur (`rondoufit:github`). Même principe que l'appli Carnet EPS.
+- **Algorithme** (`sync/engine.js`, testé dans `src/sync/sync.test.js`) : lecture du fichier → si seul GitHub a changé on le reprend ; si seul cet appareil a changé on l'envoie ; si les deux ont changé on **fusionne à 3 voies** (`sync/merge.js` : séances/pesées réunies par `id`, suppressions respectées, trophées réunis, `xp` = somme des gains, sinon la version la plus récente gagne). Envoi 2 s après une modification, reprise au retour sur l'app et toutes les minutes.
+- **Sécurités (à ne jamais casser)** : on n'écrase jamais GitHub si le fichier est illisible/invalide ; un appareil neuf (jamais modifié : `rondoudou_local_ts` = 0) ne peut pas écraser une sauvegarde existante ; une modification faite pendant une synchro n'est pas perdue (compteur de version). Les changements automatiques (trophées débloqués) passent par `setGameStateAuto` : sur un appareil jamais utilisé ils ne comptent pas comme une modification.
+- Marqueurs locaux : `rondoufit:sync` (sha + état commun), `rondoufit:dirty`, `rondoudou_local_ts`. Un champ `_savedAt` (ms) est écrit dans le fichier.
+- **Modifier les données à la place de l'utilisateur** : cloner le dépôt de données privé, éditer `rondoufit-data.json` (mêmes champs que `gameState`, ids uniques), mettre `_savedAt` à l'heure actuelle en ms, committer et pousser. Les appareils reprennent le changement (ou le fusionnent s'ils ont aussi modifié).
+- **Reprise unique de l'ancien Google Sheets** : bouton dans la fenêtre « Sauvegarde GitHub » (`legacy/googleSheets.js`). À supprimer quand tous les appareils ont migré.
+
+## Tester
+- `npm test` : `src/sync/sync.test.js` (fusion + moteur avec faux GitHub) ; `tests/ui/*.test.js` : l'appli complète tourne dans jsdom (`tests/ui/harness.js` : horloge et hasard figés, faux GitHub, « singe » qui clique au hasard). Les minuteries ≥ 200 ms sont virtuelles : `advance(h, ms)`.
+- Ajouter un test d'interface : s'inspirer de `tests/ui/app.test.js`. Ajouter un cas de synchro : `tests/ui/sync.test.js` (faux GitHub) ou `src/sync/sync.test.js` (logique pure).
+- Ne **jamais** lancer une ancienne version (l'ancien `index.html` de Google Sheets) dans un navigateur de test : elle écrirait dans le vrai Google Sheets.
 
 ## Pièges connus
-- Modifier une quête existante côté Sheets : écrire `_savedAt` récent, sinon les appareils ne reprennent pas le cloud.
-- Les valeurs de départ de l'app contiennent des données de démo (séances du jour) : ne pas les prendre pour des données réelles.
+- **localStorage partagé avec Carnet EPS** (même domaine `gab1point0.github.io`) : toujours préfixer les nouvelles clés par `rondoufit:`, ne jamais toucher aux clés `carnet-eps:`.
+- **Tailwind compilé** : écrire les noms de classes en entier (`'bg-pink-500'`), jamais `` `bg-${couleur}-500` `` (la classe ne serait pas générée). Tailwind 3 (pas 4).
+- Les valeurs de départ (`INITIAL_STATE`) contiennent des données de démo (séances du jour) : ne pas les prendre pour des données réelles.
 - Anciens objectifs conservés si on retire un exercice du catalogue (seul le catalogue change).
+- Les hooks de `hooks/` reçoivent tout ce dont ils ont besoin en paramètre (pas de contexte global) : ajouter un paramètre plutôt qu'un import croisé.

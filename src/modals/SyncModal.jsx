@@ -29,7 +29,7 @@ export function SyncModal({ sync, onClose, triggerToast }) {
   };
 
   const useCarnet = () => {
-    patch({ owner: carnet.owner, token: carnet.token, repo: carnet.repo || draft.repo });
+    patch({ owner: carnet.owner, token: carnet.token });
   };
 
   const disconnect = () => {
@@ -93,7 +93,7 @@ export function SyncModal({ sync, onClose, triggerToast }) {
             </ol>
             {carnet && (
               <button type="button" onClick={useCarnet} className="mt-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold border border-slate-600">
-                Reprendre le compte et le jeton déjà saisis dans Carnet EPS
+                Reprendre le compte et le jeton déjà saisis dans Carnet EPS (si le jeton a accès à ce dépôt)
               </button>
             )}
           </div>

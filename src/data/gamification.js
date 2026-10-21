@@ -1,3 +1,4 @@
+// Rangs du jeu (selon le niveau) et liste des trophées avec leur bonus d'EXP.
 export const RPG_RANKS = [
   { minLevel: 1, title: 'Toudoudou Novice', badge: '🎵', color: 'from-pink-400 to-rose-600' },
   { minLevel: 3, title: 'Rondoudou Apprenti', badge: '🎤', color: 'from-fuchsia-400 to-purple-600' },

@@ -1,3 +1,4 @@
+// Dates au format local AAAA-MM-JJ : jour courant, hier, début de semaine (lundi), ajout de jours.
 export function addDaysISO(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + n);
@@ -10,9 +11,6 @@ export function getWeekStart(dateStr) {
   return toLocalISODate(d);
 }
 
-// ==========================================
-// FONCTIONS UTILITAIRES
-// ==========================================
 export const toLocalISODate = d =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 

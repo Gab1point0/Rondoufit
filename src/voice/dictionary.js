@@ -2,13 +2,7 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { stripAccents } from '../lib/text';
 
 // ==========================================
-// COMPOSANT PRINCIPAL : FROM GROSDOUDOU TO RONDOUDOU
-// ==========================================
-
-// ==========================================
-
-// ==========================================
-// MODULE DE DICTÉE VOCALE V3 (MULTI-EXERCICES + TOLÉRANCE AUX FAUTES PHONÉTIQUES)
+// DICTÉE VOCALE : dictionnaire des exercices (noms, variantes et fautes d'écoute courantes)
 // ==========================================
 export const VOICE_DICTIONARY = [
   {

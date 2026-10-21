@@ -1,6 +1,4 @@
-// ==========================================================================
-// ONGLET COACH + MODE SÉANCE GUIDÉE
-// ==========================================================================
+// Textes fixes de l'onglet Coach : formats de date, badges de changement, sources scientifiques.
 export const coachFmt = n => String(Math.round((Number(n) || 0) * 100) / 100).replace('.', ',');
 
 export const coachDateFR = iso => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '');

@@ -3,7 +3,11 @@ import { COACH_DAY_NAMES, coachDayLabel, coachDow } from '../../coach/settings';
 import { addDaysISO } from '../../lib/dates';
 import { card } from './ui';
 
-export function CoachSettings({ addMatches, addSeries, coach, dayShort, extraVolleyInput, matchInput, matchList, serie, setExtraVolleyInput, setMatchInput, setSerie, today, toggleGymSkip, toggleMatch, toggleVolleyDay, toggleVolleySkip, upcomingGym, upcomingVolley, updateCoach }) {
+export function CoachSettings({
+  addMatches, addSeries, coach, dayShort, extraVolleyInput, matchInput, matchList, serie,
+  setExtraVolleyInput, setMatchInput, setSerie, today, toggleGymSkip, toggleMatch, toggleVolleyDay,
+  toggleVolleySkip, upcomingGym, upcomingVolley, updateCoach,
+}) {
   return (
     <section className={card}>
       <h3 className="font-black text-white">⚙️ Réglages & calendrier des matchs</h3>

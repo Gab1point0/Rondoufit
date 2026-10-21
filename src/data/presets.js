@@ -1,3 +1,4 @@
+// Réglages rapides proposés à la création d'un exercice (chronométré, séries × répétitions, élastique).
 export const TIMED_PRESETS = [
   { label: '3 × 20 s', sets: 3, reps: 20 },
   { label: '3 × 30 s', sets: 3, reps: 30 },

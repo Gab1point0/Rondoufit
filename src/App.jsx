@@ -40,10 +40,6 @@ import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
 
 export function App() {
-
-
-
-
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
   const [syncOpen, setSyncOpen] = useState(false);
   // Navigation et filtres
@@ -55,60 +51,87 @@ export function App() {
     () => gameState.quests[0]?.id || ''
   );
 
-
   const { toast, triggerToast, dismissToast } = useToast();
 
+  const {
+    paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats,
+    handleClaimChallenge,
+  } = useRewards({
+    syncStatus: sync.status, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast,
+  });
 
+  const {
+    levelUpModalQuest, setLevelUpModalQuest, nextGoalMode, setNextGoalMode, nextGoalValue,
+    setNextGoalValue, nextGoalSets, setNextGoalSets, nextGoalReps, setNextGoalReps,
+    nextGoalAssistanceKg, setNextGoalAssistanceKg, openLevelUpModal, handleConfirmLevelUp,
+  } = useLevelUp({
+    gameState, setGameState, triggerToast,
+  });
 
+  const {
+    questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName,
+    setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed,
+    setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue,
+    setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets,
+    formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg,
+    formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal,
+    handleSelectCatalogExercise, handleSaveQuestForm,
+  } = useQuestForm({
+    gameState, setGameState, setSelectedChartQuestId, triggerToast,
+  });
 
-  const { paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats, handleClaimChallenge } = useRewards({ syncStatus: sync.status, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast });
+  const {
+    quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId,
+    quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin,
+    setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioRpe,
+    setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote,
+    liveQuickCardioCalories, handleSaveQuickCardio,
+  } = useQuickCardio({
+    gameState, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+  });
 
+  const {
+    newWeightInput, setNewWeightInput, newWeightDate, setNewWeightDate, newWeightNote,
+    setNewWeightNote, handleAddWeightEntry, handleDeleteWeightEntry,
+  } = useWeightLog({
+    gameState, registerUndo, setGameState, triggerToast,
+  });
 
-  const { levelUpModalQuest, setLevelUpModalQuest, nextGoalMode, setNextGoalMode, nextGoalValue, setNextGoalValue, nextGoalSets, setNextGoalSets, nextGoalReps, setNextGoalReps, nextGoalAssistanceKg, setNextGoalAssistanceKg, openLevelUpModal, handleConfirmLevelUp } = useLevelUp({ gameState, setGameState, triggerToast });
+  const {
+    confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON,
+    handleResetAll,
+  } = useDataTransfer({
+    gameState, paidAchievementsRef, setGameState, skipPRRef, triggerToast,
+  });
 
-  const { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm } = useQuestForm({ gameState, setGameState, setSelectedChartQuestId, triggerToast });
+  const {
+    levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats,
+  } = useDerivedStats({
+    gameState, selectedDate,
+  });
+  const {
+    logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance,
+    setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode,
+    logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM,
+    setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal,
+    handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets,
+    handleSaveSession,
+  } = useLogSession({
+    gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay,
+    triggerToast,
+  });
 
-  const { quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId, quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin, setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioRpe, setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote, liveQuickCardioCalories, handleSaveQuickCardio } = useQuickCardio({ gameState, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast });
+  const {
+    guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap,
+  } = useGuidedSession({
+    gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+  });
 
-  const { newWeightInput, setNewWeightInput, newWeightDate, setNewWeightDate, newWeightNote, setNewWeightNote, handleAddWeightEntry, handleDeleteWeightEntry } = useWeightLog({ gameState, registerUndo, setGameState, triggerToast });
-
-  const { confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON, handleResetAll } = useDataTransfer({ gameState, paidAchievementsRef, setGameState, skipPRRef, triggerToast });
-
-
-
-
-
-
-
-
-
-
-  const { levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats } = useDerivedStats({ gameState, selectedDate });
-  const { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession } = useLogSession({ gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast });
-
-
-
-
-
-
-
-
-
-  const { guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap } = useGuidedSession({ gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast });
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const { handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleDeleteQuest } = useQuestActions({ gameState, registerUndo, setGameState, triggerToast });
+  const {
+    handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleDeleteQuest,
+  } = useQuestActions({
+    gameState, registerUndo, setGameState, triggerToast,
+  });
   const filteredQuests = useMemo(() => {
     if (questFilter === 'all') return gameState.quests;
     return gameState.quests.filter(

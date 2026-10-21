@@ -6,7 +6,9 @@ import { countValidatedSets, getSetDetailsArray, isTimedQuest } from '../lib/que
 import { playGameSound } from '../lib/sound';
 import { useEffect, useState } from 'react';
 
-export function useGuidedSession({ gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast }) {
+export function useGuidedSession({
+  gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+}) {
   // ---- Coach : séance guidée ----
   const GUIDED_KEY = 'rondoufit_guided_v1';
 

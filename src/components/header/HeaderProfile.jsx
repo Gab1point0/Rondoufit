@@ -1,7 +1,10 @@
 import { Flame } from '../../icons';
 import { JigglypuffAvatar } from '../JigglypuffAvatar';
 
-export function HeaderProfile({ currentStreak, gameState, levelInfo, lifetimeStats, onOpenSync, onRetrySync, setActiveTab, syncStatus }) {
+export function HeaderProfile({
+  currentStreak, gameState, levelInfo, lifetimeStats, onOpenSync, onRetrySync, setActiveTab,
+  syncStatus,
+}) {
   return (
     <div className="flex items-center gap-4">
       <div

@@ -1,5 +1,8 @@
 // Calories NETTES (hors métabolisme de repos : 1 MET = 1 kcal/kg/h retiré)
-export function calculateStrengthCalories({ unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82, timed = false }) {
+export function calculateStrengthCalories({
+  unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82,
+  timed = false,
+}) {
   const numSets = Math.max(1, setDetails.length);
   const totalReps = setDetails.reduce((acc, r) => acc + (Number(r) || 0), 0) / (timed ? 3 : 1);
   const durationHours = (numSets * 2.2 + totalReps * 0.05) / 60;
@@ -11,7 +14,9 @@ export function calculateStrengthCalories({ unit, weightKg = 0, assistanceKg = 0
   return Math.max(10, Math.round((grossMet - 1) * userWeightKg * durationHours));
 }
 
-export function calculateCardioCalories({ cardioMode = 'run', distanceKm = 5, durationMin = 30, elevationM = 0, rpe = 7, userWeightKg = 82 }) {
+export function calculateCardioCalories({
+  cardioMode = 'run', distanceKm = 5, durationMin = 30, elevationM = 0, rpe = 7, userWeightKg = 82,
+}) {
   const durMin = Math.max(1, Number(durationMin) || 20);
   const distKm = Math.max(0.1, Number(distanceKm) || 0);
   const elevM = Math.max(0, Number(elevationM) || 0);

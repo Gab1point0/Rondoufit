@@ -2,7 +2,13 @@ import { ELASTIC_PRESETS } from '../data/presets';
 import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
 
-export function LogSessionModal({ handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession, handleUpdateSingleSetRep, liveModalCalories, logAssistanceKg, logDate, logDurationMin, logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps, logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin, setLogElevationM, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue }) {
+export function LogSessionModal({
+  handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession,
+  handleUpdateSingleSetRep, liveModalCalories, logAssistanceKg, logDate, logDurationMin,
+  logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
+  logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
+  setLogElevationM, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
+}) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">

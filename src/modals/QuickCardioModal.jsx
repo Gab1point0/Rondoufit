@@ -2,7 +2,13 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { Footprints, X } from '../icons';
 import { formatPaceAndSpeed } from '../lib/calories';
 
-export function QuickCardioModal({ handleSaveQuickCardio, liveQuickCardioCalories, quickCardioCatalogId, quickCardioDate, quickCardioDistanceKm, quickCardioDurationMin, quickCardioElevationM, quickCardioNote, quickCardioRpe, setQuickCardioCatalogId, setQuickCardioDate, setQuickCardioDistanceKm, setQuickCardioDurationMin, setQuickCardioElevationM, setQuickCardioModalOpen, setQuickCardioNote, setQuickCardioRpe }) {
+export function QuickCardioModal({
+  handleSaveQuickCardio, liveQuickCardioCalories, quickCardioCatalogId, quickCardioDate,
+  quickCardioDistanceKm, quickCardioDurationMin, quickCardioElevationM, quickCardioNote,
+  quickCardioRpe, setQuickCardioCatalogId, setQuickCardioDate, setQuickCardioDistanceKm,
+  setQuickCardioDurationMin, setQuickCardioElevationM, setQuickCardioModalOpen, setQuickCardioNote,
+  setQuickCardioRpe,
+}) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
