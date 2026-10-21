@@ -1,0 +1,165 @@
+import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
+import { normalizeArenaGroup } from '../data/arenas';
+import { getTodayISODate } from '../lib/dates';
+import { evaluateQuestProgress } from '../lib/progress';
+import { isTimedQuest } from '../lib/quests';
+
+// Objectif de la prochaine séance pour UN exercice
+export function computeExerciseTarget(q, opts = {}) {
+  const today = opts.today || getTodayISODate();
+  const kind = coachKind(q);
+  const T = isTimedQuest(q);
+  const inc = T ? 5 : 1;
+  let sets = Math.max(1, Math.min(6, Number(q.goalSets) || 3));
+  const R = Math.max(1, Number(q.goalReps) || 6);
+  const goalAssist = Number(q.goalAssistanceKg) || 0;
+  const entries = coachRealEntries(q);
+  const last = entries[entries.length - 1] || null;
+  const arena = normalizeArenaGroup(q.category, q.type);
+  const compound = coachIsCompound(q.name);
+  const boss = evaluateQuestProgress(q).isBossDefeated;
+
+  let load = kind === 'load' ? Number(q.currentValue) || 0 : 0;
+  let assist = kind === 'assisted' ? Number(q.currentAssistanceKg) || 0 : 0;
+  let reps = Array(sets).fill(R);
+  let change = 'new';
+  let reason = '';
+  const step = coachStep(q, load);
+
+  if (!last) {
+    change = 'new';
+    reason =
+      kind === 'load'
+        ? `Charge de départ : ${load} kg. Ajuste-la pendant la séance si c'est trop lourd ou trop léger.`
+        : kind === 'assisted'
+          ? `Départ avec ${assist} kg d'aide.`
+          : T ? `Objectif : ${R} s par série. Pars de ce que tu tiens proprement et ajoute environ 5 s par séance.` : `Objectif : ${R} répétitions par série.`;
+  } else {
+    const prevSets = coachSetsOf(last, sets, R);
+    const padded = Array.from({ length: sets }, (_, i) => Number(prevSets[i]) || 0);
+    const minReps = Math.min(...padded);
+    const excess = minReps - R;
+    const rpe = Number(last.rpe) || 7;
+    const gap = coachDaysBetween(last.date, today);
+    const lastLoad = kind === 'load' ? Number(last.value) || load : 0;
+    const lastAssist = kind === 'assisted' ? Number(last.assistanceKg) || 0 : 0;
+    load = lastLoad;
+    assist = lastAssist;
+    const stepL = coachStep(q, load);
+    const holdWord = kind === 'load' ? 'charge' : kind === 'assisted' ? 'aide' : 'difficulté';
+
+    if (gap >= 14) {
+      change = 'resume';
+      const f = gap >= 21 ? 0.9 : 0.95;
+      if (kind === 'load') load = Math.max(stepL, coachRound(load * f, stepL));
+      if (kind === 'assisted') assist = assist + (gap >= 21 ? 5 : 2.5);
+      reps = Array(sets).fill(R);
+      reason = `Reprise après ${gap} jours sans cet exercice : on repart un peu plus léger pour retrouver les sensations.`;
+    } else if (minReps >= R) {
+      if (boss) {
+        change = 'goal';
+        reason = 'Objectif atteint ! Valide le niveau suivant dans l’onglet Quêtes pour définir un nouveau but.';
+      } else if (rpe >= 9 && excess < 2) {
+        change = 'hold';
+        reason = `Séance précédente ressentie très dure (RPE ${rpe}) : on consolide la même ${holdWord} une séance de plus.`;
+      } else if (kind === 'load') {
+        const pct = excess >= 2 ? 0.05 : excess === 1 ? 0.035 : 0.025;
+        let nl = coachRound(load * (1 + pct), stepL);
+        if (nl <= load) nl = coachRound(load + stepL, stepL);
+        const goalV = Number(q.goalValue) || 0;
+        if (goalV > load && nl > goalV) nl = goalV;
+        change = 'up';
+        reason = `${R} reps réussies sur toutes les séries (RPE ${rpe}) → +${coachRound(nl - load, 0.5)} kg (+${Math.round(((nl - load) / Math.max(1, load)) * 100)} %). Repère ACSM : +2 à 10 %.`;
+        load = nl;
+      } else if (kind === 'assisted') {
+        if (assist <= goalAssist) {
+          change = 'goal';
+          reason = 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Quêtes.';
+        } else {
+          const dec = assist >= 20 ? 5 : 2.5;
+          const na = Math.max(goalAssist, assist - dec);
+          change = 'assist_down';
+          reason = `${R} reps réussies partout (RPE ${rpe}) → l’aide passe de ${assist} à ${na} kg.`;
+          assist = na;
+        }
+      } else {
+        change = 'goal';
+        reason = T ? 'Objectif de durée atteint ! Valide le niveau suivant dans l’onglet Quêtes.' : 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Quêtes.';
+      }
+      reps = Array(sets).fill(R);
+    } else {
+      change = 'hold';
+      reps = padded.map(r => Math.min(R, Math.max(1, r + inc)));
+      reason = `Dernière fois : ${padded.join(' - ')}${T ? ' s' : ''}. On garde la même ${holdWord} et on vise +${inc}${T ? ' s' : ' rép'} par série (objectif ${R}${T ? ' s' : ''}).`;
+      const prev = entries[entries.length - 2];
+      if (prev) {
+        const pSets = Array.from({ length: sets }, (_, i) => Number(coachSetsOf(prev, sets, R)[i]) || 0);
+        const sameLoad = kind === 'load' ? Number(prev.value) === Number(last.value) : Number(prev.assistanceKg || 0) === Number(last.assistanceKg || 0);
+        if (sameLoad && Math.min(...pSets) < R) {
+          if (kind === 'load') {
+            const nl = coachRound(load * 0.93, stepL);
+            if (nl < load) {
+              load = nl;
+              change = 'down';
+              reps = Array(sets).fill(R);
+              reason = `${R} reps non atteintes 2 séances de suite : on recule d’environ 7 % pour repartir proprement.`;
+            }
+          } else if (kind === 'assisted') {
+            assist = assist + 2.5;
+            change = 'down';
+            reps = Array(sets).fill(R);
+            reason = `${R} reps non atteintes 2 séances de suite : l’aide remonte à ${assist} kg pour consolider.`;
+          }
+        }
+      }
+    }
+  }
+
+  if (opts.deload) {
+    if (kind === 'load') load = Math.max(coachStep(q, load), coachRound(load * 0.9, coachStep(q, load)));
+    sets = Math.max(2, sets - 1);
+    reason += ' • Semaine allégée : −10 % de charge, une série de moins.';
+  } else if (opts.reduceSets && sets > 2) {
+    sets = sets - 1;
+    reason += ' • Semaine de match : une série de moins.';
+  }
+  reps = Array.from({ length: sets }, (_, i) => reps[i] !== undefined ? reps[i] : reps[reps.length - 1] || R);
+
+  return {
+    questId: q.id, name: q.name, icon: q.icon, arena, kind, compound,
+    restSec: compound ? 150 : 90, sets, targetReps: reps, goalReps: R,
+    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T
+  };
+}
+
+// Répartition des exercices de l'utilisateur dans N séances « corps entier »
+export function composeTemplates(quests, N) {
+  const strength = (quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
+  const byArena = {};
+  strength.forEach(q => {
+    const a = normalizeArenaGroup(q.category, q.type);
+    (byArena[a] = byArena[a] || []).push(q);
+  });
+  const templates = Array.from({ length: N }, (_, i) => ({ idx: i, id: 'ABC'[i], quests: [] }));
+  COACH_ARENAS.forEach(a => {
+    const list = (byArena[a] || []).slice().sort((x, y) => String(x.id).localeCompare(String(y.id)));
+    const cap = a === 'Abdominaux' ? 1 : 2;
+    if (!list.length) return;
+    // chaque groupe est travaillé dans chaque séance (fréquence ≥ 2/semaine) :
+    // les exercices sont répartis, et s'il y en a moins que de séances, ils sont répétés
+    templates.forEach((t, i) => {
+      let mine = list.filter((q, j) => j % N === i).slice(0, cap);
+      if (!mine.length) mine = [list[i % list.length]];
+      mine.forEach(q => t.quests.push(q));
+    });
+  });
+  templates.forEach(t =>
+    t.quests.sort((x, y) => {
+      const ax = COACH_ARENAS.indexOf(normalizeArenaGroup(x.category, x.type));
+      const ay = COACH_ARENAS.indexOf(normalizeArenaGroup(y.category, y.type));
+      if (ax !== ay) return ax - ay;
+      return (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0);
+    })
+  );
+  return templates;
+}

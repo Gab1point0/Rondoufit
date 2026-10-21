@@ -1,0 +1,304 @@
+import { useMemo, useState } from 'react';
+import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeeklyGoals, coachWeightPace } from '../../coach/advice';
+import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
+import { coachRateSession } from '../../coach/rating';
+import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
+import { COACH_ARENAS, coachDow, getCoachSettings } from '../../coach/settings';
+import { computeExerciseTarget } from '../../coach/targets';
+import { normalizeArenaGroup } from '../../data/arenas';
+import { addDaysISO, getTodayISODate, getWeekStart } from '../../lib/dates';
+import { evaluateQuestProgress } from '../../lib/progress';
+import { CoachAdvice } from './CoachAdvice';
+import { CoachBalance } from './CoachBalance';
+import { CoachCycle } from './CoachCycle';
+import { CoachHeader } from './CoachHeader';
+import { CoachNextSession } from './CoachNextSession';
+import { CoachObjectives } from './CoachObjectives';
+import { CoachSettings } from './CoachSettings';
+import { CoachSources } from './CoachSources';
+import { CoachVolley } from './CoachVolley';
+import { CoachWeek } from './CoachWeek';
+import { CoachWeeklyGoals } from './CoachWeeklyGoals';
+import { CoachWeightHealth } from './CoachWeightHealth';
+
+export function CoachPanel({ gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab, guidedActive, onResumeGuided, onClaimWeekly }) {
+  const today = getTodayISODate();
+  const coach = getCoachSettings(gameState);
+  const [showSources, setShowSources] = useState(false);
+  const [matchInput, setMatchInput] = useState('');
+  const [serie, setSerie] = useState({ dow: 0, from: today, to: addDaysISO(today, 364) });
+  const [addSel, setAddSel] = useState('');
+  const [extraVolleyInput, setExtraVolleyInput] = useState('');
+  const [shortMode, setShortMode] = useState(false);
+  const [swapFor, setSwapFor] = useState(null);
+
+  const ov = useMemo(() => coachOverview(gameState, today, { minutes: shortMode ? 40 : undefined }), [gameState.quests, gameState.coach, gameState.userWeightKg, today, shortMode]);
+  const advice = useMemo(() => coachDayAdvice(gameState, today), [gameState.coach, today]);
+  const missedMsgs = useMemo(() => coachMissed(gameState, today), [gameState.quests, gameState.coach, today]);
+  const weeklyGoals = useMemo(() => coachWeeklyGoals(gameState, today), [gameState.quests, gameState.weightHistory, gameState.coach, today]);
+  const strengthTrend = useMemo(() => coachStrengthTrend(gameState, today), [gameState.quests, today]);
+  const nutrition = useMemo(() => coachNutrition(gameState, today), [gameState.quests, gameState.coach, gameState.weightHistory, gameState.targetWeightKg, gameState.userWeightKg, today]);
+  const balance = useMemo(() => coachBalance(gameState, today), [gameState.quests, today]);
+  const pace = useMemo(() => coachWeightPace(gameState, today), [gameState.weightHistory, gameState.targetWeightKg, gameState.userWeightKg, today]);
+  const activity = useMemo(() => coachWeekActivity(gameState, getWeekStart(today)), [gameState.quests, today]);
+  const trainingWeeks = useMemo(() => coachTrainingWeeks(gameState, today), [gameState.quests, today]);
+  const questRows = useMemo(
+    () =>
+      (gameState.quests || [])
+        .filter(q => q.type === 'strength' && q.goalMode !== 'free_mode')
+        .map(q => ({
+          q,
+          arena: normalizeArenaGroup(q.category, q.type),
+          target: computeExerciseTarget(q, { today }),
+          progress: evaluateQuestProgress(q).percent,
+          plateau: coachPlateau(q),
+          eta: coachEta(q, today)
+        }))
+        .sort((a, b) => COACH_ARENAS.indexOf(a.arena) - COACH_ARENAS.indexOf(b.arena)),
+    [gameState.quests, today]
+  );
+
+  const updateCoach = patch =>
+    setGameState(prev => ({ ...prev, coach: { ...getCoachSettings(prev), ...patch } }));
+  const toggleMatch = iso => {
+    const set = new Set(coach.matchDates || []);
+    if (set.has(iso)) set.delete(iso); else set.add(iso);
+    updateCoach({ matchDates: Array.from(set).sort() });
+  };
+  const toggleVolleyDay = dow => {
+    const set = new Set(coach.volleyDays || []);
+    if (set.has(dow)) set.delete(dow); else set.add(dow);
+    updateCoach({ volleyDays: Array.from(set).sort() });
+  };
+
+  const weekStart0 = getWeekStart(today);
+  const upcomingGym = [];
+  for (let i = 0; i < 21 && upcomingGym.length < 12; i++) {
+    const d = addDaysISO(today, i);
+    if (coachSlotFor(coach, d)) upcomingGym.push(d);
+  }
+  const toggleGymSkip = d => {
+    const set = new Set(coach.gymSkips || []);
+    if (set.has(d)) set.delete(d); else set.add(d);
+    updateCoach({ gymSkips: Array.from(set).sort() });
+  };
+  const upcomingVolley = [];
+  for (let i = 0; i < 28 && upcomingVolley.length < 12; i++) {
+    const d = addDaysISO(today, i);
+    if ((coach.volleyDays || []).includes(coachDow(d))) upcomingVolley.push(d);
+  }
+  const toggleVolleySkip = d => {
+    const set = new Set(coach.volleySkips || []);
+    if (set.has(d)) set.delete(d); else set.add(d);
+    updateCoach({ volleySkips: Array.from(set).sort() });
+  };
+  const matchList = (coach.matchDates || []).filter(d => d >= today).slice().sort();
+  const addMatches = list => {
+    const set = new Set(coach.matchDates || []);
+    list.forEach(d => set.add(d));
+    updateCoach({ matchDates: Array.from(set).sort() });
+  };
+  const addSeries = () => {
+    const out = [];
+    let d = serie.from;
+    let guard = 0;
+    while (d && serie.to && d <= serie.to && guard++ < 800) {
+      if (coachDow(d) === Number(serie.dow)) out.push(d);
+      d = addDaysISO(d, 1);
+    }
+    addMatches(out);
+  };
+
+  const first = ov.first;
+  const plannedMap = {};
+  ov.plannedAll.forEach(p => { plannedMap[p.iso] = p; });
+  const w0 = ov.weeks[0];
+  const plan = coach.plan && Array.isArray(coach.plan.questIds) && coach.plan.date >= today ? coach.plan : null;
+  const tiredToday = !!(coach.readiness && coach.readiness.date === today && coach.readiness.level === 'low');
+  const planWeek = useMemo(() => (plan ? coachPlanWeek(gameState, getWeekStart(plan.date), today) : null), [gameState.quests, gameState.coach]);
+  const customSession = useMemo(
+    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, tired: tiredToday && plan.date === today }) : null),
+    [gameState.quests, gameState.coach]
+  );
+  const shownSession = plan ? customSession : ov.session;
+  const shownDate = plan ? plan.date : first ? first.iso : today;
+  const rating = useMemo(
+    () => (shownSession && (plan || ov.hasExercises) ? coachRateSession(gameState, shownSession) : null),
+    [gameState.quests, gameState.coach, shownSession && shownSession.date, shownSession && shownSession.exercises.map(e => e.questId).join(',')]
+  );
+  const sessionToStart = (() => {
+    if (plan) {
+      if (!plan.questIds.length) return null;
+      return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, tired: tiredToday });
+    }
+    if (!first || !ov.hasExercises) return null;
+    if (first.iso === today) return ov.session;
+    return coachBuildPlanned(gameState, first, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek, tired: tiredToday, minutes: shortMode ? 40 : undefined });
+  })();
+  // Édition du plan personnalisé (mises à jour fonctionnelles pour éviter les écrasements)
+  const patchPlan = fn =>
+    setGameState(prev => {
+      const cs = getCoachSettings(prev);
+      const pl = cs.plan || { date: today, questIds: [] };
+      return { ...prev, coach: { ...cs, plan: fn(pl) } };
+    });
+  const startCustom = () => {
+    const ids = ov.session ? ov.session.exercises.map(e => e.questId) : [];
+    const sets = {};
+    if (ov.session) ov.session.exercises.forEach(e => { sets[e.questId] = e.sets; });
+    updateCoach({ plan: { date: first ? first.iso : today, questIds: ids, sets } });
+  };
+  const planAdd = ids => patchPlan(pl => ({ ...pl, questIds: [...pl.questIds, ...ids.filter(i => i && !pl.questIds.includes(i))] }));
+  const planRemove = id => patchPlan(pl => ({ ...pl, questIds: pl.questIds.filter(x => x !== id) }));
+  const planMove = (id, dir) =>
+    patchPlan(pl => {
+      const arr = pl.questIds.slice();
+      const i = arr.indexOf(id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= arr.length) return pl;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...pl, questIds: arr };
+    });
+  const doSwap = (oldId, newId) => {
+    if (!newId || !shownSession) return;
+    const ids = shownSession.exercises.map(e => e.questId);
+    const sets = { ...((plan && plan.sets) || {}) };
+    shownSession.exercises.forEach(e => { if (sets[e.questId] === undefined) sets[e.questId] = e.sets; });
+    const old = shownSession.exercises.find(e => e.questId === oldId);
+    sets[newId] = old ? old.sets : 3;
+    delete sets[oldId];
+    updateCoach({ plan: { date: shownDate, questIds: ids.map(i => (i === oldId ? newId : i)), sets } });
+    setSwapFor(null);
+  };
+  const planDate = d => { if (d && d >= today) patchPlan(pl => ({ ...pl, date: d })); };
+  const strengthQuests = (gameState.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
+  const availQuests = plan ? strengthQuests.filter(q => !plan.questIds.includes(q.id)) : [];
+  const planDayInfo = plan ? coachDayInfo(plan.date, coach) : null;
+  const todayInfo = coachDayInfo(today, coach);
+
+  const lowRows = balance.rows.filter(r => r.status === 'low');
+  const protein = Math.round((Number(pace.current) || Number(gameState.userWeightKg) || 80));
+  const dayShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+  return (
+    <div className="space-y-6">
+      {/* EN-TÊTE */}
+      <CoachHeader
+        coach={coach}
+        guidedActive={guidedActive}
+        onResumeGuided={onResumeGuided}
+        trainingWeeks={trainingWeeks}
+        updateCoach={updateCoach}
+        w0={w0}
+        weekStart0={weekStart0}
+      />
+
+      {(advice.length > 0 || missedMsgs.length > 0) && (
+        <CoachAdvice advice={advice} missedMsgs={missedMsgs} />
+      )}
+
+      {/* OBJECTIFS DE LA SEMAINE */}
+      <CoachWeeklyGoals onClaimWeekly={onClaimWeekly} weeklyGoals={weeklyGoals} />
+
+      {/* PROCHAINE SÉANCE */}
+      <CoachNextSession
+        addSel={addSel}
+        availQuests={availQuests}
+        coach={coach}
+        doSwap={doSwap}
+        first={first}
+        gameState={gameState}
+        onAddExercise={onAddExercise}
+        onGoTab={onGoTab}
+        onOpenLevelUp={onOpenLevelUp}
+        onStartGuided={onStartGuided}
+        ov={ov}
+        plan={plan}
+        planAdd={planAdd}
+        planDate={planDate}
+        planDayInfo={planDayInfo}
+        planMove={planMove}
+        planRemove={planRemove}
+        rating={rating}
+        sessionToStart={sessionToStart}
+        setAddSel={setAddSel}
+        setShortMode={setShortMode}
+        setSwapFor={setSwapFor}
+        shortMode={shortMode}
+        shownDate={shownDate}
+        shownSession={shownSession}
+        startCustom={startCustom}
+        strengthQuests={strengthQuests}
+        swapFor={swapFor}
+        tiredToday={tiredToday}
+        today={today}
+        todayInfo={todayInfo}
+        updateCoach={updateCoach}
+      />
+
+      {/* CYCLE */}
+      <CoachCycle updateCoach={updateCoach} w0={w0} weekStart0={weekStart0} />
+
+      {/* SEMAINE */}
+      <CoachWeek
+        dayShort={dayShort}
+        first={first}
+        ov={ov}
+        plan={plan}
+        plannedMap={plannedMap}
+        today={today}
+      />
+
+      {/* CALENDRIER & RÉGLAGES */}
+      <CoachSettings
+        addMatches={addMatches}
+        addSeries={addSeries}
+        coach={coach}
+        dayShort={dayShort}
+        extraVolleyInput={extraVolleyInput}
+        matchInput={matchInput}
+        matchList={matchList}
+        serie={serie}
+        setExtraVolleyInput={setExtraVolleyInput}
+        setMatchInput={setMatchInput}
+        setSerie={setSerie}
+        today={today}
+        toggleGymSkip={toggleGymSkip}
+        toggleMatch={toggleMatch}
+        toggleVolleyDay={toggleVolleyDay}
+        toggleVolleySkip={toggleVolleySkip}
+        upcomingGym={upcomingGym}
+        upcomingVolley={upcomingVolley}
+        updateCoach={updateCoach}
+      />
+
+      {/* OBJECTIFS */}
+      <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
+
+      {/* ÉQUILIBRE */}
+      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
+
+      {/* POIDS & SANTÉ */}
+      <CoachWeightHealth
+        activity={activity}
+        coach={coach}
+        gameState={gameState}
+        nutrition={nutrition}
+        onQuickCardio={onQuickCardio}
+        pace={pace}
+        protein={protein}
+        setGameState={setGameState}
+        strengthTrend={strengthTrend}
+        updateCoach={updateCoach}
+      />
+
+      {/* VOLLEY */}
+      {(coach.volleyDays || []).length > 0 && (
+        <CoachVolley gameState={gameState} onAddExercise={onAddExercise} />
+      )}
+
+      {/* SOURCES */}
+      <CoachSources setShowSources={setShowSources} showSources={showSources} />
+    </div>
+  );
+}

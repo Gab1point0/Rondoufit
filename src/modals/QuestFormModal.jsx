@@ -1,0 +1,342 @@
+import { ExercisePicker } from '../components/ExercisePicker';
+import { ARENA_GROUPS } from '../data/arenas';
+import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
+import { Target, X } from '../icons';
+import { timedAdvice } from '../lib/quests';
+
+export function QuestFormModal({ editingQuestId, formCatalogId, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode, formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed, formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory, setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps, setFormGoalSets, setFormGoalValue, setFormStartAssistanceKg, setFormStartValue, setFormTimed, setFormUnit, setQuestModalOpen }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                    <Target className="w-5 h-5 text-pink-400" />
+                    <span>
+                      {editingQuestId
+                        ? 'Ajuster votre Objectif'
+                        : 'Nouvel Exercice & Objectif'}
+                    </span>
+                  </h3>
+                  <button
+                    onClick={() => setQuestModalOpen(false)}
+                    className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveQuestForm} className="space-y-4">
+                  {!editingQuestId && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                        Choisir un exercice dans le Pokédex
+                      </label>
+                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
+                        Nom de l’exercice
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formCustomName}
+                        onChange={e => setFormCustomName(e.target.value)}
+                        placeholder="Ex: Tractions Pronation"
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
+                        Arène / Groupe Musculaire
+                      </label>
+                      <select
+                        value={formCategory}
+                        onChange={e => setFormCategory(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white"
+                      >
+                        {ARENA_GROUPS.map(g => (
+                          <option key={g.id} value={g.id}>
+                            {g.icon} {g.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {formType === 'strength' && (
+                    <div className="bg-pink-950/20 border border-pink-500/30 rounded-2xl p-4 space-y-3">
+                      <label className="block text-xs font-black uppercase tracking-wider text-pink-300">
+                        🎯 Choisir le Type d’Objectif
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          {
+                            id: 'weight_only',
+                            title: '🏋️ Poids (kg)',
+                            desc: 'Atteindre un poids en kg'
+                          },
+                          {
+                            id: 'reps_only',
+                            title: formTimed ? '⏱ Durée' : '🔁 Répétitions',
+                            desc: formTimed ? 'Secondes à tenir' : 'Nombre de reps cible'
+                          },
+                          {
+                            id: 'sets_reps',
+                            title: formTimed ? '🛡️ Séries × Secondes' : '🛡️ Séries × Reps',
+                            desc: formTimed ? 'Ex: 3 séries de 30 s' : 'Ex: 3 séries de 6 reps'
+                          },
+    			{
+                            id: 'free_mode',
+                            title: '🕊️ Mode Libre',
+                            desc: 'Noter sans objectif fixe'
+                          }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            type="button"
+                            onClick={() => {
+                              setFormGoalMode(mode.id);
+                              if (mode.id === 'weight_only') setFormUnit('kg');
+                            }}
+                            className={`p-2.5 rounded-xl border text-left transition ${
+                              formGoalMode === mode.id
+                                ? 'bg-pink-600 border-pink-400 text-white shadow'
+                                : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                            }`}
+                          >
+                            <div className="text-xs font-black">{mode.title}</div>
+                            <div className="text-[10px] opacity-80 mt-0.5">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {formGoalMode === 'sets_reps' && (
+                        <div className="space-y-2.5 pt-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            {(formTimed ? TIMED_PRESETS : SETS_REPS_PRESETS).map(preset => {
+                              const active =
+                                Number(formGoalSets) === preset.sets &&
+                                Number(formGoalReps) === preset.reps;
+                              return (
+                                <button
+                                  key={preset.label}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormGoalSets(preset.sets);
+                                    setFormGoalReps(preset.reps);
+                                    if (formUnit === 'reps') setFormGoalValue(preset.reps);
+                                  }}
+                                  className={`px-3 py-1 rounded-xl text-xs font-extrabold border transition ${
+                                    active
+                                      ? 'bg-indigo-600 border-indigo-400 text-white'
+                                      : 'bg-slate-900 border-slate-800 text-slate-300'
+                                  }`}
+                                >
+                                  {preset.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                                Nombre de séries cibles
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="15"
+                                value={formGoalSets}
+                                onChange={e => setFormGoalSets(e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 text-center font-black text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                                {formTimed ? 'Secondes par série' : 'Répétitions par série'}
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="600"
+                                value={formGoalReps}
+                                onChange={e => {
+                                  setFormGoalReps(e.target.value);
+                                  if (formUnit === 'reps') setFormGoalValue(e.target.value);
+                                }}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 text-center font-black text-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {formGoalMode === 'reps_only' && (
+                        <div className="pt-2">
+                          <label className="block text-[11px] font-bold text-pink-200 mb-1">
+                            {formTimed ? 'Durée à atteindre (secondes)' : 'Objectif de répétitions à atteindre'}
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="200"
+                            value={formGoalReps}
+                            onChange={e => {
+                              setFormGoalReps(e.target.value);
+                              if (formUnit === 'reps') setFormGoalValue(e.target.value);
+                            }}
+                            className="w-full bg-slate-950 border border-pink-500/40 rounded-xl py-2 text-center font-black text-white"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {formType === 'strength' && formUnit === 'reps' && formGoalMode !== 'weight_only' && (
+                    <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-4 space-y-3">
+                      <label className="flex items-center gap-2 text-xs font-bold text-cyan-200 cursor-pointer">
+                        <input type="checkbox" checked={formTimed} onChange={e => setFormTimed(e.target.checked)} className="w-4 h-4" />
+                        ⏱ Exercice chronométré (gainage, planche, chaise murale…) : la valeur est en secondes
+                      </label>
+                      {formTimed && (() => {
+                        const adv = timedAdvice(formCustomName);
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-[11px] text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
+                                <input type="number" min="1" max="600" value={formStartValue}
+                                  onChange={e => { setFormStartValue(e.target.value); if (!editingQuestId) setFormCurrentValue(e.target.value); }}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
+                              </div>
+                              <div className="flex items-end">
+                                <button type="button" onClick={() => {
+                                  setFormGoalMode('sets_reps');
+                                  setFormStartValue(adv.start);
+                                  if (!editingQuestId) setFormCurrentValue(adv.start);
+                                  setFormGoalSets(adv.sets);
+                                  setFormGoalReps(adv.reps);
+                                  setFormGoalValue(adv.reps);
+                                }} className="w-full py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black">
+                                  Appliquer les valeurs conseillées ({adv.sets} × {adv.reps} s, départ {adv.start} s)
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {formType === 'strength' && formUnit === 'reps' && !formTimed && formGoalMode !== 'weight_only' && (
+                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-violet-300 mb-1">
+                            🪢 Aide Élastique Départ (kg)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            value={formStartAssistanceKg}
+                            onChange={e => setFormStartAssistanceKg(e.target.value)}
+                            className="w-full bg-slate-900 border border-violet-500/30 rounded-xl py-2 text-center font-bold text-violet-200"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-emerald-300 mb-1">
+                            🦅 Aide Cible Objectif (0 = Strict)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            value={formGoalAssistanceKg}
+                            onChange={e => setFormGoalAssistanceKg(e.target.value)}
+                            className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl py-2 text-center font-bold text-emerald-300"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {formType === 'strength' && (formUnit === 'kg' || formGoalMode === 'weight_only') && (
+                    <div className="grid grid-cols-2 gap-3 bg-slate-950 border border-slate-800 rounded-xl p-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                          Charge de départ (kg)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={formStartValue}
+                          onChange={e => {
+                            setFormStartValue(e.target.value);
+                            if (!editingQuestId) setFormCurrentValue(e.target.value);
+                          }}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-amber-300 mb-1">
+                          Charge Objectif (kg)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={formGoalValue}
+                          onChange={e => setFormGoalValue(e.target.value)}
+                          className="w-full bg-slate-900 border border-amber-500/40 rounded-xl py-2 text-center font-black text-amber-300"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {formType === 'cardio' && (
+                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setFormGoalMode('distance_duration')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${formGoalMode !== 'free_mode' ? 'bg-emerald-600 text-white' : 'bg-slate-900 border border-slate-700 text-slate-400'}`}>🎯 Mode Objectif</button>
+                        <button type="button" onClick={() => setFormGoalMode('free_mode')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${formGoalMode === 'free_mode' ? 'bg-emerald-600 text-white' : 'bg-slate-900 border border-slate-700 text-slate-400'}`}>🕊️ Mode Libre</button>
+                      </div>
+                      {formGoalMode !== 'free_mode' && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-400 mb-1">Départ ({formUnit})</label>
+                            <input type="number" step="0.5" value={formStartValue} onChange={e => { setFormStartValue(e.target.value); setFormCurrentValue(e.target.value); }} className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-emerald-300 mb-1">Objectif ({formUnit})</label>
+                            <input type="number" step="0.5" value={formGoalValue} onChange={e => setFormGoalValue(e.target.value)} className="w-full bg-slate-900 border border-emerald-500/40 rounded-xl py-2 text-center font-black text-emerald-300" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setQuestModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
+                    >
+                      {editingQuestId ? 'Enregistrer l’Objectif' : 'Créer la Quête'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+  );
+}

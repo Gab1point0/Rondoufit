@@ -1,0 +1,73 @@
+import { useEffect, useState } from 'react';
+import { playGameSound } from '../lib/sound';
+
+export function RestTimer({ soundEnabled }) {
+  const [open, setOpen] = useState(false);
+  const [endAt, setEndAt] = useState(null);
+  const [left, setLeft] = useState(0);
+  const [total, setTotal] = useState(90);
+  useEffect(() => {
+    if (!endAt) return;
+    const id = setInterval(() => {
+      const l = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setLeft(l);
+      if (l === 0) {
+        clearInterval(id);
+        setEndAt(null);
+        playGameSound('boss', soundEnabled);
+        try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [endAt]);
+  const start = sec => { setTotal(sec); setLeft(sec); setEndAt(Date.now() + sec * 1000); };
+  const addTime = () => { setTotal(t => t + 30); setLeft(l => l + 30); setEndAt(e => (e || Date.now()) + 30000); };
+  const stop = () => { setEndAt(null); setLeft(0); };
+  useEffect(() => {
+    const h = e => { const s = Number(e.detail) || 90; start(s); };
+    window.addEventListener('rondoufit-rest', h);
+    return () => window.removeEventListener('rondoufit-rest', h);
+  });
+  const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  const running = !!endAt;
+  return (
+    <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-2">
+      {open && (
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black uppercase text-pink-300">⏱ Repos entre séries</span>
+            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white text-sm">✕</button>
+          </div>
+          {running && (
+            <div>
+              <div className="text-3xl font-black text-white text-center tabular-nums">{fmt(left)}</div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
+                <div className="h-full bg-pink-500 transition-all" style={{ width: `${Math.min(100, (left / total) * 100)}%` }} />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button onClick={addTime} className="flex-1 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 hover:bg-slate-700">+30 s</button>
+                <button onClick={stop} className="flex-1 py-1.5 rounded-lg bg-rose-900/60 text-xs font-bold text-rose-200 hover:bg-rose-800">Stop</button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            {[60, 90, 120].map(sec => (
+              <button key={sec} onClick={() => start(sec)} className="py-2 rounded-lg bg-pink-600/80 hover:bg-pink-600 text-white text-xs font-black">
+                {sec} s
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Minuteur de repos"
+        className={`h-12 px-4 rounded-full shadow-2xl border-2 text-sm font-black flex items-center justify-center gap-1.5 ${
+          running ? 'bg-emerald-600 border-emerald-300 text-white' : 'bg-pink-600 border-pink-300 text-white shadow-pink-600/50'
+        }`}
+      >
+        ⏱ {running ? <span className="tabular-nums text-base">{fmt(left)}</span> : <span>Repos</span>}
+      </button>
+    </div>
+  );
+}

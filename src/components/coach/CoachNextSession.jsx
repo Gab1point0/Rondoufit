@@ -1,0 +1,247 @@
+import { coachSwapOptions } from '../../coach/advice';
+import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
+import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
+import { coachSuggestExercises } from '../../coach/suggest';
+import { normalizeArenaGroup } from '../../data/arenas';
+import { card } from './ui';
+
+export function CoachNextSession({ addSel, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp, onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating, sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession, startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach }) {
+  return (
+    <section className={card}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-black text-white">🏋️ Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+        {!plan && ov.hasExercises && (
+          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">✏️ Choisir le jour / modifier</button>
+        )}
+        {plan && (
+          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">↩ Revenir à la proposition du coach</button>
+        )}
+      </div>
+
+      {ov.hasExercises && (
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+          <p className="text-xs font-bold text-slate-300">Comment te sens-tu aujourd’hui ?</p>
+          <div className="flex flex-wrap gap-1.5">
+            {[['low', '😵 Cuit'], ['ok', '🙂 Normal'], ['high', '💪 En forme']].map(([lv, lab]) => {
+              const on = coach.readiness && coach.readiness.date === today && coach.readiness.level === lv;
+              return (
+                <button key={lv} onClick={() => updateCoach({ readiness: on ? null : { date: today, level: lv } })}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${on ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
+                  {lab}
+                </button>
+              );
+            })}
+            {!plan && first && (
+              <button onClick={() => setShortMode(v => !v)}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
+                ⏱ Version courte (40 min)
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500">
+            Si tu es cuit (mauvaise nuit, jambes lourdes), la séance que tu lances aujourd’hui est allégée : −10 % de charge et une série de moins. Cette réponse ne vaut que pour aujourd’hui.{tiredToday ? ' ✅ Pris en compte pour la séance guidée du jour.' : ''}
+          </p>
+        </div>
+      )}
+
+      {!ov.hasExercises && !plan && (
+        <div className="text-sm text-slate-300 space-y-2">
+          <p>Le coach a besoin d’exercices de musculation dans tes objectifs pour te proposer une séance.</p>
+          <button onClick={() => onGoTab('quests')} className="px-3 py-2 rounded-lg bg-pink-600 text-white font-bold text-xs">Ajouter des objectifs</button>
+        </div>
+      )}
+      {ov.hasExercises && !first && !plan && (
+        <p className="text-sm text-slate-300">
+          Aucun créneau libre dans les deux prochaines semaines avec tes contraintes (volley, matchs). Tu peux quand même choisir un jour toi-même ou lancer une séance maintenant.
+        </p>
+      )}
+
+      {plan && (
+        <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-bold text-slate-300">Jour de la séance :</span>
+            <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
+            <span className="text-slate-300 font-bold">{coachDayLabel(plan.date)}</span>
+            {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🏆 match</span>}
+            {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">🏐 volley</span>}
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-300">Ajouter un groupe musculaire :</p>
+            <div className="flex flex-wrap gap-1.5">
+              {COACH_ARENAS.map(a => {
+                const cands = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a).slice(0, a === 'Abdominaux' ? 1 : 2);
+                const none = !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a);
+                return (
+                  <button key={a} disabled={!cands.length}
+                    onClick={() => planAdd(cands.map(q => q.id))}
+                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold ${cands.length ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-900 border-slate-800 text-slate-600'}`}>
+                    + {a}{none ? ' (aucun exo)' : ''}
+                  </button>
+                );
+              })}
+            </div>
+            {availQuests.length > 0 && (
+              <div className="flex gap-2">
+                <select value={addSel} onChange={e => setAddSel(e.target.value)} className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                  <option value="">Ajouter un exercice précis…</option>
+                  {COACH_ARENAS.map(a => {
+                    const list = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a);
+                    return list.length ? (
+                      <optgroup key={a} label={a}>
+                        {list.map(q => <option key={q.id} value={q.id}>{q.icon} {q.name}</option>)}
+                      </optgroup>
+                    ) : null;
+                  })}
+                </select>
+                <button disabled={!addSel} onClick={() => { planAdd([addSel]); setAddSel(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-black">Ajouter</button>
+              </div>
+            )}
+            {COACH_ARENAS.filter(a => !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a)).map(a => (
+              <div key={a} className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="text-slate-400">Tu n’as pas encore d’exercice de {a} :</span>
+                {coachSuggestExercises(gameState, a, 2).map(c => (
+                  <button key={c.id} onClick={() => { const id = onAddExercise(c.id); planAdd([id]); }} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold">+ créer « {c.name} »</button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {shownSession && shownSession.exercises.length > 0 && (
+        <>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">
+              {plan ? 'Séance perso' : shownSession.type ? `Séance ${shownSession.typeLabel}` : `Séance ${shownSession.templateId} · corps entier`}
+            </span>
+            <span className="text-slate-300 font-bold">
+              {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
+            </span>
+            <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
+          </div>
+          {shownSession.notes.map((n, i) => (
+            <p key={i} className="text-xs text-sky-300">ℹ️ {n}</p>
+          ))}
+          <div className="space-y-2">
+            {shownSession.exercises.map(e => {
+              const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
+              const uniform = e.targetReps.every(r => r === e.targetReps[0]);
+              const ru = e.timed ? 's' : 'reps';
+              const repsTxt = uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
+              const loadTxt = e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · aide ${coachFmt(e.assist)} kg` : '';
+              return (
+                <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-white text-sm truncate">{e.icon} {e.name}</p>
+                      <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1">
+                      <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
+                      <button onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} title="Remplacer cet exercice" className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">🔄</button>
+                      {plan && (
+                        <>
+                          <button onClick={() => planMove(e.questId, -1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▲</button>
+                          <button onClick={() => planMove(e.questId, 1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▼</button>
+                          <button onClick={() => planRemove(e.questId)} className="w-7 h-7 rounded-lg bg-rose-900/60 text-rose-200 text-xs font-black">✕</button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">{e.reason}</p>
+                  {swapFor === e.questId && (() => {
+                    const opt = coachSwapOptions(gameState, e.questId, shownSession.exercises.map(x => x.questId));
+                    return (
+                      <div className="mt-2 bg-slate-900 border border-slate-700 rounded-lg p-2 space-y-1.5">
+                        <p className="text-[11px] font-bold text-slate-300">Remplacer par (même groupe : {opt.arena}) :</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {opt.own.map(q => (
+                            <button key={q.id} onClick={() => doSwap(e.questId, q.id)} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[11px] font-bold text-slate-100">{q.icon} {q.name}</button>
+                          ))}
+                          {opt.catalog.map(c => (
+                            <button key={c.id} onClick={() => { const id = onAddExercise(c.id); doSwap(e.questId, id); }} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 text-[11px] font-bold text-slate-300">+ créer « {c.name} »</button>
+                          ))}
+                          {!opt.own.length && !opt.catalog.length && <span className="text-[11px] text-slate-500">Aucun équivalent disponible.</span>}
+                        </div>
+                        <p className="text-[10px] text-slate-500">Le remplacement transforme la séance en séance personnalisée (tu peux revenir à la proposition du coach).</p>
+                      </div>
+                    );
+                  })()}
+                  {e.change === 'goal' && (
+                    <button
+                      onClick={() => { const q = gameState.quests.find(x => x.id === e.questId); if (q) onOpenLevelUp(q); }}
+                      className="mt-2 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[11px] font-black"
+                    >
+                      Valider le niveau suivant
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {shownSession.warmup && <p className="text-[11px] text-slate-400">🔥 {shownSession.warmup}</p>}
+          {!plan && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
+              <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
+              <div className="flex flex-wrap gap-1.5">
+                {shownSession.fillSuggestions.map(c => (
+                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="text-[11px] text-slate-500">
+            Repos conseillé : 2 min 30 sur les exercices principaux, 1 min 30 sur les exercices d’appoint (ACSM 2009).
+          </p>
+        </>
+      )}
+      {plan && shownSession && shownSession.exercises.length === 0 && (
+        <p className="text-xs text-slate-400">Ta séance est vide : ajoute un groupe ou un exercice ci-dessus.</p>
+      )}
+
+      {rating && (
+        <div className={`rounded-xl border p-3 space-y-2 ${rating.score >= 7.5 ? 'bg-emerald-950/20 border-emerald-500/40' : rating.score >= 5 ? 'bg-amber-950/20 border-amber-500/40' : 'bg-rose-950/20 border-rose-500/40'}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 ${rating.score >= 7.5 ? 'border-emerald-400 text-emerald-300' : rating.score >= 5 ? 'border-amber-400 text-amber-300' : 'border-rose-400 text-rose-300'}`}>
+              {String(rating.score).replace('.', ',')}
+            </div>
+            <div>
+              <p className="font-black text-white text-sm">Avis du coach : {rating.label}</p>
+              <p className="text-[11px] text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {rating.items.map((it, i) => (
+              <div key={i} className="text-xs">
+                <p className={it.level === 'bad' ? 'text-rose-300 font-bold' : it.level === 'warn' ? 'text-amber-300 font-bold' : it.level === 'info' ? 'text-sky-300' : 'text-emerald-300'}>
+                  {it.level === 'bad' ? '⛔' : it.level === 'warn' ? '⚠️' : it.level === 'info' ? 'ℹ️' : '✅'} {it.text}
+                </p>
+                {it.fix && <p className="text-slate-300 ml-5">→ {it.fix}</p>}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>
+        </div>
+      )}
+
+      {sessionToStart && sessionToStart.exercises.length > 0 && (
+        <div className="space-y-1.5">
+          <button
+            onClick={() => onStartGuided(sessionToStart)}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-500 hover:to-fuchsia-500 text-white font-black text-sm shadow-lg shadow-pink-600/30"
+          >
+            ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
+          </button>
+          {shownDate !== today && (
+            <p className="text-[11px] text-slate-500">
+              Prévue le {coachDayLabel(shownDate)}.{plan ? '' : ` Si tu la fais aujourd’hui, le coach adapte les exercices à la journée${todayInfo.legsOk ? '' : ` (pas de jambes : ${todayInfo.legsWhy})`}.`}
+            </p>
+          )}
+          {todayInfo.blocked && (
+            <p className="text-[11px] text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : 'volley'} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
