@@ -50,11 +50,13 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     [stateRef, version, applyRemote]
   );
 
-  const syncNow = useCallback(() => {
+  // `quiet` : vérification régulière en arrière-plan, la pastille ne clignote pas si rien n'est à envoyer.
+  const syncNow = useCallback(opts => {
     const cfg = cfgRef.current;
     if (!store.isConfigured(cfg)) return Promise.resolve(false);
     if (running.current) return running.current;
-    setStatus(s => (s === 'off' || s === 'loading' ? 'loading' : 'saving'));
+    const quiet = !!(opts && opts.quiet);
+    setStatus(s => (quiet && s === 'synced' ? s : s === 'off' || s === 'loading' ? 'loading' : 'saving'));
     const p = (async () => {
       try {
         await syncOnce(cfg, ports);
@@ -77,11 +79,11 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
   }, [ports]);
 
   const scheduleSync = useCallback(
-    (delay = DEBOUNCE_MS) => {
+    (delay = DEBOUNCE_MS, quiet = false) => {
       if (!store.isConfigured(cfgRef.current)) return;
       clearTimeout(timer.current);
       timer.current = setTimeout(() => {
-        if (navigator.onLine !== false) void syncNow();
+        if (navigator.onLine !== false) void syncNow({ quiet });
       }, delay);
     },
     [syncNow]
@@ -117,7 +119,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
     const poll = setInterval(() => {
-      if (document.visibilityState === 'visible' && store.isConfigured(cfgRef.current)) scheduleSync(100);
+      if (document.visibilityState === 'visible' && store.isConfigured(cfgRef.current)) scheduleSync(100, true);
     }, POLL_MS);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);

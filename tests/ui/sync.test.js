@@ -27,6 +27,19 @@ describe('sauvegarde GitHub dans l’application', () => {
     expect(pill(h)).toContain('Sauvegardé sur GitHub');
   }, TIMEOUT);
 
+  it('reprend au bout d’une minute les modifications faites depuis un autre appareil', async () => {
+    const srv = fakeGithub(SAVE({ xp: 100, _savedAt: 5 }));
+    const h = await start(srv, { 'rondoufit:github': CFG });
+    await settle(h);
+    expect(pageText(h)).toContain('100 EXP');
+    srv.file = { content: JSON.stringify(SAVE({ xp: 300, _savedAt: 9 })), sha: 'sha-autre-appareil' };
+    await settle(h, 62000);
+    await sleep(400); // le délai court (100 ms) qui suit la vérification est une vraie minuterie
+    expect(pageText(h)).toContain('300 EXP');
+    expect(srv.puts).toHaveLength(0);
+    expect(pill(h)).toContain('Sauvegardé');
+  }, TIMEOUT);
+
   it('non configurée : pastille d’avertissement, aucune requête, réglages utilisables', async () => {
     const srv = fakeGithub(null);
     const h = await start(srv);

@@ -17,6 +17,7 @@ export function useGameState() {
   const mounted = useRef(false);
 
   const applyRemote = useCallback(state => {
+    if (state === stateRef.current) return; // rien à changer : pas d'affichage suivant, donc rien à « consommer »
     stateRef.current = state;
     fromRemote.current = true;
     setRawState(state);
