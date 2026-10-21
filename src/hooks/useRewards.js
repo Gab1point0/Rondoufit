@@ -1,9 +1,10 @@
 import { ACHIEVEMENTS_LIST } from '../data/gamification';
-import { addDaysISO, getWeekStart } from '../lib/dates';
+import { addDaysISO, getTodayISODate, getWeekStart } from '../lib/dates';
 import { getAllEntries } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { computeAchievementStats, computeDerivedAchievements, computePersonalRecords, computeWeekStats, getWeekChallenges } from '../lib/stats';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { computeXp } from '../lib/xp';
 
 export function useRewards({ syncStatus, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast }) {
   // Déblocage automatique des trophées + versement du bonus EXP
@@ -27,7 +28,7 @@ export function useRewards({ syncStatus, gameState, isLoaded, setGameState, setG
 
     setGameStateAuto(prev => ({
       ...prev,
-      xp: prev.xp + bonus,
+      ...computeXp(prev, bonus, getTodayISODate(), 'reward').patch,
       unlockedAchievements: Array.from(
         new Set([...(prev.unlockedAchievements || []), ...fresh.map(a => a.id)])
       )
@@ -102,7 +103,7 @@ export function useRewards({ syncStatus, gameState, isLoaded, setGameState, setG
 
   const handleClaimChallenge = c => {
     if ((gameState.claimedChallenges || []).includes(c.uid)) return;
-    setGameState(prev => ({ ...prev, xp: prev.xp + c.xp, claimedChallenges: [...(prev.claimedChallenges || []), c.uid] }));
+    setGameState(prev => ({ ...prev, ...computeXp(prev, c.xp, getTodayISODate(), 'reward').patch, claimedChallenges: [...(prev.claimedChallenges || []), c.uid] }));
     playGameSound('boss', gameState.soundEnabled);
     triggerToast(`Défi relevé : ${c.title}`, c.desc, c.xp, c.icon);
   };

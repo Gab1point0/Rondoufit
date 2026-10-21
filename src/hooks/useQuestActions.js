@@ -4,13 +4,14 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { getTodayISODate } from '../lib/dates';
 import { getSetDetailsArray, isTimedCatalog } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
+import { computeXp } from '../lib/xp';
 
 export function useQuestActions({ gameState, registerUndo, setGameState, triggerToast }) {
   const handleClaimWeekly = ws => {
     setGameState(prev => {
       const cs = getCoachSettings(prev);
       if ((cs.weeklyClaimed || []).includes(ws)) return prev;
-      return { ...prev, xp: prev.xp + 150, coach: { ...cs, weeklyClaimed: [...(cs.weeklyClaimed || []), ws] } };
+      return { ...prev, ...computeXp(prev, 150, getTodayISODate(), 'reward').patch, coach: { ...cs, weeklyClaimed: [...(cs.weeklyClaimed || []), ws] } };
     });
     playGameSound('boss', gameState.soundEnabled);
     triggerToast('Objectifs de la semaine accomplis !', 'Muscu, endurance et pesées : bravo.', 150, '🏅');
@@ -65,7 +66,7 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
         note: `Point de départ — Niveau 1 (${c.name}) • ajouté par le Coach`
       }]
     };
-    setGameState(prev => ({ ...prev, xp: prev.xp + 40, quests: [newQuest, ...prev.quests] }));
+    setGameState(prev => ({ ...prev, ...computeXp(prev, 40, getTodayISODate(), 'minor').patch, quests: [newQuest, ...prev.quests] }));
     triggerToast('Exercice ajouté !', `${c.name} : ajuste la charge de départ dans « Quêtes » (✏️).`, 40, c.icon);
     return newQuest.id;
   };

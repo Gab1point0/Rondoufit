@@ -3,6 +3,7 @@ import { calculateCardioCalories } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
+import { computeXp, xpNote } from '../lib/xp';
 
 export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast }) {
   // Modale rapide "+ Course / Marche du jour"
@@ -110,9 +111,10 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
     newUnlocked.add('first_blood');
     newUnlocked.add('hybrid_athlete');
 
+    const award = computeXp(gameState, xpGain, getTodayISODate(), 'session');
     setGameState(prev => ({
       ...prev,
-      xp: prev.xp + xpGain,
+      ...computeXp(prev, xpGain, getTodayISODate(), 'session').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       quests: updatedQuests
     }));
@@ -123,8 +125,8 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
     playGameSound('xp', gameState.soundEnabled);
     triggerToast(
       `${cat.name} ajoutée !`,
-      `${dist} km en ${dur} min • 🔥 ${calories} kcal brûlées`,
-      xpGain,
+      `${dist} km en ${dur} min • 🔥 ${calories} kcal brûlées` + xpNote(award),
+      award.gained,
       cat.icon
     );
   };

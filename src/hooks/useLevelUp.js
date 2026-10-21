@@ -1,6 +1,8 @@
 import { isTimedQuest } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useState } from 'react';
+import { computeXp } from '../lib/xp';
+import { getTodayISODate } from '../lib/dates';
 
 export function useLevelUp({ gameState, setGameState, triggerToast }) {
   // Modale "Objectif Validé & Passage au Niveau Supérieur"
@@ -52,7 +54,7 @@ export function useLevelUp({ gameState, setGameState, triggerToast }) {
 
     setGameState(prev => ({
       ...prev,
-      xp: prev.xp + 300,
+      ...computeXp(prev, 300, getTodayISODate(), 'reward').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       quests: prev.quests.map(item => {
         if (item.id !== q.id) return item;

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { normalizeArenaGroup } from '../data/arenas';
 import { stripAccents } from '../lib/text';
 import { parseSpokenWorkout } from '../voice/parser';
+import { computeXp, xpNote } from '../lib/xp';
+import { getTodayISODate } from '../lib/dates';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -120,6 +122,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
     let totalXpGain = 0;
     let totalKcalGain = 0;
+    let award = { gained: 0, bonusPct: 0, reduced: false };
 
     setGameState(prev => {
       let updatedQuests = [...prev.quests];
@@ -199,9 +202,10 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
         }
       });
 
+      award = computeXp(prev, totalXpGain, getTodayISODate(), 'session');
       return {
         ...prev,
-        xp: prev.xp + totalXpGain,
+        ...award.patch,
         quests: updatedQuests
       };
     });
@@ -211,8 +215,9 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
       `🎤 ${editableItems.length} exercice(s) validé(s) d'un coup !`,
       `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}` +
         (createdNames.length ? ` • ${createdNames.length} nouvel(s) objectif(s) ajouté(s)` : '') +
-        (newArenas.length ? ` • Arène débloquée : ${newArenas.join(', ')}` : ''),
-      totalXpGain,
+        (newArenas.length ? ` • Arène débloquée : ${newArenas.join(', ')}` : '') +
+        xpNote(award),
+      award.gained,
       '🎤'
     );
     setSpokenText('');

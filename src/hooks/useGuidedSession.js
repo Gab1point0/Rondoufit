@@ -5,6 +5,7 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { countValidatedSets, getSetDetailsArray, isTimedQuest } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useEffect, useState } from 'react';
+import { computeXp, xpNote } from '../lib/xp';
 
 export function useGuidedSession({
   gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
@@ -114,9 +115,10 @@ export function useGuidedSession({
       return;
     }
     newUnlocked.add('first_blood');
+    const award = computeXp(gameState, xpEarned, today, 'session');
     setGameState(prev => ({
       ...prev,
-      xp: prev.xp + xpEarned,
+      ...computeXp(prev, xpEarned, today, 'session').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       quests: updatedQuests
     }));
@@ -126,8 +128,8 @@ export function useGuidedSession({
     setGuided(null);
     setGuidedOpen(false);
     playGameSound(bossQuest ? 'boss' : 'xp', gameState.soundEnabled);
-    triggerToast('Séance guidée terminée !', `${doneEx} exercice(s) enregistré(s)`, xpEarned, bossQuest ? '👑' : '🎵');
-    try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, xpEarned)); } catch (err) {}
+    triggerToast('Séance guidée terminée !', `${doneEx} exercice(s) enregistré(s)` + xpNote(award), award.gained, bossQuest ? '👑' : '🎵');
+    try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, award.gained)); } catch (err) {}
     if (bossQuest) openLevelUpModal(bossQuest);
   };
 

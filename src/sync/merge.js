@@ -19,6 +19,7 @@ const SET_KEYS = {
   volleyExtra: true,
   gymSkips: true,
   deloadWeeks: true,
+  rankTrials: true,
 };
 
 export function deepEqual(a, b) {
@@ -112,7 +113,7 @@ function mergeItem(b, l, r, ctx) {
   return out;
 }
 
-function merge3(base, local, remote, ctx, key) {
+function merge3(base, local, remote, ctx, key, parent) {
   if (deepEqual(local, remote)) return local;
   if (base !== undefined && deepEqual(local, base)) return remote;
   if (base !== undefined && deepEqual(remote, base)) return local;
@@ -121,7 +122,7 @@ function merge3(base, local, remote, ctx, key) {
   if (isPlainObject(local) && isPlainObject(remote)) {
     const out = {};
     for (const k of new Set([...Object.keys(local), ...Object.keys(remote)])) {
-      out[k] = merge3(isPlainObject(base) ? base[k] : undefined, local[k], remote[k], ctx, k);
+      out[k] = merge3(isPlainObject(base) ? base[k] : undefined, local[k], remote[k], ctx, k, key);
     }
     return out;
   }
@@ -129,7 +130,8 @@ function merge3(base, local, remote, ctx, key) {
     if (isIdList(local) || isIdList(remote)) return mergeIdLists(base, local, remote, ctx);
     if (key in SET_KEYS) return mergeSets(key, base, local, remote);
   }
-  if (key === 'xp' && typeof local === 'number' && typeof remote === 'number') {
+  // EXP : les gains des deux appareils s'additionnent (ici pour le total et pour chaque semaine de `xpWeeks`)
+  if ((key === 'xp' || parent === 'xpWeeks') && typeof local === 'number' && typeof remote === 'number') {
     return typeof base === 'number' ? Math.max(0, local + remote - base) : Math.max(local, remote);
   }
   return ctx.preferLocal ? local : remote;

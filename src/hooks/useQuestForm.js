@@ -5,6 +5,7 @@ import { getTodayISODate } from '../lib/dates';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useState } from 'react';
+import { computeXp } from '../lib/xp';
 
 export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId, triggerToast }) {
   // Modale "Ajouter / Ajuster un Objectif"
@@ -254,7 +255,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
 
       setGameState(prev => ({
         ...prev,
-        xp: prev.xp + 40,
+        ...computeXp(prev, 40, getTodayISODate(), 'minor').patch,
         quests: [newQuest, ...prev.quests]
       }));
       setSelectedChartQuestId(newQuest.id);

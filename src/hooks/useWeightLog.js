@@ -1,6 +1,7 @@
 import { getTodayISODate } from '../lib/dates';
 import { playGameSound } from '../lib/sound';
 import { useState } from 'react';
+import { computeXp } from '../lib/xp';
 
 export function useWeightLog({ gameState, registerUndo, setGameState, triggerToast }) {
   // États pour l'onglet "⚖️ Suivi du Poids"
@@ -26,7 +27,7 @@ export function useWeightLog({ gameState, registerUndo, setGameState, triggerToa
     setGameState(prev => ({
       ...prev,
       userWeightKg: w,
-      xp: prev.xp + 25,
+      ...computeXp(prev, 25, getTodayISODate(), 'minor').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       weightHistory: [...(prev.weightHistory || []), entry].sort((a, b) =>
         a.date.localeCompare(b.date)

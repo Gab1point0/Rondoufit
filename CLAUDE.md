@@ -48,6 +48,15 @@ Exercices chronométrés (planche…) : `timed:true`, valeurs en secondes (`isTi
 
 Coach (`coach/`, repères : ACSM 2009, Schoenfeld 2016/2017, Spiering 2021, Garthe 2011, Morton 2018, Bell 2023, Mifflin 1990, Epley 1985) : progression auto (`computeExerciseTarget`), planning hebdo avec volley jeudi/vendredi, matchs, créneaux de salle, mode 3 séances, durée cible 60 min, séance guidée, bilan, nutrition, objectifs hebdo. Ce n'est pas un avis médical.
 
+## Niveaux, EXP, rangs (refonte du 21/10/2026)
+- **Courbe** (`lib/levels.js`) : EXP cumulée pour le niveau L = 300 × (L−1)^1,6 (niveau 5 ≈ 2 800 EXP, 10 ≈ 10 000, 20 ≈ 33 000, 50 ≈ 150 000). Pour changer le rythme, ne toucher qu'à `XP_BASE` / `XP_EXPONENT`. Niveau max 100.
+- **Rangs** (`data/gamification.js`, `RPG_RANKS`) : 7 rangs, du niveau 1 (Novice) au 50 (Maître des Arènes).
+- **Épreuves de rang** (`data/trials.js`, `hooks/useRankTrial.js`, `modals/RankTrialModal.jsx`) : pour passer un rang il faut aussi réussir une épreuve (jours d'entraînement, semaines d'affilée, exercices niveau 2+, kcal). Tant qu'elle n'est pas réussie, le niveau reste bloqué juste avant le rang (`levelInfo.locked`) et l'EXP s'accumule en réserve. Réussies : `gameState.rankTrials` (niveaux des rangs).
+- **EXP gagnée** : toujours via `computeXp(state, base, today, kind)` de `lib/xp.js` (jamais `xp: prev.xp + n`), avec `kind` = `'session'` (bonus de régularité +10 %/semaine d'affilée, max +50 %, puis plafond du jour), `'minor'` (plafond seulement) ou `'reward'` (trophées, défis, objectifs hebdo : tel quel). Plafond du jour : au-delà de 600 EXP gagnées dans la journée l'EXP de séance compte moitié. `computeXp` renvoie aussi le `patch` à fusionner dans l'état (`xp`, `xpWeeks` = EXP par semaine pour le Bilan, `xpDaily`).
+- **Récompenses** (`data/rewards.js`, `modals/RewardsModal.jsx`) : thèmes de couleur, accessoires de Rondoudou et titres débloqués par niveau (`gameState.cosmetics`) ; le cadre de l'avatar change avec le rang.
+- **Célébrations** (`hooks/useLevelCelebration.js`, `modals/RankUpModal.jsx`) : message à chaque niveau, grande fenêtre à chaque nouveau rang. **Bilan** : `components/XpProgress.jsx` (courbe d'EXP, dates estimées).
+- Trophées : bonus d'EXP divisés par deux par rapport à l'ancienne version. La fusion de synchro additionne les gains `xp` / `xpWeeks` des deux appareils et réunit `rankTrials`.
+
 ## Sauvegarde : fichier JSON dans un dépôt GitHub privé
 - **Local** : `localStorage` clé `rondoudou_save_v1` (ne jamais la renommer : elle contient les données des appareils existants). **Photos souvenirs** : IndexedDB `rondoufit_photos`, hors synchro (export/import JSON dans l'onglet Souvenirs).
 - **GitHub** (remplace Google Sheets depuis la refonte) : `sync/` + `hooks/useGithubSync.js`. L'utilisateur renseigne dans l'appli (pastille ☁️ de l'en-tête → fenêtre « Sauvegarde GitHub ») compte, dépôt privé, fichier (`rondoufit-data.json`) et un **jeton fine-grained** (Contents : lecture/écriture) gardé uniquement dans son navigateur (`rondoufit:github`). Même principe que l'appli Carnet EPS.

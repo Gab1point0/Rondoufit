@@ -4,13 +4,14 @@ import { levelFromXp } from '../lib/levels';
 import { compareWithPreviousSession, evaluateQuestProgress } from '../lib/progress';
 import { getSetDetailsArray, isTimedQuest } from '../lib/quests';
 import { computeCurrentStreak } from '../lib/stats';
+import { streakBonusPct } from '../lib/xp';
 import { useMemo } from 'react';
 
 export function useDerivedStats({ gameState, selectedDate }) {
   // ==========================================
   // CALCULS DÉRIVÉS
   // ==========================================
-  const levelInfo = useMemo(() => levelFromXp(gameState.xp), [gameState.xp]);
+  const levelInfo = useMemo(() => levelFromXp(gameState.xp, { passed: gameState.rankTrials || [] }), [gameState.xp, gameState.rankTrials]);
 
   const currentStreak = useMemo(() => computeCurrentStreak(gameState.quests), [gameState.quests]);
 
@@ -133,5 +134,8 @@ export function useDerivedStats({ gameState, selectedDate }) {
     return { totalKcal, totalSessions, bossesDefeated };
   }, [gameState.quests]);
 
-  return { levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats };
+  // Bonus de régularité en cours (semaines d'affilée terminées avec au moins une séance)
+  const xpBonusPct = useMemo(() => streakBonusPct(gameState, getTodayISODate()), [gameState.quests]);
+
+  return { levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats, xpBonusPct };
 }

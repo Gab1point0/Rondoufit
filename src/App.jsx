@@ -29,6 +29,9 @@ import { AppHeader } from './components/header/AppHeader';
 import { useDataTransfer } from './hooks/useDataTransfer';
 import { useDerivedStats } from './hooks/useDerivedStats';
 import { useLevelCelebration } from './hooks/useLevelCelebration';
+import { useRankTrial } from './hooks/useRankTrial';
+import { RankTrialModal } from './modals/RankTrialModal';
+import { RewardsModal } from './modals/RewardsModal';
 import { RankUpModal } from './modals/RankUpModal';
 import { useGameState } from './hooks/useGameState';
 import { useGuidedSession } from './hooks/useGuidedSession';
@@ -107,10 +110,15 @@ export function App() {
   });
 
   const {
-    levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats,
+    levelInfo, currentStreak, arenaLevels, dailySummary, dailyJournalList, lifetimeStats, xpBonusPct,
   } = useDerivedStats({
     gameState, selectedDate,
   });
+
+  const { trialOpen, setTrialOpen, trialRank, trialEval, validateTrial } = useRankTrial({
+    gameState, setGameState, triggerToast,
+  });
+  const [rewardsOpen, setRewardsOpen] = useState(false);
 
   const { celebration, closeCelebration } = useLevelCelebration({
     levelInfo, isLoaded, syncStatus: sync.status, soundEnabled: gameState.soundEnabled, triggerToast,
@@ -183,9 +191,13 @@ export function App() {
         importInputRef={importInputRef}
         levelInfo={levelInfo}
         lifetimeStats={lifetimeStats}
+        onOpenRewards={() => setRewardsOpen(true)}
         onOpenSync={() => setSyncOpen(true)}
+        onOpenTrial={() => setTrialOpen(true)}
         onRetrySync={sync.syncNow}
+        streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
+        trialRank={trialRank}
         openCreateQuestModal={openCreateQuestModal}
         questFilter={questFilter}
         selectedDate={selectedDate}
@@ -286,7 +298,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {activeTab === 'photos' && <PhotoCalendar gameState={gameState} />}
 
         {activeTab === 'bilan' && (
-          <BilanTab gameState={gameState} handleClaimChallenge={handleClaimChallenge} records={records} weekData={weekData} />
+          <BilanTab gameState={gameState} handleClaimChallenge={handleClaimChallenge} levelInfo={levelInfo} records={records} weekData={weekData} />
         )}
 
         {/* ONGLET 5 : TROPHÉES */}
@@ -413,6 +425,16 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       {/* MODALE 6 : RÉGLAGES DE LA SAUVEGARDE GITHUB */}
       {syncOpen && (
         <SyncModal sync={sync} onClose={() => setSyncOpen(false)} triggerToast={triggerToast} />
+      )}
+
+      {/* MODALE 7 : RÉCOMPENSES DE NIVEAU */}
+      {rewardsOpen && (
+        <RewardsModal gameState={gameState} levelInfo={levelInfo} onClose={() => setRewardsOpen(false)} setGameState={setGameState} />
+      )}
+
+      {/* MODALE 8 : ÉPREUVE DE RANG */}
+      {trialOpen && trialRank && (
+        <RankTrialModal levelInfo={levelInfo} onClose={() => setTrialOpen(false)} onValidate={validateTrial} trialEval={trialEval} trialRank={trialRank} />
       )}
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}

@@ -4,9 +4,9 @@ import { HeaderProfile } from './HeaderProfile';
 
 export function AppHeader({
   arenaLevels, currentStreak, gameState, handleExportJSON, handleImportJSON, importInputRef,
-  levelInfo, lifetimeStats, onOpenSync, onRetrySync, openCreateQuestModal, questFilter,
-  selectedDate, setActiveTab, setConfirmResetOpen, setGameState, setQuestFilter, setQuickCardioDate,
-  setQuickCardioModalOpen, syncStatus,
+  levelInfo, lifetimeStats, onOpenRewards, onOpenSync, onOpenTrial, onRetrySync,
+  openCreateQuestModal, questFilter, selectedDate, setActiveTab, setConfirmResetOpen, setGameState,
+  setQuestFilter, setQuickCardioDate, setQuickCardioModalOpen, streakBonusPct, syncStatus, trialRank,
 }) {
   return (
     <header className="relative overflow-hidden border-b border-pink-500/20 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
@@ -17,10 +17,14 @@ export function AppHeader({
             gameState={gameState}
             levelInfo={levelInfo}
             lifetimeStats={lifetimeStats}
+            onOpenRewards={onOpenRewards}
             onOpenSync={onOpenSync}
+            onOpenTrial={onOpenTrial}
             onRetrySync={onRetrySync}
             setActiveTab={setActiveTab}
+            streakBonusPct={streakBonusPct}
             syncStatus={syncStatus}
+            trialRank={trialRank}
           />
 
           {/* Boutons d'Action Rapide */}

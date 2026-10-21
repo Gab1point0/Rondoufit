@@ -16,6 +16,10 @@ export const INITIAL_STATE = {
   xp: 280,
   streak: 2,
   soundEnabled: true,
+  xpWeeks: {},                                  // EXP gagnée par semaine (clé = lundi AAAA-MM-JJ), pour la courbe du Bilan
+  xpDaily: { date: '', earned: 0 },             // EXP gagnée aujourd'hui (plafond du jour)
+  rankTrials: [],                               // niveaux des rangs dont l'épreuve est réussie
+  cosmetics: { theme: 'rose', accessory: 'none', title: '' },
   unlockedAchievements: ['first_blood', 'weight_tracker'],
   claimedChallenges: [],
   quests: [

@@ -4,6 +4,7 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
+import { computeXp, xpNote } from '../lib/xp';
 
 export function useLogSession({
   gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay,
@@ -343,9 +344,11 @@ export function useLogSession({
     );
     if (totalCaloriesAfter >= 1000) newUnlocked.add('calorie_furnace');
 
+    const xpDay = getTodayISODate();
+    const award = computeXp(gameState, xpEarned, xpDay, 'session');
     setGameState(prev => ({
       ...prev,
-      xp: prev.xp + xpEarned,
+      ...computeXp(prev, xpEarned, xpDay, 'session').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       quests: updatedQuests
     }));
@@ -357,7 +360,7 @@ export function useLogSession({
       bannerBadge === '👑' ? 'boss' : 'xp',
       gameState.soundEnabled
     );
-    triggerToast(bannerTitle, bannerSubtitle, xpEarned, bannerBadge);
+    triggerToast(bannerTitle, bannerSubtitle + xpNote(award), award.gained, bannerBadge);
 
     if (questForAutoLevelUp) {
       openLevelUpModal(questForAutoLevelUp);

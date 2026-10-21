@@ -1,8 +1,11 @@
+import { XpProgress } from '../components/XpProgress';
 import { addDaysISO } from '../lib/dates';
 
-export function BilanTab({ gameState, handleClaimChallenge, records, weekData }) {
+export function BilanTab({ gameState, handleClaimChallenge, levelInfo, records, weekData }) {
   return (
     <div className="space-y-6">
+      <XpProgress gameState={gameState} levelInfo={levelInfo} />
+
       <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
         <h3 className="font-black text-white">
           🎯 Défis de la semaine{' '}
