@@ -292,7 +292,6 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       { id: 'hanging_leg_raises', name: 'Relevé de Jambes Suspendu', category: 'Abdominaux', type: 'strength', unit: 'reps', defaultGoalMode: 'sets_reps', defaultStart: 6, defaultGoal: 12, defaultGoalSets: 3, defaultGoalReps: 12, defaultStartAssistance: 0, defaultGoalAssistance: 0, icon: '🦿' },
       { id: 'ab_wheel', name: 'Roue Abdominale (Ab Wheel)', category: 'Abdominaux', type: 'strength', unit: 'reps', defaultGoalMode: 'sets_reps', defaultStart: 5, defaultGoal: 12, defaultGoalSets: 3, defaultGoalReps: 12, defaultStartAssistance: 0, defaultGoalAssistance: 0, icon: '🎡' },
       { id: 'cable_crunch', name: 'Crunch Abdominaux Poulie Haute', category: 'Abdominaux', type: 'strength', unit: 'kg', defaultGoalMode: 'sets_reps', defaultStart: 25, defaultGoal: 45, defaultGoalSets: 3, defaultGoalReps: 15, defaultStartAssistance: 0, defaultGoalAssistance: 0, icon: '⚡' },
-      { id: 'russian_twist', name: 'Russian Twist (Obliques)', category: 'Abdominaux', type: 'strength', unit: 'reps', defaultGoalMode: 'sets_reps', defaultStart: 16, defaultGoal: 30, defaultGoalSets: 3, defaultGoalReps: 30, defaultStartAssistance: 0, defaultGoalAssistance: 0, icon: '🌪️' },
       { id: 'running_endurance', name: 'Course à pied (Endurance)', category: 'Course & Cardio', type: 'cardio', unit: 'km', cardioMode: 'run', defaultStart: 3, defaultGoal: 10, defaultDurationMin: 25, defaultElevationM: 30, icon: '🏃' },
       { id: 'running_interval', name: 'Course Fractionné / VMA', category: 'Course & Cardio', type: 'cardio', unit: 'km', cardioMode: 'interval', defaultStart: 3, defaultGoal: 6, defaultDurationMin: 22, defaultElevationM: 20, icon: '⚡' },
       { id: 'brisk_walk', name: 'Marche Active / Randonnée', category: 'Course & Cardio', type: 'cardio', unit: 'km', cardioMode: 'walk', defaultStart: 4, defaultGoal: 12, defaultDurationMin: 50, defaultElevationM: 120, icon: '🥾' },
@@ -403,7 +402,6 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       ['fp_wrist_curl','Curl Poignets (Avant-Bras)','Épaules & Bras','Barre','kg',10,30,3,15,'✊'],
       // ABDOMINAUX
       ['fp_ab_machine','Crunch Machine (Abdominal Crunch)','Abdominaux','Machine guidée','kg',20,60,3,15,'🍫'],
-      ['fp_rotary_torso','Rotary Torso Machine (Obliques)','Abdominaux','Machine guidée','kg',20,55,3,15,'🌪️'],
       ['fp_captain_knee','Relevé de Genoux Chaise Romaine','Abdominaux','Poids du corps','reps',8,15,3,12,'🦿'],
       ['fp_toes_to_bar','Toes to Bar','Abdominaux','Poids du corps','reps',3,10,3,8,'🦿'],
       ['fp_plank','Gainage Planche (en secondes)','Abdominaux','Poids du corps','reps',30,90,3,60,'🧱'],
@@ -413,13 +411,12 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       ['fp_dead_hang','Suspension à la Barre / Dead Hang (en secondes)','Dos','Poids du corps','reps',20,60,3,45,'🪝'],
       ['fp_superman_hold','Superman Hold Lombaires (en secondes)','Dos','Poids du corps','reps',20,45,3,30,'🦸'],
       ['fp_mountain','Mountain Climbers','Abdominaux','Poids du corps','reps',20,50,3,30,'⛰️'],
-      ['fp_bicycle','Crunch Vélo (Bicycle Crunch)','Abdominaux','Poids du corps','reps',16,40,3,30,'🚲'],
       ['fp_reverse_crunch','Crunch Inversé','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
       ['fp_leg_raise_floor','Relevé de Jambes au Sol','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
       ['fp_situp','Sit-Ups','Abdominaux','Poids du corps','reps',12,25,3,20,'🍫'],
       ['fp_decline_crunch','Crunch Décliné (Banc)','Abdominaux','Banc','reps',10,20,3,15,'🍫'],
-      ['fp_woodchop','Wood Chop Poulie (Rotation)','Abdominaux','Poulie','kg',8,25,3,12,'🪓'],
-      ['fp_pallof','Pallof Press Poulie','Abdominaux','Poulie','kg',8,25,3,12,'🧘']
+      ['hs_oblique_crunch','Abdominal / Oblique Crunch (Hammer Strength)','Abdominaux','Machine guidée','kg',20,50,3,15,'🌪️'],
+      ['tg_total_abdominal','Total Abdominal (Technogym)','Abdominaux','Machine guidée','kg',20,60,3,15,'🍫']
     ];
     const mkCardio = (id, name, unit, mode, start, goal, dur, icon) => ({
       id, name, category: 'Course & Cardio', type: 'cardio', unit, cardioMode: mode, equip: 'Cardio',
@@ -4186,18 +4183,6 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         aliases: ['crunch poulie', 'abdos poulie', 'crunch corde']
       },
       {
-        id: 'russian_twist',
-        name: 'Russian Twist (Obliques)',
-        category: 'Abdominaux',
-        type: 'strength',
-        unit: 'reps',
-        icon: '🌪️',
-        defaultGoal: 30,
-        defaultGoalSets: 3,
-        defaultGoalReps: 30,
-        aliases: ['russian twist', 'russian', 'obliques', 'rotation buste']
-      },
-      {
         id: 'running_endurance',
         name: 'Course à pied (Endurance)',
         category: 'Course & Cardio',
@@ -4357,8 +4342,9 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       fp_bench_dips: ['dips banc', 'dips sur banc', 'bench dips'],
       fp_wrist_curl: ['curl poignets', 'curl poignet', 'avant bras', 'wrist curl'],
 
+      hs_oblique_crunch: ['oblique crunch', 'hammer strength obliques', 'machine obliques', 'obliques machine', 'abdominal oblique', 'obliques', 'rotation buste'],
+      tg_total_abdominal: ['total abdominal', 'technogym abdos', 'machine abdos technogym', 'abdos transverse', 'transverse'],
       fp_ab_machine: ['crunch machine', 'abdos machine', 'machine abdos', 'ab crunch'],
-      fp_rotary_torso: ['rotary torso', 'rotary', 'rotation tronc', 'machine obliques', 'obliques machine'],
       fp_captain_knee: ['releves de genoux', 'releve genoux', 'chaise romaine', 'captain chair', 'releves genoux'],
       fp_toes_to_bar: ['toes to bar', 'toes bar', 'ttb', 'orteils barre'],
       fp_plank: ['gainage', 'planche', 'plank', 'gainage planche'],
@@ -4368,13 +4354,10 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       fp_dead_hang: ['suspension barre', 'dead hang', 'suspension a la barre'],
       fp_superman_hold: ['superman', 'superman hold'],
       fp_mountain: ['mountain climbers', 'mountain climber', 'grimpeurs'],
-      fp_bicycle: ['crunch velo', 'bicycle crunch', 'abdos velo', 'bicycle crunchs'],
       fp_reverse_crunch: ['crunch inverse', 'reverse crunch', 'crunchs inverses'],
       fp_leg_raise_floor: ['releves de jambes sol', 'releve jambes sol', 'leg raise sol', 'releves jambes'],
       fp_situp: ['sit up', 'sit ups', 'situp', 'situps'],
       fp_decline_crunch: ['crunch decline', 'crunch banc', 'abdos decline', 'crunchs declines'],
-      fp_woodchop: ['wood chop', 'woodchop', 'bucheron', 'rotation poulie'],
-      fp_pallof: ['pallof press', 'pallof', 'pallof presse'],
 
       fp_bike: ['velo', 'biking', 'velo stationnaire', 'cycling', 'velo de salle', 'cycle park'],
       fp_assault_bike: ['assault bike', 'air bike', 'velo assault', 'assault'],
