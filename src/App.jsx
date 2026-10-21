@@ -19,6 +19,7 @@ import { QuestFormModal } from './modals/QuestFormModal';
 import { QuestsTab } from './tabs/QuestsTab';
 import { QuickCardioModal } from './modals/QuickCardioModal';
 import { ResetModal } from './modals/ResetModal';
+import { SyncModal } from './modals/SyncModal';
 import { TabBar } from './components/TabBar';
 import { ToastBanner } from './components/ToastBanner';
 import { TrophiesTab } from './tabs/TrophiesTab';
@@ -43,7 +44,8 @@ export function App() {
 
 
 
-  const { gameState, setGameState, cloudStatus, isLoaded, loadCloud } = useGameState();
+  const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
+  const [syncOpen, setSyncOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('quests');
   const [questFilter, setQuestFilter] = useState('all');
@@ -59,7 +61,7 @@ export function App() {
 
 
 
-  const { paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats, handleClaimChallenge } = useRewards({ cloudStatus, gameState, isLoaded, setGameState, triggerToast });
+  const { paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats, handleClaimChallenge } = useRewards({ syncStatus: sync.status, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast });
 
 
   const { levelUpModalQuest, setLevelUpModalQuest, nextGoalMode, setNextGoalMode, nextGoalValue, setNextGoalValue, nextGoalSets, setNextGoalSets, nextGoalReps, setNextGoalReps, nextGoalAssistanceKg, setNextGoalAssistanceKg, openLevelUpModal, handleConfirmLevelUp } = useLevelUp({ gameState, setGameState, triggerToast });
@@ -144,7 +146,6 @@ export function App() {
       {/* EN-TÊTE : AVATAR RONDOUDOU NATUREL EN HAUT À GAUCHE */}
       <AppHeader
         arenaLevels={arenaLevels}
-        cloudStatus={cloudStatus}
         currentStreak={currentStreak}
         gameState={gameState}
         handleExportJSON={handleExportJSON}
@@ -152,7 +153,9 @@ export function App() {
         importInputRef={importInputRef}
         levelInfo={levelInfo}
         lifetimeStats={lifetimeStats}
-        loadCloud={loadCloud}
+        onOpenSync={() => setSyncOpen(true)}
+        onRetrySync={sync.syncNow}
+        syncStatus={sync.status}
         openCreateQuestModal={openCreateQuestModal}
         questFilter={questFilter}
         selectedDate={selectedDate}
@@ -375,6 +378,11 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       {/* MODALE 5 : AVERTISSEMENT DE RÉINITIALISATION SÉCURISÉ */}
       {confirmResetOpen && (
         <ResetModal handleResetAll={handleResetAll} setConfirmResetOpen={setConfirmResetOpen} />
+      )}
+
+      {/* MODALE 6 : RÉGLAGES DE LA SAUVEGARDE GITHUB */}
+      {syncOpen && (
+        <SyncModal sync={sync} onClose={() => setSyncOpen(false)} triggerToast={triggerToast} />
       )}
     </div>
   );

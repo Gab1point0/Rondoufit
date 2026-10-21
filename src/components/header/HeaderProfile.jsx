@@ -1,7 +1,7 @@
 import { Flame } from '../../icons';
 import { JigglypuffAvatar } from '../JigglypuffAvatar';
 
-export function HeaderProfile({ cloudStatus, currentStreak, gameState, levelInfo, lifetimeStats, loadCloud, setActiveTab }) {
+export function HeaderProfile({ currentStreak, gameState, levelInfo, lifetimeStats, onOpenSync, onRetrySync, setActiveTab, syncStatus }) {
   return (
     <div className="flex items-center gap-4">
       <div
@@ -32,25 +32,32 @@ export function HeaderProfile({ cloudStatus, currentStreak, gameState, levelInfo
           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1">
             🔥 {lifetimeStats.totalKcal} kcal brûlées
           </span>
-          <span
+          <button
+            type="button"
+            onClick={onOpenSync}
+            title="Réglages de la sauvegarde GitHub"
             className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-              cloudStatus === 'synced'
+              syncStatus === 'synced'
                 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : cloudStatus === 'saving' || cloudStatus === 'loading'
+                : syncStatus === 'saving' || syncStatus === 'loading'
                 ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
+                : syncStatus === 'off'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                 : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
             }`}
           >
-            {cloudStatus === 'synced'
-              ? '☁️ Sauvegardé sur Google Sheets'
-              : cloudStatus === 'saving'
-              ? '⏳ Synchronisation Cloud...'
-              : cloudStatus === 'loading'
-              ? '☁️ Chargement Cloud...'
-              : '⚠️ Cloud injoignable : données gardées sur cet appareil'}
-          </span>
-          {cloudStatus === 'error' && (
-            <button onClick={() => loadCloud(false)} className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-white border border-slate-600">🔄 Réessayer</button>
+            {syncStatus === 'synced'
+              ? '☁️ Sauvegardé sur GitHub'
+              : syncStatus === 'saving'
+              ? '⏳ Synchronisation…'
+              : syncStatus === 'loading'
+              ? '☁️ Chargement…'
+              : syncStatus === 'off'
+              ? '⚠️ Sauvegarde GitHub non réglée : données sur cet appareil seulement'
+              : '⚠️ GitHub injoignable : données gardées sur cet appareil'}
+          </button>
+          {syncStatus === 'error' && (
+            <button onClick={onRetrySync} className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-white border border-slate-600">🔄 Réessayer</button>
           )}
         </div>
 

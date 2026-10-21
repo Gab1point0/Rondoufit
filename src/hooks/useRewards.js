@@ -5,7 +5,7 @@ import { playGameSound } from '../lib/sound';
 import { computeAchievementStats, computeDerivedAchievements, computePersonalRecords, computeWeekStats, getWeekChallenges } from '../lib/stats';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-export function useRewards({ cloudStatus, gameState, isLoaded, setGameState, triggerToast }) {
+export function useRewards({ syncStatus, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast }) {
   // Déblocage automatique des trophées + versement du bonus EXP
   const paidAchievementsRef = useRef(null);
 
@@ -25,7 +25,7 @@ export function useRewards({ cloudStatus, gameState, isLoaded, setGameState, tri
     fresh.forEach(a => paid.add(a.id));
     const bonus = fresh.reduce((sum, a) => sum + a.xpBonus, 0);
 
-    setGameState(prev => ({
+    setGameStateAuto(prev => ({
       ...prev,
       xp: prev.xp + bonus,
       unlockedAchievements: Array.from(
@@ -42,7 +42,7 @@ export function useRewards({ cloudStatus, gameState, isLoaded, setGameState, tri
         fresh[0].icon
       );
     }
-  }, [gameState, cloudStatus]);
+  }, [gameState, syncStatus]);
 
   // Annuler après suppression
   const skipPRRef = useRef(false);
@@ -88,7 +88,7 @@ export function useRewards({ cloudStatus, gameState, isLoaded, setGameState, tri
       0,
       '🏅'
     );
-  }, [gameState, cloudStatus]);
+  }, [gameState, syncStatus]);
 
   const weekData = useMemo(() => {
     const entries = getAllEntries(gameState);
