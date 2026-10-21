@@ -721,7 +721,7 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     //  - Spiering 2021 : dose minimale pour conserver la force/le muscle (déficit calorique).
     //  - Garthe 2011 : perte de poids ≈ 0,5-1 % du poids de corps par semaine pour préserver la masse maigre.
     // ==========================================================================
-    const COACH_DEFAULTS = { sessionsPerWeek: 2, volleyDays: [4, 5], matchDates: [], deloadWeeks: [] };
+    const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [] };
     const getCoachSettings = state => ({ ...COACH_DEFAULTS, ...((state && state.coach) || {}) });
     const COACH_ARENAS = ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'];
     const COACH_DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -995,6 +995,79 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       return bestIdx;
     }
 
+    // Durée estimée d'une séance (échauffement 5 min + séries et repos)
+    function coachEstimateMin(exercises) {
+      return Math.round(5 + exercises.reduce((s, e) => s + e.sets * (0.75 + e.restSec / 60), 0));
+    }
+
+    // Complète (ou allège) la séance proposée pour tenir la durée voulue par l'utilisateur.
+    // On ajoute d'abord des séries (jusqu'à 4 par exercice), puis des exercices de ses propres objectifs.
+    function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
+      if (!targetMin || opts.deload || !exercises.length) return exercises;
+      let ex = exercises.map(e => ({ ...e, targetReps: e.targetReps.slice() }));
+      const startMin = coachEstimateMin(ex);
+      const startSets = ex.reduce((s, e) => s + e.sets, 0);
+      const startNames = ex.map(e => e.questId);
+      const legsAllowed = di.legsOk && !opts.matchWeek;
+      const arenaCount = a => ex.filter(e => e.arena === a).length;
+      const arenaSets = a => ex.filter(e => e.arena === a).reduce((s, e) => s + e.sets, 0);
+      const pool = () =>
+        (state.quests || []).filter(q => {
+          if (q.type !== 'strength' || q.goalMode === 'free_mode') return false;
+          if (ex.some(e => e.questId === q.id)) return false;
+          const a = normalizeArenaGroup(q.category, q.type);
+          if (a === 'Jambes' && !legsAllowed) return false;
+          return arenaCount(a) < 2;
+        });
+      const addSet = e => { e.sets += 1; e.targetReps.push(e.targetReps[e.targetReps.length - 1]); };
+      let guard = 0;
+      while (coachEstimateMin(ex) < targetMin - 3 && guard++ < 40) {
+        const cands = pool().sort((x, y) => {
+          const ax = normalizeArenaGroup(x.category, x.type), ay = normalizeArenaGroup(y.category, y.type);
+          const d = arenaSets(ax) - arenaSets(ay);
+          if (d) return d;
+          return (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0);
+        });
+        const allThree = ex.every(e => e.sets >= 3);
+        const canSet = ex
+          .filter(e => e.sets < 4 && !(opts.matchWeek && e.arena === 'Jambes'))
+          .sort((a, b) => a.sets - b.sets || (b.compound ? 1 : 0) - (a.compound ? 1 : 0));
+        if (allThree && cands.length && ex.length < 8) {
+          const q = cands[0];
+          ex.push(computeExerciseTarget(q, { today: di.iso, deload: false, reduceSets: false }));
+        } else if (canSet.length) {
+          addSet(canSet[0]);
+        } else if (cands.length && ex.length < 8) {
+          ex.push(computeExerciseTarget(cands[0], { today: di.iso, deload: false, reduceSets: false }));
+        } else break;
+      }
+      // Allègement si la séance dépasse nettement la durée voulue
+      guard = 0;
+      while (coachEstimateMin(ex) > targetMin + 8 && guard++ < 30) {
+        const big = ex.filter(e => e.sets > 3).sort((a, b) => b.sets - a.sets)[0];
+        if (big) { big.sets -= 1; big.targetReps.pop(); continue; }
+        if (ex.length > 3) { ex.pop(); continue; }
+        break;
+      }
+      ex.sort((a, b) => {
+        const ia = COACH_ARENAS.indexOf(a.arena), ib = COACH_ARENAS.indexOf(b.arena);
+        if (ia !== ib) return ia - ib;
+        return (b.compound ? 1 : 0) - (a.compound ? 1 : 0);
+      });
+      const endMin = coachEstimateMin(ex);
+      const endSets = ex.reduce((s, e) => s + e.sets, 0);
+      const added = ex.filter(e => !startNames.includes(e.questId));
+      if (endSets > startSets || added.length) {
+        notes.push(`Séance complétée pour tenir environ ${targetMin} min : ${added.length ? `${added.length} exercice(s) ajouté(s) (${added.map(e => e.name).join(', ')})` : ''}${added.length && endSets - startSets - added.reduce((s, e) => s + e.sets, 0) > 0 ? ' et ' : ''}${endSets - startSets - added.reduce((s, e) => s + e.sets, 0) > 0 ? `${endSets - startSets - added.reduce((s, e) => s + e.sets, 0)} série(s) en plus` : ''}.`);
+      } else if (endMin < startMin) {
+        notes.push(`Séance allégée pour tenir environ ${targetMin} min.`);
+      }
+      if (endMin < targetMin - 8) {
+        notes.push(`Avec tes exercices actuels, la séance dure environ ${endMin} min (objectif ${targetMin}). Ajoute un ou deux exercices (surtout pour les groupes les moins travaillés) pour la compléter.`);
+      }
+      return ex;
+    }
+
     // Construit une séance complète (liste d'exercices avec objectifs chiffrés)
     function coachBuildSession(state, templateIdx, di, opts = {}) {
       const coach = getCoachSettings(state);
@@ -1007,9 +1080,35 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
         if (without.length !== quests.length) notes.push(`Pas d'exercices de jambes (${di.legsWhy}) pour garder les jambes fraîches.`);
         quests = without;
       }
-      const exercises = quests.map(q =>
+      let exercises = quests.map(q =>
         computeExerciseTarget(q, {
           today: di.iso,
+          deload: !!opts.deload,
+          reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'
+        })
+      );
+      exercises = coachFitDuration(state, exercises, di, opts, Number(coach.sessionMinutes) || 0, notes);
+      const w = Number(state.userWeightKg) || 82;
+      const estMin = coachEstimateMin(exercises);
+      const estKcal = exercises.reduce(
+        (s, e) => s + calculateStrengthCalories({ unit: e.unit, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
+        0
+      );
+      const first = exercises.find(e => e.kind === 'load' && e.load >= 20);
+      const warmup = first
+        ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg, avant la première série de travail.`
+        : '';
+      return { templateIdx, templateId: t.id, date: di.iso, exercises, notes, estMin, estKcal, warmup };
+    }
+
+    // Séance construite à la main par l'utilisateur (liste d'exercices + date choisie)
+    function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
+      const byId = {};
+      (state.quests || []).forEach(q => { byId[q.id] = q; });
+      const quests = (questIds || []).map(id => byId[id]).filter(q => q && q.type === 'strength' && q.goalMode !== 'free_mode');
+      const exercises = quests.map(q =>
+        computeExerciseTarget(q, {
+          today: dateIso,
           deload: !!opts.deload,
           reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'
         })
@@ -1024,7 +1123,121 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       const warmup = first
         ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg, avant la première série de travail.`
         : '';
-      return { templateIdx, templateId: t.id, date: di.iso, exercises, notes, estMin, estKcal, warmup };
+      return { templateIdx: -1, templateId: 'Perso', date: dateIso, exercises, notes: [], estMin, estKcal, warmup, custom: true };
+    }
+
+    // Note de 1 à 10 pour une séance (proposée par le coach ou composée par l'utilisateur),
+    // avec des remarques écrites. Ce sont des règles de bon sens appuyées sur les repères ACSM 2009 /
+    // Schoenfeld 2016-2017 (fréquence, volume, récupération) : une aide à la décision, pas une mesure scientifique exacte.
+    function coachRateSession(state, session) {
+      const coach = getCoachSettings(state);
+      const iso = session.date;
+      const ex = session.exercises || [];
+      if (!ex.length) {
+        return { score: 1, label: 'Séance vide', items: [{ level: 'bad', text: 'La séance ne contient aucun exercice.', fix: 'Ajoute au moins un exercice pour chaque grand groupe (jambes, dos, pectoraux, épaules/bras).' }] };
+      }
+      const items = [];
+      let score = 10;
+      const add = (pen, level, text, fix) => { score -= pen; items.push({ level, text, fix: fix || '' }); };
+      const ok = text => items.push({ level: 'ok', text, fix: '' });
+      const di = coachDayInfo(iso, coach);
+      const wkStart = getWeekStart(iso);
+      const wk = coachPlanWeek(state, wkStart, getTodayISODate());
+      const setsBy = {};
+      let total = 0;
+      ex.forEach(e => { setsBy[e.arena] = (setsBy[e.arena] || 0) + e.sets; total += e.sets; });
+      const legSets = setsBy['Jambes'] || 0;
+      const entries = getAllEntries(state).filter(e => e.quest.type === 'strength' && !isStartEntry(e));
+      const wkEnd = addDaysISO(wkStart, 6);
+
+      // 1. Jour choisi
+      if (di.isMatch) add(3, 'bad', 'Tu as placé la séance un jour de match.', 'Choisis un autre jour : la veille et le lendemain d’un match sont aussi à éviter pour les jambes.');
+      else if (di.isVolley) add(1, 'warn', 'Ce jour-là tu as volley : séance de muscu + volley = fatigue cumulée.', 'Fais-la plutôt un jour sans volley, ou réduis le volume (4 à 5 exercices).');
+      else ok('Le jour choisi est libre de volley et de match.');
+      if (legSets > 0 && !di.legsOk) add(3, 'bad', `Il y a des jambes (${legSets} séries) alors que ce n’est pas le bon moment (${di.legsWhy}).`, 'Retire les exercices de jambes ou déplace la séance : des jambes fatiguées gênent le volley et augmentent le risque de blessure.');
+      else if (legSets > 0) ok('Les jambes sont compatibles avec ton calendrier de volley et de match.');
+      if (wk.matchInWeek && legSets > 6) add(1, 'warn', 'Semaine de match : beaucoup de séries de jambes.', 'Limite-toi à environ 6 séries de jambes cette semaine-là.');
+
+      // 2. Récupération
+      const before = entries.map(e => e.date).filter(d => d < iso).sort();
+      const lastBefore = before.length ? before[before.length - 1] : null;
+      const daysSince = lastBefore ? coachDaysBetween(lastBefore, iso) : null;
+      if (entries.some(e => e.date === iso)) add(1, 'warn', 'Tu as déjà une séance de muscu enregistrée ce jour-là.', 'Évite d’empiler deux séances le même jour.');
+      else if (daysSince !== null && daysSince <= 1) add(1.5, 'warn', 'Ta dernière séance de muscu date de moins de 48 h.', 'Laisse au moins 2 jours entre deux séances (ACSM 2009 : 48 h de récupération pour les mêmes muscles).');
+      else if (daysSince !== null) ok(`Bonne récupération : ${daysSince} jours depuis ta dernière séance.`);
+      const recentArenas = new Set(entries.filter(e => e.date < iso && coachDaysBetween(e.date, iso) <= 1).map(e => normalizeArenaGroup(e.quest.category, e.quest.type)));
+      let overlapPen = 0;
+      Object.keys(setsBy).forEach(a => {
+        if (recentArenas.has(a) && overlapPen < 1.5) {
+          overlapPen += 0.75;
+          add(0.75, 'warn', `${a} déjà travaillé il y a moins de 48 h.`, `Remplace ces exercices par un autre groupe, ou décale la séance.`);
+        }
+      });
+
+      // 3. Nombre de séances dans la semaine
+      const weekDays = new Set(entries.filter(e => e.date >= wkStart && e.date <= wkEnd && e.date !== iso).map(e => e.date));
+      const cnt = weekDays.size + 1;
+      if (cnt > 3) add(2, 'bad', `Ce serait ta ${cnt}e séance de muscu cette semaine, et tu veux 3 maximum.`, 'Reporte-la à la semaine suivante ou remplace-la par du cardio léger.');
+      else if (cnt > coach.sessionsPerWeek) add(0.5, 'warn', `Ce serait ta ${cnt}e séance de la semaine (objectif : ${coach.sessionsPerWeek}).`, 'Pas grave si tu récupères bien, mais l’objectif de 2 séances est déjà une dose efficace (Spiering 2021).');
+      else ok(`Séance n°${cnt} de la semaine : dans ton objectif.`);
+
+      // 4. Couverture des groupes
+      const weekArenas = new Set(entries.filter(e => e.date >= wkStart && e.date <= wkEnd && e.date !== iso).map(e => normalizeArenaGroup(e.quest.category, e.quest.type)));
+      const core = ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras'];
+      let covPen = 0;
+      const missing = [];
+      core.forEach(a => {
+        if (setsBy[a]) return;
+        if (a === 'Jambes' && !di.legsOk) return;
+        if (weekArenas.has(a)) return;
+        missing.push(a);
+      });
+      missing.forEach(a => {
+        if (covPen < 2.25) { covPen += 0.75; add(0.75, 'warn', `Aucun exercice de ${a} dans cette séance (ni plus tôt cette semaine).`, `Ajoute un exercice de ${a}, ou prévois-le dans ta prochaine séance : chaque groupe gagne à être travaillé au moins 2 fois par semaine (Schoenfeld 2016).`); }
+      });
+      if (!missing.length) ok('Tous les grands groupes sont couverts cette semaine.');
+      if (!setsBy['Abdominaux'] && !weekArenas.has('Abdominaux')) add(0.25, 'info', 'Pas d’abdos cette semaine.', 'Un exercice de gainage ou d’abdos (2 à 3 séries) complète bien la séance et aide pour le volley.');
+
+      // 5. Équilibre poussée / tirage
+      const pecs = setsBy['Pectoraux'] || 0, back = setsBy['Dos'] || 0;
+      if (pecs > 0 && back === 0) add(1, 'warn', 'Tu pousses (pectoraux) sans aucun exercice de tirage.', 'Ajoute un exercice de dos (tirage, rowing) : le volley sollicite déjà beaucoup les épaules, l’équilibre protège l’articulation (pratique courante, preuves limitées).');
+      else if (pecs > 0 && back > 0) {
+        const r = back / pecs;
+        if (r < 0.5) add(0.5, 'warn', 'Beaucoup plus de poussée que de tirage.', 'Ajoute une série ou deux de dos.');
+        else if (r > 2) add(0.5, 'info', 'Beaucoup plus de tirage que de poussée.', 'Ajoute un peu de pectoraux ou d’épaules.');
+        else ok('Poussée et tirage équilibrés.');
+      }
+
+      // 6. Volume et durée
+      if (total < 6) add(1.5, 'warn', `Séance très courte (${total} séries).`, 'Vise au moins 8 à 12 séries au total pour que la séance compte.');
+      else if (total > 24) add(1.5, 'warn', `Séance très longue (${total} séries).`, 'Au-delà d’environ 20 séries, la qualité baisse : retire les exercices les moins utiles.');
+      else if (total > 18) add(0.5, 'info', `Séance chargée (${total} séries).`, 'Surveille ta fatigue et ta durée.');
+      else ok(`Volume raisonnable (${total} séries).`);
+      Object.keys(setsBy).forEach(a => {
+        if (setsBy[a] > 10) add(0.75, 'warn', `${setsBy[a]} séries sur ${a} dans une seule séance.`, 'Au-delà de 10 séries par groupe dans une séance, le gain supplémentaire est faible : répartis sur une autre séance.');
+      });
+      const tgt = Number(coach.sessionMinutes) || 0;
+      if (tgt && session.estMin < tgt - 12) add(1, 'warn', `Durée estimée de ${session.estMin} min, alors que tu veux environ ${tgt} min.`, 'Ajoute une série sur tes gros exercices ou un exercice pour un groupe peu travaillé : la séance vaut mieux le déplacement.');
+      else if (tgt && session.estMin < tgt - 6) add(0.5, 'info', `Durée estimée de ${session.estMin} min (objectif ${tgt} min).`, 'Il te manque quelques minutes : une série ou un exercice en plus suffit.');
+      else if (tgt) ok(`Durée estimée de ${session.estMin} min : proche de ton objectif de ${tgt} min.`);
+      if (session.estMin > Math.max(90, tgt + 20)) add(1, 'warn', `Durée estimée de ${session.estMin} min.`, 'C’est long à tenir : réduis le nombre d’exercices ou de séries.');
+      else if (!tgt && session.estMin > 75) add(0.5, 'info', `Durée estimée de ${session.estMin} min.`, 'Prévois du temps pour les repos.');
+      if (ex.length > 9) add(1, 'warn', `${ex.length} exercices : c’est beaucoup.`, 'Garde 5 à 8 exercices bien faits plutôt que 10 survolés.');
+
+      // 7. Ordre des exercices
+      const firstCompound = ex.findIndex(e => e.compound);
+      const isoBeforeCompound = ex.some((e, i) => !e.compound && e.arena !== 'Abdominaux' && ex.slice(i + 1).some(x => x.compound));
+      if (firstCompound >= 0 && isoBeforeCompound) add(0.5, 'info', 'Des exercices d’isolation passent avant des exercices polyarticulaires.', 'Commence par les gros mouvements (squat, développé, rowing) quand tu es frais.');
+
+      // 8. Progression
+      const downs = ex.filter(e => e.change === 'down' || e.change === 'resume');
+      if (downs.length) items.push({ level: 'info', text: `${downs.map(e => e.name).join(', ')} : le coach te fait reculer légèrement pour consolider.`, fix: '' });
+
+      score = Math.max(1, Math.min(10, Math.round(score * 2) / 2));
+      const label = score >= 9 ? 'Excellente' : score >= 7.5 ? 'Bonne' : score >= 6 ? 'Correcte' : score >= 4 ? 'À améliorer' : 'À revoir';
+      const order = { bad: 0, warn: 1, info: 2, ok: 3 };
+      items.sort((a, b) => order[a.level] - order[b.level]);
+      return { score, label, items };
     }
 
     // Prochaine séance + plan des 2 prochaines semaines
@@ -1223,7 +1436,9 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       const today = getTodayISODate();
       const coach = getCoachSettings(gameState);
       const [showSources, setShowSources] = useState(false);
-      const [extraMatch, setExtraMatch] = useState('');
+      const [matchInput, setMatchInput] = useState('');
+      const [serie, setSerie] = useState({ dow: 0, from: today, to: addDaysISO(today, 364) });
+      const [addSel, setAddSel] = useState('');
 
       const ov = useMemo(() => coachOverview(gameState, today), [gameState.quests, gameState.coach, gameState.userWeightKg, today]);
       const balance = useMemo(() => coachBalance(gameState, today), [gameState.quests, today]);
@@ -1260,24 +1475,74 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
       };
 
       const weekStart0 = getWeekStart(today);
-      const weekend = [];
-      for (let i = 0; i < 8; i++) {
-        const sat = addDaysISO(weekStart0, 5 + 7 * i);
-        const sun = addDaysISO(weekStart0, 6 + 7 * i);
-        const items = [sat, sun].filter(d => d >= today);
-        if (items.length) weekend.push({ label: `Semaine du ${addDaysISO(weekStart0, 7 * i).slice(8, 10)}/${addDaysISO(weekStart0, 7 * i).slice(5, 7)}`, items });
-      }
-      const customMatches = (coach.matchDates || []).filter(d => d >= today && ![5, 6, 0].includes(coachDow(d)));
+      const matchList = (coach.matchDates || []).filter(d => d >= today).slice().sort();
+      const addMatches = list => {
+        const set = new Set(coach.matchDates || []);
+        list.forEach(d => set.add(d));
+        updateCoach({ matchDates: Array.from(set).sort() });
+      };
+      const addSeries = () => {
+        const out = [];
+        let d = serie.from;
+        let guard = 0;
+        while (d && serie.to && d <= serie.to && guard++ < 800) {
+          if (coachDow(d) === Number(serie.dow)) out.push(d);
+          d = addDaysISO(d, 1);
+        }
+        addMatches(out);
+      };
 
       const first = ov.first;
       const plannedMap = {};
       ov.plannedAll.forEach(p => { plannedMap[p.iso] = p; });
       const w0 = ov.weeks[0];
+      const plan = coach.plan && Array.isArray(coach.plan.questIds) && coach.plan.date >= today ? coach.plan : null;
+      const planWeek = useMemo(() => (plan ? coachPlanWeek(gameState, getWeekStart(plan.date), today) : null), [gameState.quests, gameState.coach]);
+      const customSession = useMemo(
+        () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { deload: planWeek.deload, matchWeek: planWeek.matchInWeek }) : null),
+        [gameState.quests, gameState.coach]
+      );
+      const shownSession = plan ? customSession : ov.session;
+      const shownDate = plan ? plan.date : first ? first.iso : today;
+      const rating = useMemo(
+        () => (shownSession && (plan || ov.hasExercises) ? coachRateSession(gameState, shownSession) : null),
+        [gameState.quests, gameState.coach, shownSession && shownSession.date, shownSession && shownSession.exercises.map(e => e.questId).join(',')]
+      );
       const sessionToStart = (() => {
+        if (plan) {
+          if (!plan.questIds.length) return null;
+          return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek });
+        }
         if (!first || !ov.hasExercises) return null;
         if (first.iso === today) return ov.session;
         return coachBuildSession(gameState, first.templateIdx, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek });
       })();
+      // Édition du plan personnalisé (mises à jour fonctionnelles pour éviter les écrasements)
+      const patchPlan = fn =>
+        setGameState(prev => {
+          const cs = getCoachSettings(prev);
+          const pl = cs.plan || { date: today, questIds: [] };
+          return { ...prev, coach: { ...cs, plan: fn(pl) } };
+        });
+      const startCustom = () => {
+        const ids = ov.session ? ov.session.exercises.map(e => e.questId) : [];
+        updateCoach({ plan: { date: first ? first.iso : today, questIds: ids } });
+      };
+      const planAdd = ids => patchPlan(pl => ({ ...pl, questIds: [...pl.questIds, ...ids.filter(i => i && !pl.questIds.includes(i))] }));
+      const planRemove = id => patchPlan(pl => ({ ...pl, questIds: pl.questIds.filter(x => x !== id) }));
+      const planMove = (id, dir) =>
+        patchPlan(pl => {
+          const arr = pl.questIds.slice();
+          const i = arr.indexOf(id);
+          const j = i + dir;
+          if (i < 0 || j < 0 || j >= arr.length) return pl;
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+          return { ...pl, questIds: arr };
+        });
+      const planDate = d => { if (d && d >= today) patchPlan(pl => ({ ...pl, date: d })); };
+      const strengthQuests = (gameState.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
+      const availQuests = plan ? strengthQuests.filter(q => !plan.questIds.includes(q.id)) : [];
+      const planDayInfo = plan ? coachDayInfo(plan.date, coach) : null;
       const todayInfo = coachDayInfo(today, coach);
 
       const lowRows = balance.rows.filter(r => r.status === 'low');
@@ -1336,34 +1601,96 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
 
           {/* PROCHAINE SÉANCE */}
           <section className={card}>
-            <h3 className="font-black text-white">🏋️ Prochaine séance</h3>
-            {!ov.hasExercises && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-black text-white">🏋️ Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+              {!plan && ov.hasExercises && (
+                <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">✏️ Choisir le jour / modifier</button>
+              )}
+              {plan && (
+                <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">↩ Revenir à la proposition du coach</button>
+              )}
+            </div>
+
+            {!ov.hasExercises && !plan && (
               <div className="text-sm text-slate-300 space-y-2">
                 <p>Le coach a besoin d’exercices de musculation dans tes objectifs pour te proposer une séance.</p>
                 <button onClick={() => onGoTab('quests')} className="px-3 py-2 rounded-lg bg-pink-600 text-white font-bold text-xs">Ajouter des objectifs</button>
               </div>
             )}
-            {ov.hasExercises && !first && (
+            {ov.hasExercises && !first && !plan && (
               <p className="text-sm text-slate-300">
-                Aucun créneau libre dans les deux prochaines semaines avec tes contraintes (volley, matchs). Tu peux quand même lancer une séance maintenant.
+                Aucun créneau libre dans les deux prochaines semaines avec tes contraintes (volley, matchs). Tu peux quand même choisir un jour toi-même ou lancer une séance maintenant.
               </p>
             )}
-            {ov.hasExercises && ov.session && (
+
+            {plan && (
+              <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3 space-y-3">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-300">Jour de la séance :</span>
+                  <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
+                  <span className="text-slate-300 font-bold">{coachDayLabel(plan.date)}</span>
+                  {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🏆 match</span>}
+                  {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">🏐 volley</span>}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-300">Ajouter un groupe musculaire :</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COACH_ARENAS.map(a => {
+                      const cands = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a).slice(0, a === 'Abdominaux' ? 1 : 2);
+                      const none = !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a);
+                      return (
+                        <button key={a} disabled={!cands.length}
+                          onClick={() => planAdd(cands.map(q => q.id))}
+                          className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold ${cands.length ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-900 border-slate-800 text-slate-600'}`}>
+                          + {a}{none ? ' (aucun exo)' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {availQuests.length > 0 && (
+                    <div className="flex gap-2">
+                      <select value={addSel} onChange={e => setAddSel(e.target.value)} className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                        <option value="">Ajouter un exercice précis…</option>
+                        {COACH_ARENAS.map(a => {
+                          const list = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a);
+                          return list.length ? (
+                            <optgroup key={a} label={a}>
+                              {list.map(q => <option key={q.id} value={q.id}>{q.icon} {q.name}</option>)}
+                            </optgroup>
+                          ) : null;
+                        })}
+                      </select>
+                      <button disabled={!addSel} onClick={() => { planAdd([addSel]); setAddSel(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-black">Ajouter</button>
+                    </div>
+                  )}
+                  {COACH_ARENAS.filter(a => !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a)).map(a => (
+                    <div key={a} className="flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="text-slate-400">Tu n’as pas encore d’exercice de {a} :</span>
+                      {coachSuggestExercises(gameState, a, 2).map(c => (
+                        <button key={c.id} onClick={() => { const id = onAddExercise(c.id); planAdd([id]); }} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold">+ créer « {c.name} »</button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {shownSession && shownSession.exercises.length > 0 && (
               <>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">
-                    Séance {ov.session.templateId} · corps entier
+                    {plan ? 'Séance perso' : `Séance ${shownSession.templateId} · corps entier`}
                   </span>
                   <span className="text-slate-300 font-bold">
-                    {first.iso === today ? 'Aujourd’hui' : coachDayLabel(first.iso)}
+                    {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
                   </span>
-                  <span className="text-slate-400">≈ {ov.session.estMin} min · ≈ {ov.session.estKcal} kcal</span>
+                  <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
                 </div>
-                {ov.session.notes.map((n, i) => (
+                {shownSession.notes.map((n, i) => (
                   <p key={i} className="text-xs text-sky-300">ℹ️ {n}</p>
                 ))}
                 <div className="space-y-2">
-                  {ov.session.exercises.map(e => {
+                  {shownSession.exercises.map(e => {
                     const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
                     const uniform = e.targetReps.every(r => r === e.targetReps[0]);
                     const repsTxt = uniform ? `${e.sets} × ${e.targetReps[0]} reps` : `${e.sets} séries : ${e.targetReps.join(' - ')} reps`;
@@ -1375,7 +1702,16 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                             <p className="font-extrabold text-white text-sm truncate">{e.icon} {e.name}</p>
                             <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
                           </div>
-                          <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
+                          <div className="shrink-0 flex items-center gap-1">
+                            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
+                            {plan && (
+                              <>
+                                <button onClick={() => planMove(e.questId, -1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▲</button>
+                                <button onClick={() => planMove(e.questId, 1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▼</button>
+                                <button onClick={() => planRemove(e.questId)} className="w-7 h-7 rounded-lg bg-rose-900/60 text-rose-200 text-xs font-black">✕</button>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <p className="text-[11px] text-slate-400 mt-1">{e.reason}</p>
                         {e.change === 'goal' && (
@@ -1390,23 +1726,52 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                     );
                   })}
                 </div>
-                {ov.session.warmup && <p className="text-[11px] text-slate-400">🔥 {ov.session.warmup}</p>}
+                {shownSession.warmup && <p className="text-[11px] text-slate-400">🔥 {shownSession.warmup}</p>}
                 <p className="text-[11px] text-slate-500">
                   Repos conseillé : 2 min 30 sur les exercices principaux, 1 min 30 sur les exercices d’appoint (ACSM 2009).
                 </p>
               </>
             )}
-            {ov.hasExercises && sessionToStart && sessionToStart.exercises.length > 0 && (
+            {plan && shownSession && shownSession.exercises.length === 0 && (
+              <p className="text-xs text-slate-400">Ta séance est vide : ajoute un groupe ou un exercice ci-dessus.</p>
+            )}
+
+            {rating && (
+              <div className={`rounded-xl border p-3 space-y-2 ${rating.score >= 7.5 ? 'bg-emerald-950/20 border-emerald-500/40' : rating.score >= 5 ? 'bg-amber-950/20 border-amber-500/40' : 'bg-rose-950/20 border-rose-500/40'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 ${rating.score >= 7.5 ? 'border-emerald-400 text-emerald-300' : rating.score >= 5 ? 'border-amber-400 text-amber-300' : 'border-rose-400 text-rose-300'}`}>
+                    {String(rating.score).replace('.', ',')}
+                  </div>
+                  <div>
+                    <p className="font-black text-white text-sm">Avis du coach : {rating.label}</p>
+                    <p className="text-[11px] text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  {rating.items.map((it, i) => (
+                    <div key={i} className="text-xs">
+                      <p className={it.level === 'bad' ? 'text-rose-300 font-bold' : it.level === 'warn' ? 'text-amber-300 font-bold' : it.level === 'info' ? 'text-sky-300' : 'text-emerald-300'}>
+                        {it.level === 'bad' ? '⛔' : it.level === 'warn' ? '⚠️' : it.level === 'info' ? 'ℹ️' : '✅'} {it.text}
+                      </p>
+                      {it.fix && <p className="text-slate-300 ml-5">→ {it.fix}</p>}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>
+              </div>
+            )}
+
+            {sessionToStart && sessionToStart.exercises.length > 0 && (
               <div className="space-y-1.5">
                 <button
                   onClick={() => onStartGuided(sessionToStart)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-500 hover:to-fuchsia-500 text-white font-black text-sm shadow-lg shadow-pink-600/30"
                 >
-                  ▶ {first && first.iso === today ? 'Lancer la séance guidée' : 'Lancer une séance guidée maintenant'}
+                  ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
                 </button>
-                {first && first.iso !== today && (
+                {shownDate !== today && (
                   <p className="text-[11px] text-slate-500">
-                    Prévue le {coachDayLabel(first.iso)}. Si tu la fais aujourd’hui, le coach adapte les exercices à la journée{todayInfo.legsOk ? '' : ` (pas de jambes : ${todayInfo.legsWhy})`}.
+                    Prévue le {coachDayLabel(shownDate)}.{plan ? '' : ` Si tu la fais aujourd’hui, le coach adapte les exercices à la journée${todayInfo.legsOk ? '' : ` (pas de jambes : ${todayInfo.legsWhy})`}.`}
                   </p>
                 )}
                 {todayInfo.blocked && (
@@ -1436,7 +1801,11 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                       match: ['🏆', 'Match', 'border-amber-500/50 bg-amber-950/20'],
                       rest: ['😴', 'Repos', 'border-slate-800 bg-slate-950']
                     };
-                    const m = map[d.status];
+                    let m = map[d.status];
+                    if (plan && d.status !== 'done') {
+                      if (d.iso === plan.date) m = ['💪', 'Ma séance', map.planned[2]];
+                      else if (first && d.iso === first.iso && d.status === 'planned') m = map.rest;
+                    }
                     return (
                       <div key={d.iso} className={`rounded-lg border p-1.5 text-center ${m[2]} ${d.iso === today ? 'ring-2 ring-pink-400' : ''}`}>
                         <p className="text-[10px] font-bold text-slate-400">{dayShort[d.dow]} {d.iso.slice(8, 10)}</p>
@@ -1466,6 +1835,16 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                 </button>
               ))}
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-slate-300 font-bold">Durée de séance voulue :</span>
+              {[0, 45, 60, 75, 90].map(n => (
+                <button key={n} onClick={() => updateCoach({ sessionMinutes: n })}
+                  className={`px-3 py-1.5 rounded-lg font-black border ${Number(coach.sessionMinutes) === n ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
+                  {n === 0 ? 'Libre' : `${n} min`}
+                </button>
+              ))}
+              <span className="text-[11px] text-slate-500 w-full">Le coach complète chaque séance proposée (séries, puis exercices de tes objectifs) pour tenir cette durée. Estimation : échauffement 5 min + séries et repos.</span>
+            </div>
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <span className="text-slate-300 font-bold mr-1">Volley (entraînements) :</span>
               {[1, 2, 3, 4, 5, 6, 0].map(dow => (
@@ -1475,35 +1854,44 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                 </button>
               ))}
             </div>
-            <div>
-              <p className="text-xs text-slate-300 font-bold mb-1.5">🏆 Quel week-end as-tu match ?</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {weekend.map(wk => (
-                  <div key={wk.label} className="bg-slate-950 border border-slate-800 rounded-xl p-2">
-                    <p className="text-[10px] text-slate-500 mb-1">{wk.label}</p>
-                    <div className="flex gap-1.5">
-                      {wk.items.map(d => {
-                        const on = (coach.matchDates || []).includes(d);
-                        return (
-                          <button key={d} onClick={() => toggleMatch(d)}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border ${on ? 'bg-amber-500 border-amber-300 text-slate-950' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                            {on ? '🏆 ' : ''}{coachDayLabel(d).slice(0, 3)} {d.slice(8, 10)}/{d.slice(5, 7)}
-                          </button>
-                        );
-                      })}
-                    </div>
+            <div className="space-y-2">
+              <p className="text-xs text-slate-300 font-bold">🏆 Jours de match</p>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <input type="date" value={matchInput} min={today} onChange={e => setMatchInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
+                <button disabled={!matchInput} onClick={() => { addMatches([matchInput]); setMatchInput(''); }} className="px-3 py-1.5 rounded-lg bg-amber-500 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-black">Ajouter</button>
+              </div>
+              <details className="text-xs">
+                <summary className="cursor-pointer text-slate-400 font-bold">Ajouter plusieurs matchs d’un coup</summary>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-slate-400">Tous les</span>
+                  <select value={serie.dow} onChange={e => setSerie({ ...serie, dow: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white">
+                    {[1, 2, 3, 4, 5, 6, 0].map(d => <option key={d} value={d}>{COACH_DAY_NAMES[d].toLowerCase()}s</option>)}
+                  </select>
+                  <span className="text-slate-400">du</span>
+                  <input type="date" value={serie.from} onChange={e => setSerie({ ...serie, from: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white" />
+                  <span className="text-slate-400">au</span>
+                  <input type="date" value={serie.to} onChange={e => setSerie({ ...serie, to: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white" />
+                  <button onClick={addSeries} className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 font-bold">Ajouter</button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">Tu peux ensuite retirer les dates sans match une par une.</p>
+              </details>
+              {matchList.length === 0 ? (
+                <p className="text-[11px] text-slate-500">Aucun match à venir enregistré.</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {matchList.map(d => (
+                      <button key={d} onClick={() => toggleMatch(d)} title="Retirer" className="px-2 py-1 rounded-lg bg-amber-500/90 text-slate-950 text-[11px] font-bold">
+                        {coachDayLabel(d).slice(0, 3)} {d.slice(8, 10)}/{d.slice(5, 7)}/{d.slice(2, 4)} ✕
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                <span className="text-slate-400">Autre jour de match :</span>
-                <input type="date" value={extraMatch} min={today} onChange={e => setExtraMatch(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white" />
-                <button onClick={() => { if (extraMatch) { const s = new Set(coach.matchDates || []); s.add(extraMatch); updateCoach({ matchDates: Array.from(s).sort() }); setExtraMatch(''); } }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 font-bold">Ajouter</button>
-                {customMatches.map(d => (
-                  <button key={d} onClick={() => toggleMatch(d)} className="px-2 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">🏆 {coachDayLabel(d)} ✕</button>
-                ))}
-              </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
+                    <span>{matchList.length} match(s) à venir. Touche une date pour la retirer.</span>
+                    <button onClick={() => { if (window.confirm('Retirer tous les matchs à venir ?')) updateCoach({ matchDates: (coach.matchDates || []).filter(d => d < today) }); }} className="text-rose-300 font-bold">Tout effacer</button>
+                  </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -2242,7 +2630,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
       startWeightKg: 84,
       userWeightKg: 82,
       targetWeightKg: 75,
-      coach: { sessionsPerWeek: 2, volleyDays: [4, 5], matchDates: [], deloadWeeks: [] },
+      coach: { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [] },
       weightHistory: [
         { id: 'w_1', date: getYesterdayISODate(), weightKg: 84.0, note: 'Pesée initiale (Mode Grosdoudou)' },
         { id: 'w_2', date: getTodayISODate(), weightKg: 82.0, note: 'Premiers kilos perdus, en route vers Rondoudou Fit !' }
@@ -4591,6 +4979,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         }));
         setSelectedDate(today);
         setSelectedJournalDay(today);
+        setGameState(prev => { const cs = prev.coach; return cs && cs.plan && cs.plan.date <= today ? { ...prev, coach: { ...cs, plan: null } } : prev; });
         setGuided(null);
         setGuidedOpen(false);
         playGameSound(bossQuest ? 'boss' : 'xp', gameState.soundEnabled);
@@ -4600,10 +4989,11 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
 
       const addQuestFromCatalog = catId => {
         const c = EXERCISE_CATALOG.find(x => x.id === catId);
-        if (!c) return;
-        if (gameState.quests.some(q => q.catalogId === catId)) {
+        if (!c) return null;
+        const existing = gameState.quests.find(q => q.catalogId === catId);
+        if (existing) {
           triggerToast('Déjà dans tes objectifs', c.name, 0, 'ℹ️');
-          return;
+          return existing.id;
         }
         const gSets = c.defaultGoalSets || 3;
         const gReps = c.defaultGoalReps || 6;
@@ -4647,6 +5037,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
         };
         setGameState(prev => ({ ...prev, xp: prev.xp + 40, quests: [newQuest, ...prev.quests] }));
         triggerToast('Exercice ajouté !', `${c.name} : ajuste la charge de départ dans « Quêtes » (✏️).`, 40, c.icon);
+        return newQuest.id;
       };
 
       const handleSaveQuickCardio = e => {
