@@ -1,0 +1,269 @@
+import { normalizeArenaGroup } from '../data/arenas';
+import { EXERCISE_CATALOG } from '../data/catalog';
+import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
+import { getTodayISODate } from '../lib/dates';
+import { isTimedCatalog, isTimedQuest } from '../lib/quests';
+import { playGameSound } from '../lib/sound';
+import { useState } from 'react';
+
+export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId, triggerToast }) {
+  // Modale "Ajouter / Ajuster un Objectif"
+  const [questModalOpen, setQuestModalOpen] = useState(false);
+
+  const [editingQuestId, setEditingQuestId] = useState(null);
+
+  const [formCatalogId, setFormCatalogId] = useState('pullups');
+
+  const [formCustomName, setFormCustomName] = useState('');
+
+  const [formCategory, setFormCategory] = useState('Dos');
+
+  const [formType, setFormType] = useState('strength');
+
+  const [formUnit, setFormUnit] = useState('reps');
+
+  const [formTimed, setFormTimed] = useState(false);
+
+  const [formGoalMode, setFormGoalMode] = useState('sets_reps');
+
+  const [formCardioMode, setFormCardioMode] = useState('run');
+
+  const [formIcon, setFormIcon] = useState('🦅');
+
+  const [formStartValue, setFormStartValue] = useState(4);
+
+  const [formCurrentValue, setFormCurrentValue] = useState(4);
+
+  const [formGoalValue, setFormGoalValue] = useState(6);
+
+  const [formGoalSets, setFormGoalSets] = useState(3);
+
+  const [formGoalReps, setFormGoalReps] = useState(6);
+
+  const [formStartAssistanceKg, setFormStartAssistanceKg] = useState(15);
+
+  const [formGoalAssistanceKg, setFormGoalAssistanceKg] = useState(0);
+
+  const openCreateQuestModal = () => {
+    const def = EXERCISE_CATALOG[0];
+    setEditingQuestId(null);
+    setFormCatalogId(def.id);
+    setFormCustomName(def.name);
+    setFormCategory(def.category);
+    setFormType(def.type);
+    setFormUnit(def.unit);
+    setFormTimed(isTimedCatalog(def));
+    setFormGoalMode(def.defaultGoalMode || 'sets_reps');
+    setFormCardioMode(def.cardioMode || 'run');
+    setFormIcon(def.icon);
+    setFormStartValue(def.defaultStart);
+    setFormCurrentValue(def.defaultStart);
+    setFormGoalValue(def.defaultGoal);
+    setFormGoalSets(def.defaultGoalSets || 3);
+    setFormGoalReps(def.defaultGoalReps || 6);
+    setFormStartAssistanceKg(def.defaultStartAssistance || 0);
+    setFormGoalAssistanceKg(def.defaultGoalAssistance || 0);
+    setQuestModalOpen(true);
+  };
+
+  const openEditQuestModal = quest => {
+    setEditingQuestId(quest.id);
+    setFormCatalogId(quest.catalogId || 'custom');
+    setFormCustomName(quest.name);
+    setFormCategory(normalizeArenaGroup(quest.category, quest.type));
+    setFormType(quest.type || 'strength');
+    setFormUnit(quest.unit || 'reps');
+    setFormTimed(isTimedQuest(quest));
+    setFormGoalMode(quest.goalMode || 'sets_reps');
+    setFormCardioMode(quest.cardioMode || 'run');
+    setFormIcon(quest.icon || '⚔️');
+    setFormStartValue(Number(quest.startValue) || 0);
+    setFormCurrentValue(Number(quest.currentValue) || 0);
+    setFormGoalValue(Number(quest.goalValue) || 6);
+    setFormGoalSets(Number(quest.goalSets) || 3);
+    setFormGoalReps(Number(quest.goalReps) || Number(quest.goalValue) || 6);
+    setFormStartAssistanceKg(Number(quest.startAssistanceKg) || 0);
+    setFormGoalAssistanceKg(Number(quest.goalAssistanceKg) || 0);
+    setQuestModalOpen(true);
+  };
+
+  const handleSelectCatalogExercise = catId => {
+    setFormCatalogId(catId);
+    if (catId === 'custom_strength') {
+      setFormCustomName('');
+      setFormCategory('Pectoraux');
+      setFormType('strength');
+      setFormUnit('kg');
+      setFormTimed(false);
+      setFormGoalMode('sets_reps');
+      setFormIcon('⚔️');
+      setFormStartValue(20);
+      setFormCurrentValue(20);
+      setFormGoalValue(40);
+      setFormGoalSets(3);
+      setFormGoalReps(8);
+      setFormStartAssistanceKg(0);
+      setFormGoalAssistanceKg(0);
+      return;
+    }
+    if (catId === 'custom_bodyweight') {
+      setFormCustomName('');
+      setFormCategory('Dos');
+      setFormType('strength');
+      setFormUnit('reps');
+      setFormTimed(false);
+      setFormGoalMode('sets_reps');
+      setFormIcon('🦅');
+      setFormStartValue(4);
+      setFormCurrentValue(4);
+      setFormGoalValue(8);
+      setFormGoalSets(3);
+      setFormGoalReps(8);
+      setFormStartAssistanceKg(10);
+      setFormGoalAssistanceKg(0);
+      return;
+    }
+    const found = EXERCISE_CATALOG.find(item => item.id === catId);
+    if (!found) return;
+    setFormCustomName(found.name);
+    setFormCategory(normalizeArenaGroup(found.category, found.type));
+    setFormType(found.type);
+    setFormUnit(found.unit);
+    setFormTimed(isTimedCatalog(found));
+    setFormGoalMode(found.defaultGoalMode || 'sets_reps');
+    setFormCardioMode(found.cardioMode || 'run');
+    setFormIcon(found.icon);
+    setFormStartValue(found.defaultStart);
+    setFormCurrentValue(found.defaultStart);
+    setFormGoalValue(found.defaultGoal);
+    setFormGoalSets(found.defaultGoalSets || 3);
+    setFormGoalReps(found.defaultGoalReps || 6);
+    setFormStartAssistanceKg(found.defaultStartAssistance || 0);
+    setFormGoalAssistanceKg(found.defaultGoalAssistance || 0);
+  };
+
+  const handleSaveQuestForm = e => {
+    e.preventDefault();
+    const cleanName = formCustomName.trim() || 'Nouvel Exercice';
+    const gSets = formGoalMode === 'reps_only' ? 1 : Math.max(1, Number(formGoalSets) || 3);
+    const gReps = Math.max(1, Number(formGoalReps) || 6);
+    const effectiveUnit =
+      formType === 'strength' && formGoalMode === 'weight_only' ? 'kg' : formUnit;
+    const finalGoalValue =
+      formType === 'strength' && effectiveUnit === 'reps'
+        ? gReps
+        : Math.max(1, Number(formGoalValue) || gReps);
+
+    if (editingQuestId) {
+      setGameState(prev => ({
+        ...prev,
+        quests: prev.quests.map(q => {
+          if (q.id !== editingQuestId) return q;
+          return {
+            ...q,
+            name: cleanName,
+            category: formCategory,
+            type: formType,
+            unit: effectiveUnit,
+            timed: formType === 'strength' && effectiveUnit === 'reps' ? formTimed : undefined,
+            goalMode: formGoalMode,
+            cardioMode: formCardioMode,
+            icon: formIcon,
+            startValue: Number(formStartValue) || 0,
+            currentValue: Number(formCurrentValue) || 0,
+            goalValue: finalGoalValue,
+            goalSets: gSets,
+            goalReps: gReps,
+            startAssistanceKg:
+              effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
+            goalAssistanceKg:
+              effectiveUnit === 'reps' && !formTimed ? Number(formGoalAssistanceKg) || 0 : 0
+          };
+        })
+      }));
+      triggerToast('Objectif ajusté !', `${cleanName} mis à jour.`, 25, '🛠️');
+    } else {
+      const startRepsOrVal = Number(formStartValue) || 0;
+      const initialSetDetails =
+        formType === 'strength'
+          ? Array(gSets).fill(effectiveUnit === 'reps' ? startRepsOrVal : gReps)
+          : [];
+
+      const initialCalories =
+        formType === 'cardio'
+          ? calculateCardioCalories({
+              cardioMode: formCardioMode,
+              distanceKm: startRepsOrVal,
+              durationMin: 25,
+              elevationM: 20,
+              rpe: 7,
+              userWeightKg: gameState.userWeightKg
+            })
+          : calculateStrengthCalories({
+              unit: effectiveUnit,
+              timed: formTimed,
+              weightKg: effectiveUnit === 'kg' ? startRepsOrVal : 0,
+              assistanceKg:
+                effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
+              setDetails: initialSetDetails,
+              rpe: 7,
+              userWeightKg: gameState.userWeightKg
+            });
+
+      const newQuest = {
+        id: `q_${Date.now()}`,
+        catalogId: formCatalogId,
+        name: cleanName,
+        category: formCategory,
+        type: formType,
+        cardioMode: formCardioMode,
+        unit: effectiveUnit,
+        timed: formType === 'strength' && effectiveUnit === 'reps' ? formTimed : undefined,
+        goalMode: formGoalMode,
+        level: 1,
+        icon: formIcon,
+        startValue: startRepsOrVal,
+        currentValue: Number(formCurrentValue) || startRepsOrVal,
+        goalValue: finalGoalValue,
+        goalSets: gSets,
+        goalReps: gReps,
+        setDetails: initialSetDetails,
+        startAssistanceKg:
+          effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
+        currentAssistanceKg:
+          effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
+        goalAssistanceKg:
+          effectiveUnit === 'reps' && !formTimed ? Number(formGoalAssistanceKg) || 0 : 0,
+        history: [
+          {
+            id: `h_start_${Date.now()}`,
+            date: getTodayISODate(),
+            value: Number(formCurrentValue) || startRepsOrVal,
+            sets: gSets,
+            reps: effectiveUnit === 'reps' ? startRepsOrVal : gReps,
+            setDetails: initialSetDetails,
+            assistanceKg:
+              effectiveUnit === 'reps' && !formTimed ? Number(formStartAssistanceKg) || 0 : 0,
+            rpe: 7,
+            calories: initialCalories,
+            goalBeaten: false,
+            note: `Point de départ — Niveau 1 (${cleanName})`
+          }
+        ]
+      };
+
+      setGameState(prev => ({
+        ...prev,
+        xp: prev.xp + 40,
+        quests: [newQuest, ...prev.quests]
+      }));
+      setSelectedChartQuestId(newQuest.id);
+      triggerToast('Nouvelle Quête Créée !', `${cleanName} ajouté au Pokédex.`, 40, formIcon);
+    }
+
+    setQuestModalOpen(false);
+    playGameSound('xp', gameState.soundEnabled);
+  };
+
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm };
+}
