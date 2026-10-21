@@ -4,7 +4,7 @@ Application de fitness façon RPG Pokémon pour **un seul utilisateur** (frança
 
 ## Règles de travail avec l'utilisateur
 - Parler **français**, réponses courtes, orientées résultat.
-- **Ne jamais pousser sur GitHub sans accord explicite** de l'utilisateur à chaque fois ; proposer d'abord, pousser ensuite.
+- **Pousser sur `main` automatiquement** une fois les tests faits (autorisation permanente de l'utilisateur, 21/10/2026), puis **expliquer clairement ce qui a changé**. Ne pas publier de données personnelles.
 - Livrer aussi `index.html` à l'utilisateur quand il le demande (il teste souvent depuis son téléphone).
 - Commits : message en français + trailers `Co-Authored-By` / `Claude-Session` demandés par l'environnement.
 - Les évolutions sont des demandes de fonctionnalités ; vérifier dans un navigateur (Playwright) avant de livrer.
