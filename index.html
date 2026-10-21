@@ -2954,6 +2954,10 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     }
 
     function SessionRecap({ recap, onClose }) {
+      const hasPhotos = usePhotos();
+      useEffect(() => {
+        try { navigator.vibrate && navigator.vibrate([150, 80, 150]); } catch (e) {}
+      }, []);
       const diff = recap.prevTonnage > 0 ? Math.round(((recap.tonnage - recap.prevTonnage) / recap.prevTonnage) * 100) : null;
       return (
         <div className="fixed inset-0 z-[90] bg-black/80 overflow-y-auto">
@@ -2985,8 +2989,13 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
                   </div>
                 ))}
               </div>
-              <SessionPhoto date={recap.date || getTodayISODate()} label={recap.title || ''} />
-              <button onClick={onClose} className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm">Super, merci coach</button>
+              <SessionPhoto date={recap.date || getTodayISODate()} label={recap.title || ''} highlight />
+              <button onClick={() => {
+                const d = recap.date || getTodayISODate();
+                const has = hasPhotos.some(p => p.date === d);
+                if (!has && !window.confirm('📸 Tu n’as pas encore pris ta photo de fin de séance. Fermer quand même ?')) return;
+                onClose();
+              }} className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm">Super, merci coach</button>
             </div>
           </div>
         </div>
@@ -3103,11 +3112,13 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
     }
 
     // Souvenir proposé à la fin d'une séance
-    function SessionPhoto({ date, label }) {
+    function SessionPhoto({ date, label, highlight }) {
       const photos = usePhotos().filter(p => p.date === date);
+      const todo = highlight && photos.length === 0;
       return (
-        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
-          <p className="text-xs font-extrabold text-white">📸 Souvenir de la séance</p>
+        <div className={`rounded-xl p-3 space-y-2 ${todo ? 'bg-pink-950/60 border-2 border-pink-500 animate-pulse' : 'bg-slate-950 border border-slate-800'}`}>
+          <p className="text-xs font-extrabold text-white">{todo ? '📸 Vas-y, prends ta photo de fin de séance !' : '📸 Souvenir de la séance'}</p>
+          {todo && <p className="text-[11px] text-pink-200">Ne l’oublie pas : c’est le souvenir de la séance du jour pour ton calendrier.</p>}
           {photos.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {photos.map(p => (
@@ -3273,6 +3284,25 @@ if (category.toLowerCase().includes('volley')) return 'Volley-ball';
               </div>
             </div>
           )}
+        </div>
+      );
+    }
+
+    // Rappel : séance faite aujourd'hui mais pas de photo
+    function PhotoReminder({ gameState, onGo }) {
+      const photos = usePhotos();
+      const today = getTodayISODate();
+      const [hidden, setHidden] = useState(() => { try { return localStorage.getItem('rondoufit_photo_snooze') === today; } catch (e) { return false; } });
+      const done = (gameState.quests || []).some(q => (q.history || []).some(h => h.date === today && !isStartEntry(h)));
+      if (hidden || !done || photos.some(p => p.date === today)) return null;
+      return (
+        <div className="bg-pink-950/60 border border-pink-500/60 rounded-xl p-3 flex items-center gap-3">
+          <span className="text-2xl">📸</span>
+          <div className="flex-1">
+            <p className="text-xs font-black text-white">Séance faite aujourd’hui : pense à ta photo souvenir !</p>
+            <button onClick={onGo} className="text-[11px] font-bold text-pink-300 underline">Ouvrir mes souvenirs</button>
+          </div>
+          <button onClick={() => { try { localStorage.setItem('rondoufit_photo_snooze', today); } catch (e) {} setHidden(true); }} className="text-slate-400 hover:text-white text-sm" title="Plus tard">✕</button>
         </div>
       );
     }
@@ -8133,6 +8163,7 @@ if (goalMode === 'free_mode') return { percent: 100, isBossDefeated: false, vali
             )}
 
             {/* ONGLET : BILAN (défis, semaine, records) */}
+            {activeTab !== 'photos' && <PhotoReminder gameState={gameState} onGo={() => setActiveTab('photos')} />}
             {activeTab === 'photos' && <PhotoCalendar gameState={gameState} />}
 
             {activeTab === 'bilan' && (
