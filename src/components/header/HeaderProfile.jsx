@@ -81,6 +81,11 @@ export function HeaderProfile({
               style={{ width: `${levelInfo.progressPct}%` }}
             />
           </div>
+          {levelInfo.nextRank && (
+            <p className="text-[10px] text-slate-500 mt-1">
+              Prochain rang : {levelInfo.nextRank.badge} {levelInfo.nextRank.title} (niv. {levelInfo.nextRank.minLevel}, encore {levelInfo.xpToNextRank} EXP)
+            </p>
+          )}
         </div>
       </div>
     </div>

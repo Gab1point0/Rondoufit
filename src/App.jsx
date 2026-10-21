@@ -28,6 +28,8 @@ import { WeightTab } from './tabs/WeightTab';
 import { AppHeader } from './components/header/AppHeader';
 import { useDataTransfer } from './hooks/useDataTransfer';
 import { useDerivedStats } from './hooks/useDerivedStats';
+import { useLevelCelebration } from './hooks/useLevelCelebration';
+import { RankUpModal } from './modals/RankUpModal';
 import { useGameState } from './hooks/useGameState';
 import { useGuidedSession } from './hooks/useGuidedSession';
 import { useLevelUp } from './hooks/useLevelUp';
@@ -109,6 +111,11 @@ export function App() {
   } = useDerivedStats({
     gameState, selectedDate,
   });
+
+  const { celebration, closeCelebration } = useLevelCelebration({
+    levelInfo, isLoaded, syncStatus: sync.status, soundEnabled: gameState.soundEnabled, triggerToast,
+  });
+
   const {
     logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance,
     setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode,
@@ -407,6 +414,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       {syncOpen && (
         <SyncModal sync={sync} onClose={() => setSyncOpen(false)} triggerToast={triggerToast} />
       )}
+
+      {/* CÉLÉBRATION : NOUVEAU RANG */}
+      {celebration && <RankUpModal celebration={celebration} onClose={closeCelebration} />}
     </div>
   );
 }

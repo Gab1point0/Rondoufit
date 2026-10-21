@@ -1,6 +1,6 @@
 import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
-import { RPG_RANKS } from '../data/gamification';
 import { getTodayISODate } from '../lib/dates';
+import { levelFromXp } from '../lib/levels';
 import { compareWithPreviousSession, evaluateQuestProgress } from '../lib/progress';
 import { getSetDetailsArray, isTimedQuest } from '../lib/quests';
 import { computeCurrentStreak } from '../lib/stats';
@@ -10,13 +10,7 @@ export function useDerivedStats({ gameState, selectedDate }) {
   // ==========================================
   // CALCULS DÉRIVÉS
   // ==========================================
-  const levelInfo = useMemo(() => {
-    const level = Math.floor(gameState.xp / 250) + 1;
-    const currentLevelXp = gameState.xp % 250;
-    const progressPct = Math.min(100, Math.round((currentLevelXp / 250) * 100));
-    const rank = [...RPG_RANKS].reverse().find(r => level >= r.minLevel) || RPG_RANKS[0];
-    return { level, currentLevelXp, nextLevelXp: 250, progressPct, rank };
-  }, [gameState.xp]);
+  const levelInfo = useMemo(() => levelFromXp(gameState.xp), [gameState.xp]);
 
   const currentStreak = useMemo(() => computeCurrentStreak(gameState.quests), [gameState.quests]);
 

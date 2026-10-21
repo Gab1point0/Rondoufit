@@ -1,10 +1,12 @@
 // Rangs du jeu (selon le niveau) et liste des trophées avec leur bonus d'EXP.
 export const RPG_RANKS = [
   { minLevel: 1, title: 'Toudoudou Novice', badge: '🎵', color: 'from-pink-400 to-rose-600' },
-  { minLevel: 3, title: 'Rondoudou Apprenti', badge: '🎤', color: 'from-fuchsia-400 to-purple-600' },
-  { minLevel: 6, title: 'Rondoudou Combattant', badge: '🥊', color: 'from-indigo-400 to-violet-600' },
-  { minLevel: 10, title: 'Grodoudou d’Élite', badge: '👑', color: 'from-amber-400 to-orange-600' },
-  { minLevel: 15, title: 'Rondoudou Légendaire', badge: '🌟', color: 'from-emerald-400 to-teal-600' }
+  { minLevel: 4, title: 'Rondoudou Apprenti', badge: '🎤', color: 'from-fuchsia-400 to-purple-600' },
+  { minLevel: 8, title: 'Rondoudou Combattant', badge: '🥊', color: 'from-indigo-400 to-violet-600' },
+  { minLevel: 14, title: 'Grodoudou d’Élite', badge: '👑', color: 'from-amber-400 to-orange-600' },
+  { minLevel: 22, title: 'Rondoudou Légendaire', badge: '🌟', color: 'from-emerald-400 to-teal-600' },
+  { minLevel: 35, title: 'Rondoudou Mythique', badge: '🐉', color: 'from-cyan-400 to-blue-600' },
+  { minLevel: 50, title: 'Maître des Arènes', badge: '🏆', color: 'from-rose-400 to-red-600' }
 ];
 
 export const ACHIEVEMENTS_LIST = [
