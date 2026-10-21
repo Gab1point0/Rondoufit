@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { normalizeState } from '../data/state';
 import { fetchLegacySave } from '../legacy/googleSheets';
+import { PhotoDB } from '../lib/photos';
 import { syncOnce } from '../sync/engine';
 import * as github from '../sync/github';
 import { mergeStates } from '../sync/merge';
+import { syncPhotos } from '../sync/photoSync';
 import * as store from '../sync/storage';
 
 const DEBOUNCE_MS = 2000;      // attente après une modification avant d'envoyer
@@ -51,6 +53,22 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
   );
 
   // `quiet` : vérification régulière en arrière-plan, la pastille ne clignote pas si rien n'est à envoyer.
+  // Photos souvenirs : une par fichier dans le dépôt (voir sync/photoSync.js).
+  const photoPorts = useMemo(
+    () => ({
+      api: github,
+      local: {
+        index: () => PhotoDB.index(),
+        get: id => PhotoDB.get(id),
+        put: p => PhotoDB.put(p, { remote: true }),
+        del: id => PhotoDB.del(id, { remote: true }),
+      },
+      getMeta: store.readPhotoMeta,
+      setMeta: store.writePhotoMeta,
+    }),
+    []
+  );
+
   const syncNow = useCallback(opts => {
     const cfg = cfgRef.current;
     if (!store.isConfigured(cfg)) return Promise.resolve(false);
@@ -60,6 +78,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     const p = (async () => {
       try {
         await syncOnce(cfg, ports);
+        await syncPhotos(cfg, photoPorts);
         lastSyncRef.current = Date.now();
         setLastSync(lastSyncRef.current);
         setError(null);
@@ -76,7 +95,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     })();
     running.current = p;
     return p;
-  }, [ports]);
+  }, [ports, photoPorts]);
 
   const scheduleSync = useCallback(
     (delay = DEBOUNCE_MS, quiet = false) => {
@@ -93,7 +112,10 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     next => {
       const prev = cfgRef.current;
       const sameFile = ['owner', 'repo', 'path', 'branch'].every(k => prev[k] === next[k]);
-      if (!sameFile) store.writeSynced(null); // l'ancienne référence ne vaut que pour l'ancien fichier
+      if (!sameFile) {
+        store.writeSynced(null); // l'ancienne référence ne vaut que pour l'ancien fichier
+        store.writePhotoMeta(null);
+      }
       store.writeConfig(next);
       cfgRef.current = next;
       setConfigState(next);
@@ -116,14 +138,17 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
       if (document.visibilityState === 'visible' && Date.now() - lastSyncRef.current > FOCUS_MIN_MS) scheduleSync(200);
     };
     const onOnline = () => scheduleSync(500);
+    const onPhotoChange = () => scheduleSync(3000);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
+    window.addEventListener('rondoufit-photos-local', onPhotoChange);
     const poll = setInterval(() => {
       if (document.visibilityState === 'visible' && store.isConfigured(cfgRef.current)) scheduleSync(100, true);
     }, POLL_MS);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('rondoufit-photos-local', onPhotoChange);
       clearInterval(poll);
       clearTimeout(timer.current);
     };

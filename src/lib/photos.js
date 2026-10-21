@@ -1,9 +1,33 @@
 import { useEffect, useState } from 'react';
 
 // ===== Souvenirs photo (stockés dans IndexedDB, hors sauvegarde principale) =====
+// Chaque photo : { id, date, label, note, img (JPEG en base64), createdAt, updatedAt }.
+// Elles sont synchronisées avec GitHub par sync/photoSync.js. Un petit index { id: updatedAt } est gardé dans
+// localStorage pour que la synchro n'ait pas à relire toutes les images.
+const INDEX_KEY = 'rondoufit:photoIdx';
+const readIdx = () => { try { return JSON.parse(localStorage.getItem(INDEX_KEY) || 'null'); } catch (e) { return null; } };
+const writeIdx = idx => { try { localStorage.setItem(INDEX_KEY, JSON.stringify(idx)); } catch (e) {} };
+// 'rondoufit-photos' : l'affichage doit se rafraîchir ; 'rondoufit-photos-local' : l'utilisateur a changé quelque chose (à envoyer).
+const notify = remote => {
+  window.dispatchEvent(new Event('rondoufit-photos'));
+  if (!remote) window.dispatchEvent(new Event('rondoufit-photos-local'));
+};
+
 export const PhotoDB = {
   _db: null,
   _mem: [],
+  async index() {
+    let idx = readIdx();
+    if (!idx) {
+      idx = {};
+      for (const p of await this.all()) idx[p.id] = p.updatedAt || p.createdAt || 0;
+      writeIdx(idx);
+    }
+    return idx;
+  },
+  async get(id) {
+    return (await this.all()).find(p => p.id === id) || null;
+  },
   open() {
     if (this._db) return Promise.resolve(this._db);
     return new Promise((res, rej) => {
@@ -25,7 +49,12 @@ export const PhotoDB = {
       });
     } catch (e) { return this._mem.slice(); }
   },
-  async put(p) {
+  // remote = true : photo reçue de GitHub (on garde sa date de modification et on ne la renvoie pas)
+  async put(photo, { remote = false } = {}) {
+    const p = remote ? photo : { ...photo, updatedAt: Date.now() };
+    const idx = (await this.index()) || {};
+    idx[p.id] = p.updatedAt || p.createdAt || 0;
+    writeIdx(idx);
     try {
       const db = await this.open();
       await new Promise((res, rej) => {
@@ -34,9 +63,12 @@ export const PhotoDB = {
         t.oncomplete = res; t.onerror = () => rej(t.error);
       });
     } catch (e) { this._mem = this._mem.filter(x => x.id !== p.id).concat(p); }
-    window.dispatchEvent(new Event('rondoufit-photos'));
+    notify(remote);
   },
-  async del(id) {
+  async del(id, { remote = false } = {}) {
+    const idx = (await this.index()) || {};
+    delete idx[id];
+    writeIdx(idx);
     try {
       const db = await this.open();
       await new Promise((res, rej) => {
@@ -45,7 +77,7 @@ export const PhotoDB = {
         t.oncomplete = res; t.onerror = () => rej(t.error);
       });
     } catch (e) { this._mem = this._mem.filter(x => x.id !== id); }
-    window.dispatchEvent(new Event('rondoufit-photos'));
+    notify(remote);
   }
 };
 

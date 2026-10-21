@@ -4,6 +4,7 @@
 const KEYS = {
   config: 'rondoufit:github',
   synced: 'rondoufit:sync',       // { sha, base } : version de GitHub vue en dernier + état commun à ce moment-là
+  photoMeta: 'rondoufit:photoSync', // { id: { sha, at } } : état des photos à la dernière synchro
   dirty: 'rondoufit:dirty',       // '1' tant que des modifications de cet appareil n'ont pas été envoyées
   localTs: 'rondoudou_local_ts',  // date (ms) de la dernière modification faite sur cet appareil
   carnet: 'carnet-eps:github',    // réglages de l'appli Carnet EPS (même appareil), pour les reprendre en un clic
@@ -65,6 +66,15 @@ export function readSynced() {
   }
 }
 export const writeSynced = s => write(KEYS.synced, s ? JSON.stringify(s) : null);
+
+export function readPhotoMeta() {
+  try {
+    return JSON.parse(read(KEYS.photoMeta) || 'null');
+  } catch {
+    return null;
+  }
+}
+export const writePhotoMeta = m => write(KEYS.photoMeta, m ? JSON.stringify(m) : null);
 
 export const isDirty = () => read(KEYS.dirty) === '1';
 export const markDirty = () => write(KEYS.dirty, '1');

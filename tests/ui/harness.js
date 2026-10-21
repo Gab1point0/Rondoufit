@@ -158,10 +158,19 @@ export async function monkey(h, seed, steps) {
   return done;
 }
 
-// ── Faux GitHub (API « Contents ») ────────────────────────────────────────────
+// ── Faux GitHub (API « Contents ») : plusieurs fichiers, dossiers, suppression ───────────────────
+const MAIN = 'rondoufit-data.json';
 export function fakeGithub(initial) {
-  const srv = { file: initial ? { content: JSON.stringify(initial), sha: 'sha0' } : null, n: 0, puts: [], gets: 0, legacy: null, offline: false };
+  const files = new Map(); // chemin -> { content, sha }
+  const srv = { files, n: 0, puts: [], gets: 0, photoPuts: [], photoDeletes: [], legacy: null, offline: false };
   const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
+  const put = (path, content) => files.set(path, { content, sha: 'sha' + ++srv.n });
+  // le fichier de données principal, accessible directement
+  Object.defineProperty(srv, 'file', {
+    get: () => files.get(MAIN) || null,
+    set: v => (v ? files.set(MAIN, v) : files.delete(MAIN)),
+  });
+  if (initial) srv.file = { content: JSON.stringify(initial), sha: 'sha0' };
   srv.fetch = async (url, opts = {}) => {
     url = String(url);
     if (url.startsWith('https://script.google.com')) {
@@ -172,16 +181,31 @@ export function fakeGithub(initial) {
     const m = url.match(/^https:\/\/api\.github\.com\/repos\/([^/]+)\/([^/?]+)(?:\/contents\/([^?]+))?/);
     if (!m) return res(404, { message: 'Not Found' });
     if (!m[3]) return res(200, { name: m[2] });
-    if ((opts.method || 'GET') === 'GET') {
-      srv.gets++;
-      if (!srv.file) return res(404, { message: 'Not Found' });
-      return res(200, { content: Buffer.from(srv.file.content, 'utf8').toString('base64'), encoding: 'base64', sha: srv.file.sha });
+    const path = decodeURIComponent(m[3]);
+    const method = opts.method || 'GET';
+    if (method === 'GET') {
+      if (path === MAIN) srv.gets++;
+      if (files.has(path)) {
+        const f = files.get(path);
+        return res(200, { type: 'file', content: Buffer.from(f.content, 'utf8').toString('base64'), encoding: 'base64', sha: f.sha });
+      }
+      const dir = [...files.entries()].filter(([p]) => p.startsWith(path + '/'));
+      if (dir.length) return res(200, dir.map(([p, f]) => ({ type: 'file', name: p.slice(path.length + 1), sha: f.sha })));
+      return res(404, { message: 'Not Found' });
     }
     const body = JSON.parse(opts.body);
-    if ((srv.file ? srv.file.sha : null) !== (body.sha || null)) return res(409, { message: 'sha does not match' });
-    srv.file = { content: Buffer.from(body.content, 'base64').toString('utf8'), sha: 'sha' + ++srv.n };
-    srv.puts.push(JSON.parse(srv.file.content));
-    return res(200, { content: { sha: srv.file.sha } });
+    const current = files.get(path);
+    if ((current ? current.sha : null) !== (body.sha || null)) return res(409, { message: 'sha does not match' });
+    if (method === 'DELETE') {
+      files.delete(path);
+      srv.photoDeletes.push(path);
+      return res(200, {});
+    }
+    const content = Buffer.from(body.content, 'base64').toString('utf8');
+    put(path, content);
+    if (path === MAIN) srv.puts.push(JSON.parse(content));
+    else srv.photoPuts.push(path);
+    return res(200, { content: { sha: files.get(path).sha } });
   };
   return srv;
 }

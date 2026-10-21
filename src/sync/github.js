@@ -103,3 +103,24 @@ export async function putFile(cfg, content, sha, message) {
   const json = await res.json();
   return json.content.sha;
 }
+
+/** Liste les fichiers d'un dossier du dépôt : [{ name, sha }]. Dossier absent = liste vide. */
+export async function listDir(cfg, dir) {
+  const path = dir.split('/').map(encodeURIComponent).join('/');
+  const url = `${API}/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${path}?ref=${encodeURIComponent(cfg.branch)}`;
+  const res = await fetch(url, { headers: headers(cfg), cache: 'no-store' });
+  if (res.status === 404) return [];
+  if (!res.ok) throw await explain(res);
+  const json = await res.json();
+  return Array.isArray(json) ? json.filter(f => f.type === 'file').map(f => ({ name: f.name, sha: f.sha })) : [];
+}
+
+/** Supprime un fichier du dépôt (il faut son sha actuel). */
+export async function deleteFile(cfg, sha, message) {
+  const res = await fetch(fileUrl(cfg), {
+    method: 'DELETE',
+    headers: { ...headers(cfg), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, sha, branch: cfg.branch }),
+  });
+  if (!res.ok && res.status !== 404) throw await explain(res);
+}
