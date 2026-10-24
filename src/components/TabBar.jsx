@@ -53,6 +53,17 @@ export function TabBar({ activeTab, dailyJournalList, gameState, setActiveTab })
         </button>
 
         <button
+          onClick={() => setActiveTab('maxima')}
+          className={`px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
+            activeTab === 'maxima'
+              ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <span>💯 Mes maxima</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('weight')}
           className={`px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
             activeTab === 'weight'

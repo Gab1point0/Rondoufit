@@ -12,6 +12,7 @@ import { BilanTab } from './tabs/BilanTab';
 import { ChartsTab } from './tabs/ChartsTab';
 import { DailySummary } from './components/DailySummary';
 import { JournalTab } from './tabs/JournalTab';
+import { MaximaTab } from './tabs/MaximaTab';
 import { LevelUpModal } from './modals/LevelUpModal';
 import { LogSessionModal } from './modals/LogSessionModal';
 import { QuestFormModal } from './modals/QuestFormModal';
@@ -276,6 +277,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {activeTab === 'charts' && (
           <ChartsTab activeChartQuest={activeChartQuest} gameState={gameState} openLogModal={openLogModal} setSelectedChartQuestId={setSelectedChartQuestId} />
         )}
+
+        {/* ONGLET : 💯 MES MAXIMA */}
+        {activeTab === 'maxima' && <MaximaTab gameState={gameState} setGameState={setGameState} />}
 
         {/* ONGLET 4 : ⚖️ SUIVI DU POIDS */}
         {activeTab === 'weight' && (

@@ -20,6 +20,7 @@ export const INITIAL_STATE = {
   xpDaily: { date: '', earned: 0 },             // EXP gagnée aujourd'hui (plafond du jour)
   rankTrials: [],                               // niveaux des rangs dont l'épreuve est réussie
   cosmetics: { theme: 'rose', accessory: 'none', title: '' },
+  maxRecords: {},                               // records réels saisis dans l'onglet « Mes maxima » (clé = id de l'exercice)
   unlockedAchievements: ['first_blood', 'weight_tracker'],
   claimedChallenges: [],
   quests: [
