@@ -2,6 +2,7 @@ import { getCoachSettings } from '../coach/settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { getTodayISODate } from '../lib/dates';
+import { questAfterHistoryChange, rebuildEntry } from '../lib/history';
 import { getSetDetailsArray, isTimedCatalog } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { computeXp } from '../lib/xp';
@@ -74,6 +75,22 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
   // ==========================================
   // ACTION : SUPPRIMER UNE SÉANCE (BILAN DU JOUR OU JOURNAL)
   // ==========================================
+  // Correction d'une séance enregistrée (onglet Journal) : le coach repart des valeurs corrigées.
+  const handleEditSessionEntry = (questId, entryId, patch) => {
+    const quest = gameState.quests.find(q => q.id === questId);
+    registerUndo('Séance corrigée');
+    playGameSound('click', gameState.soundEnabled);
+    setGameState(prev => ({
+      ...prev,
+      quests: prev.quests.map(q => {
+        if (q.id !== questId) return q;
+        const history = (q.history || []).map(h => (h.id === entryId ? rebuildEntry(q, h, patch, prev.userWeightKg) : h));
+        return questAfterHistoryChange(q, history);
+      }),
+    }));
+    triggerToast('Séance corrigée', `${quest ? quest.name : 'Exercice'} : le coach repart de tes nouvelles valeurs.`, 0, '✏️');
+  };
+
   const handleDeleteSessionEntry = (questId, entryId) => {
     registerUndo('Séance supprimée');
     playGameSound('click', gameState.soundEnabled);
@@ -151,5 +168,5 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
     triggerToast('Quête retirée', 'L’exercice a été retiré du Pokédex.', 0, '🗑️');
   };
 
-  return { handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleDeleteQuest };
+  return { handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleEditSessionEntry, handleDeleteQuest };
 }

@@ -6,7 +6,7 @@ import { normalizeArenaGroup } from '../../data/arenas';
 import { card } from './ui';
 
 export function CoachNextSession({
-  addSel, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
@@ -154,6 +154,20 @@ export function CoachNextSession({
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">{e.reason}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="text-slate-500 font-bold">Tu décides :</span>
+                    <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
+                      {e.kind === 'load' ? '🔽 Plus léger' : e.kind === 'assisted' ? '➕ Plus d’aide' : '🔽 1 rép de moins'}
+                    </button>
+                    <button onClick={() => adjustTarget(e, 'harder')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
+                      {e.kind === 'load' ? '🔼 Plus lourd' : e.kind === 'assisted' ? '➖ Moins d’aide' : '🔼 1 rép de plus'}
+                    </button>
+                    {e.manual && (
+                      <button onClick={() => adjustTarget(e, 'reset')} className="px-2 py-1 rounded-lg bg-violet-900/50 hover:bg-violet-800/60 border border-violet-500/40 font-bold text-violet-200">
+                        ↩ Proposition du coach
+                      </button>
+                    )}
+                  </div>
                   {swapFor === e.questId && (() => {
                     const opt = coachSwapOptions(gameState, e.questId, shownSession.exercises.map(x => x.questId));
                     return (

@@ -3,7 +3,7 @@ import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachNutrition, co
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
-import { COACH_ARENAS, coachDow, getCoachSettings } from '../../coach/settings';
+import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoachSettings } from '../../coach/settings';
 import { computeExerciseTarget } from '../../coach/targets';
 import { normalizeArenaGroup } from '../../data/arenas';
 import { addDaysISO, getTodayISODate, getWeekStart } from '../../lib/dates';
@@ -173,6 +173,31 @@ export function CoachPanel({
     updateCoach({ plan: { date: shownDate, questIds: ids.map(i => (i === oldId ? newId : i)), sets } });
     setSwapFor(null);
   };
+  // « Tu décides » : on va à l'encontre du coach pour un exercice (plus lourd / plus léger, moins / plus d'aide, ±1 rép)
+  const adjustTarget = (e, action) =>
+    setGameState(prev => ({
+      ...prev,
+      quests: prev.quests.map(q => {
+        if (q.id !== e.questId) return q;
+        if (action === 'reset') {
+          const { coachOverride, ...rest } = q;
+          return rest;
+        }
+        const n = coachRealEntries(q).length;
+        const cur = q.coachOverride && q.coachOverride.entries === n ? q.coachOverride : {};
+        const dir = action === 'harder' ? 1 : -1;
+        const next = { ...cur, entries: n };
+        if (e.kind === 'load') {
+          const st = coachStep(q, e.load);
+          next.load = Math.max(0, coachRound(e.load + dir * st, st));
+        } else if (e.kind === 'assisted') {
+          next.assist = Math.max(0, e.assist - dir * 2.5);
+        } else {
+          next.repsDelta = (cur.repsDelta || 0) + dir;
+        }
+        return { ...q, coachOverride: next };
+      }),
+    }));
   const planDate = d => { if (d && d >= today) patchPlan(pl => ({ ...pl, date: d })); };
   const strengthQuests = (gameState.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
   const availQuests = plan ? strengthQuests.filter(q => !plan.questIds.includes(q.id)) : [];
@@ -206,6 +231,7 @@ export function CoachPanel({
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
+        adjustTarget={adjustTarget}
         availQuests={availQuests}
         coach={coach}
         doSwap={doSwap}

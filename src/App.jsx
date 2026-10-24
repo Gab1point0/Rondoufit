@@ -142,7 +142,7 @@ export function App() {
   });
 
   const {
-    handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleDeleteQuest,
+    handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleEditSessionEntry, handleDeleteQuest,
   } = useQuestActions({
     gameState, registerUndo, setGameState, triggerToast,
   });
@@ -269,7 +269,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 
         {/* ONGLET 2 : 📅 JOURNAL DES SÉANCES */}
         {activeTab === 'journal' && (
-          <JournalTab activeJournalDayObj={activeJournalDayObj} dailyJournalList={dailyJournalList} handleDeleteSessionEntry={handleDeleteSessionEntry} setSelectedJournalDay={setSelectedJournalDay} />
+          <JournalTab activeJournalDayObj={activeJournalDayObj} dailyJournalList={dailyJournalList} handleDeleteSessionEntry={handleDeleteSessionEntry} handleEditSessionEntry={handleEditSessionEntry} setSelectedJournalDay={setSelectedJournalDay} />
         )}
 
         {/* ONGLET 3 : COURBES DE PROGRESSION */}

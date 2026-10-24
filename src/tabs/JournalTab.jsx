@@ -1,8 +1,11 @@
+import { useState } from 'react';
+import { EntryEditor } from '../components/EntryEditor';
 import { normalizeArenaGroup } from '../data/arenas';
 import { Calendar, Trash2 } from '../icons';
 import { isTimedQuest, repUnit } from '../lib/quests';
 
-export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDeleteSessionEntry, setSelectedJournalDay }) {
+export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDeleteSessionEntry, handleEditSessionEntry, setSelectedJournalDay }) {
+  const [editingId, setEditingId] = useState(null);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-4 space-y-3">
@@ -118,6 +121,14 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                       </span>
                       <button
                         type="button"
+                        onClick={() => setEditingId(editingId === entry.id ? null : entry.id)}
+                        title="Corriger cette séance (répétitions, charge, aide…)"
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-pink-950/60 text-slate-300 hover:text-pink-200 border border-slate-800 hover:border-pink-500/40 transition text-xs font-bold flex items-center gap-1"
+                      >
+                        ✏️ <span>Corriger</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDeleteSessionEntry(quest.id, entry.id)}
                         title="Supprimer cette séance"
                         className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 text-xs font-bold flex items-center gap-1 transition"
@@ -127,6 +138,18 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                       </button>
                     </div>
                   </div>
+
+                  {editingId === entry.id && (
+                    <EntryEditor
+                      entry={entry}
+                      quest={quest}
+                      onCancel={() => setEditingId(null)}
+                      onSave={patch => {
+                        handleEditSessionEntry(quest.id, entry.id, patch);
+                        setEditingId(null);
+                      }}
+                    />
+                  )}
 
                   {quest.type === 'strength' ? (
                     <div className="flex flex-wrap items-center gap-2 pt-1">

@@ -125,10 +125,24 @@ export function computeExerciseTarget(q, opts = {}) {
   }
   reps = Array.from({ length: sets }, (_, i) => reps[i] !== undefined ? reps[i] : reps[reps.length - 1] || R);
 
+  // Décision de l'utilisateur : elle prime sur la proposition du coach jusqu'à la prochaine séance de cet exercice
+  // (voir « Tu décides » dans l'onglet Coach). On garde la proposition du coach pour pouvoir y revenir.
+  const suggested = { load, assist, targetReps: reps.slice(), change };
+  const choice = q.coachOverride;
+  const manual = !!(choice && choice.entries === entries.length);
+  if (manual) {
+    if (kind === 'load' && choice.load !== undefined) load = Number(choice.load) || 0;
+    if (kind === 'assisted' && choice.assist !== undefined) assist = Math.max(0, Number(choice.assist) || 0);
+    if (choice.repsDelta) reps = reps.map(r => Math.max(1, r + choice.repsDelta));
+    change = 'manual';
+    const was = kind === 'load' ? `${suggested.load} kg` : kind === 'assisted' ? `${suggested.assist} kg d’aide` : suggested.targetReps.join(' - ') + (T ? ' s' : ' reps');
+    reason = `Ta décision : tu as choisi toi-même cet objectif. Le coach proposait ${was}.`;
+  }
+
   return {
     questId: q.id, name: q.name, icon: q.icon, arena, kind, compound,
     restSec: compound ? 150 : 90, sets, targetReps: reps, goalReps: R,
-    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T
+    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, suggested
   };
 }
 
