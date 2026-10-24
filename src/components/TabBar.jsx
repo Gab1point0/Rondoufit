@@ -6,6 +6,17 @@ export function TabBar({ activeTab, dailyJournalList, gameState, setActiveTab })
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
       <div className="flex flex-wrap items-center gap-2">
         <button
+          onClick={() => setActiveTab('coach')}
+          className={`px-5 py-3 rounded-xl font-black text-sm sm:text-base flex items-center gap-2 transition shadow-lg ${
+            activeTab === 'coach'
+              ? 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-pink-600/40 ring-2 ring-pink-300/60'
+              : 'bg-gradient-to-r from-pink-600/70 to-fuchsia-700/70 text-white shadow-pink-600/20 hover:from-pink-500 hover:to-fuchsia-600'
+          }`}
+        >
+          <span>🧠 Coach</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('quests')}
           className={`px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
             activeTab === 'quests'
@@ -15,17 +26,6 @@ export function TabBar({ activeTab, dailyJournalList, gameState, setActiveTab })
         >
           <Sword className="w-4 h-4" />
           <span>Quêtes & Objectifs ({gameState.quests.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('coach')}
-          className={`px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition ${
-            activeTab === 'coach'
-              ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30'
-              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-          }`}
-        >
-          <span>🧠 Coach</span>
         </button>
 
         <button

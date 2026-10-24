@@ -228,33 +228,43 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   };
 
   return (
-    <div className="bg-gradient-to-r from-pink-950/50 via-slate-900 to-indigo-950/50 border border-pink-500/40 rounded-2xl p-4 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🎤</span>
-          <div>
-            <h3 className="text-sm font-black text-white">
-              Micro Magique de Rondoudou (Résumé Vocal Multi-Exercices)
-            </h3>
-            <p className="text-xs text-slate-300">
-              Dictez toute votre séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(!isOpen);
-            setTimeout(() => inputRef.current?.focus(), 100);
-          }}
-          className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md hover:opacity-95 transition"
-        >
-          {isOpen ? 'Fermer la dictée' : '🎤 Dicter toute ma séance'}
-        </button>
-      </div>
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen(true);
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }}
+        title="Dicter toute ma séance à la voix"
+        className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-pink-500/40 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition"
+      >
+        <span>🎤</span>
+        <span className="hidden sm:inline">Dicter</span>
+      </button>
 
       {isOpen && (
-        <div className="mt-4 pt-4 border-t border-pink-500/20 space-y-3">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-pink-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎤</span>
+                <div>
+                  <h3 className="text-sm font-black text-white">Micro Magique de Rondoudou</h3>
+                  <p className="text-xs text-slate-300">
+                    Dictez toute votre séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                title="Fermer la dictée"
+                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white shrink-0 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <textarea
               ref={inputRef}
@@ -355,8 +365,10 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               </button>
             </div>
           )}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

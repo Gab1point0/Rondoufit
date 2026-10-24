@@ -1,8 +1,11 @@
 import { Footprints, Plus, RefreshCw, Scale, Volume2, VolumeX } from '../../icons';
+import { playGameSound } from '../../lib/sound';
+import { VoiceWorkoutAssistant } from '../VoiceWorkoutAssistant';
 
 export function HeaderActions({
   gameState, handleExportJSON, handleImportJSON, importInputRef, openCreateQuestModal, selectedDate,
   setActiveTab, setConfirmResetOpen, setGameState, setQuickCardioDate, setQuickCardioModalOpen,
+  triggerToast,
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2.5">
@@ -57,6 +60,14 @@ export function HeaderActions({
           <VolumeX className="w-4 h-4 text-slate-500" />
         )}
       </button>
+
+      <VoiceWorkoutAssistant
+        gameState={gameState}
+        setGameState={setGameState}
+        selectedDate={selectedDate}
+        triggerToast={triggerToast}
+        playGameSound={playGameSound}
+      />
 
       <button
         onClick={handleExportJSON}

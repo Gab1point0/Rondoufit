@@ -5,10 +5,9 @@ import { PhotoCalendar } from './components/photos/PhotoCalendar';
 import { PhotoReminder } from './components/photos/PhotoReminder';
 import { RestTimer } from './components/RestTimer';
 import { SessionRecap } from './components/SessionRecap';
-import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
+import { CoachBanner } from './components/CoachBanner';
 import { normalizeArenaGroup } from './data/arenas';
 import { getTodayISODate } from './lib/dates';
-import { playGameSound } from './lib/sound';
 import { BilanTab } from './tabs/BilanTab';
 import { ChartsTab } from './tabs/ChartsTab';
 import { DailySummary } from './components/DailySummary';
@@ -197,6 +196,7 @@ export function App() {
         onRetrySync={sync.syncNow}
         streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
+        triggerToast={triggerToast}
         trialRank={trialRank}
         openCreateQuestModal={openCreateQuestModal}
         questFilter={questFilter}
@@ -211,12 +211,12 @@ export function App() {
 
       {/* CONTENU PRINCIPAL */}
       <main className="max-w-6xl mx-auto px-4 pt-6 space-y-6">
-<VoiceWorkoutAssistant
+<CoachBanner
   gameState={gameState}
-  setGameState={setGameState}
-  selectedDate={selectedDate}
-  triggerToast={triggerToast}
-  playGameSound={playGameSound}
+  guidedActive={!!guided}
+  onOpenCoach={() => setActiveTab('coach')}
+  onResumeGuided={() => setGuidedOpen(true)}
+  onStartGuided={startGuided}
 />
 {recap && <SessionRecap recap={recap} onClose={() => setRecap(null)} />}
 {guided && guidedOpen && (

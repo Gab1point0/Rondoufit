@@ -37,6 +37,8 @@ data/               catalogue d'exercices, arènes, rangs/trophées, état de d�
 sync/               github.js (API Contents), merge.js (fusion à 3 voies), engine.js (algorithme), storage.js (réglages locaux)
 legacy/             googleSheets.js : ancienne sauvegarde, gardée UNIQUEMENT pour la reprise unique des données
 ```
+Accueil : la grande carte **Coach** (`components/CoachBanner.jsx` : prochaine séance, « Lancer ma séance », « Ouvrir le Coach ») est en haut de la page ; l'onglet Coach est le premier de `TabBar`. La dictée vocale (`VoiceWorkoutAssistant`) est un petit bouton « 🎤 Dicter » dans `header/HeaderActions.jsx` qui ouvre une fenêtre.
+
 Pour modifier un écran : le fichier de `tabs/`, `modals/` ou `components/` correspondant. Pour une règle du coach : `coach/`. Pour ajouter un exercice : `data/catalog.js` (+ alias vocaux dans `voice/dictionary.js`).
 
 ## Modèle de données

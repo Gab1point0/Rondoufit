@@ -1,6 +1,6 @@
 // Parcours complets de l'application dans un faux navigateur.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, monkey, pageText } from './harness';
+import { advance, clickEl, clickText, findByText, launch, monkey, pageText } from './harness';
 
 const open = [];
 const start = async opts => { const h = await launch(opts); open.push(h); return h; };
@@ -13,6 +13,27 @@ describe('application', () => {
     const h = await start();
     expect(h.doc.querySelector('h1').textContent).toContain('From Grosdoudou to Rondoudou');
     expect(pageText(h)).toContain('Quêtes & Objectifs');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('la grande carte Coach est en haut de page et ouvre le Coach', async () => {
+    const h = await start();
+    expect(pageText(h)).toContain('Mon Coach');
+    expect(pageText(h)).not.toContain('Micro Magique de Rondoudou'); // l'ancienne zone micro a disparu de la page
+    await clickText(h, 'Ouvrir le Coach');
+    expect(pageText(h)).toContain('Prochaine séance');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('le micro est un petit bouton de l’en-tête qui ouvre la dictée', async () => {
+    const h = await start();
+    const micro = [...h.doc.querySelectorAll('header button')].find(b => b.title === 'Dicter toute ma séance à la voix');
+    expect(micro).toBeTruthy();
+    await clickEl(h, micro);
+    expect(pageText(h)).toContain('Micro Magique de Rondoudou');
+    expect(h.doc.querySelector('textarea')).toBeTruthy();
+    await clickText(h, '✕');
+    expect(pageText(h)).not.toContain('Micro Magique de Rondoudou');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
