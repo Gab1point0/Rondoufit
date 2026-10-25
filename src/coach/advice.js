@@ -7,6 +7,7 @@ import { composeTemplates, computeExerciseTarget } from './targets';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO, getWeekStart } from '../lib/dates';
 import { getAllEntries, isStartEntry, isTimedQuest } from '../lib/quests';
+import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoads';
 import { stripAccents } from '../lib/text';
 
 // ---- Conseils du jour (volley / match) ----
@@ -126,7 +127,7 @@ export function coachSwapOptions(state, questId, sessionIds) {
 export function coachSessionRecap(oldQuests, newQuests, g, today, xp) {
   const rows = [];
   let tonnage = 0, prevTonnage = 0, kcal = 0, prs = 0;
-  const tonOf = e => (Number(e.value) || 0) * (e.setDetails || []).reduce((s, r) => s + (Number(r) || 0), 0);
+  const tonOf = e => entryTonnage(e);
   g.items.forEach(it => {
     const nq = newQuests.find(q => q.id === it.questId);
     const oq = oldQuests.find(q => q.id === it.questId);
@@ -149,7 +150,7 @@ export function coachSessionRecap(oldQuests, newQuests, g, today, xp) {
     const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, aide ${coachFmt(nt.assist)} kg` : `${nt.sets} × ${nt.goalReps} ${nt.timed ? 's' : 'reps'}`;
     rows.push({
       name: nq.name, icon: nq.icon, pr,
-      summary: `${(entry.setDetails || []).join(' - ')} ${isTimedQuest(nq) ? 's' : 'reps'}${kind === 'load' ? ` à ${coachFmt(entry.value)} kg` : kind === 'assisted' ? ` · aide ${coachFmt(entry.assistanceKg)} kg` : ''}`,
+      summary: `${(entry.setDetails || []).join(' - ')} ${isTimedQuest(nq) ? 's' : 'reps'}${kind === 'load' ? ` à ${fmtLoads(entryLoads(entry))}` : kind === 'assisted' ? ` · aide ${fmtLoads(entryAssists(entry))}` : ''}`,
       next: nextTxt, ton
     });
   });

@@ -35,14 +35,22 @@ export function computeExerciseTarget(q, opts = {}) {
           ? `Départ avec ${assist} kg d'aide.`
           : T ? `Objectif : ${R} s par série. Pars de ce que tu tiens proprement et ajoute environ 5 s par séance.` : `Objectif : ${R} répétitions par série.`;
   } else {
-    const prevSets = coachSetsOf(last, sets, R);
-    const padded = Array.from({ length: sets }, (_, i) => Number(prevSets[i]) || 0);
+    let prevSets = coachSetsOf(last, sets, R);
+    // Charge (ou aide) changée entre deux séries : la référence est celle de la DERNIÈRE série réalisée, et on ne juge
+    // les répétitions que sur les séries faites à cette charge ou plus dures (les plus légères servaient à monter / descendre).
+    const perSet = kind === 'load' ? last.setLoads : kind === 'assisted' ? last.setAssists : null;
+    const mixed = Array.isArray(perSet) && perSet.length === prevSets.length && new Set(perSet.map(Number)).size > 1;
+    const refSet = mixed ? Number(perSet[perSet.length - 1]) || 0 : null;
+    if (mixed) prevSets = prevSets.filter((_, i) => (kind === 'load' ? Number(perSet[i]) >= refSet : Number(perSet[i]) <= refSet));
+    // séries manquantes à la charge de référence : comptées juste sous l'objectif (on garde cette charge et on vise l'objectif)
+    const missing = mixed ? Math.max(0, R - inc) : 0;
+    const padded = Array.from({ length: sets }, (_, i) => (prevSets[i] !== undefined ? Number(prevSets[i]) || 0 : missing));
     const minReps = Math.min(...padded);
     const excess = minReps - R;
     const rpe = Number(last.rpe) || 7;
     const gap = coachDaysBetween(last.date, today);
-    const lastLoad = kind === 'load' ? Number(last.value) || load : 0;
-    const lastAssist = kind === 'assisted' ? Number(last.assistanceKg) || 0 : 0;
+    const lastLoad = kind === 'load' ? (mixed ? refSet : Number(last.value) || load) : 0;
+    const lastAssist = kind === 'assisted' ? (mixed ? refSet : Number(last.assistanceKg) || 0) : 0;
     load = lastLoad;
     assist = lastAssist;
     const stepL = coachStep(q, load);
@@ -99,7 +107,7 @@ export function computeExerciseTarget(q, opts = {}) {
         const pSets = Array.from({ length: sets }, (_, i) => Number(coachSetsOf(prev, sets, R)[i]) || 0);
         const sameLoad = kind === 'load' ? Number(prev.value) === Number(last.value) : Number(prev.assistanceKg || 0) === Number(last.assistanceKg || 0);
         // un recul n'est justifié que si la dernière séance était vraiment dure (ressenti 8 ou plus)
-        if (sameLoad && Math.min(...pSets) < R && rpe >= 8) {
+        if (sameLoad && !mixed && Math.min(...pSets) < R && rpe >= 8) {
           if (kind === 'load') {
             const nl = coachRound(load * 0.93, stepL);
             if (nl < load) {

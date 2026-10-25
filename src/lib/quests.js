@@ -40,7 +40,13 @@ export const entryReps = e =>
     ? e.setDetails.reduce((a, r) => a + (Number(r) || 0), 0)
     : e.quest.type === 'strength' ? (Number(e.sets) || 0) * (Number(e.reps) || 0) : 0;
 
-export const entryVolume = e => (e.quest.type === 'strength' && e.quest.unit === 'kg' ? entryReps(e) * (Number(e.value) || 0) : 0);
+export const entryVolume = e => {
+  if (!(e.quest.type === 'strength' && e.quest.unit === 'kg')) return 0;
+  if (Array.isArray(e.setLoads) && Array.isArray(e.setDetails) && e.setLoads.length === e.setDetails.length) {
+    return e.setDetails.reduce((s, r, i) => s + (Number(r) || 0) * (Number(e.setLoads[i]) || 0), 0); // charge différente selon la série
+  }
+  return entryReps(e) * (Number(e.value) || 0);
+};
 
 export const entryKm = e =>
   e.quest.type !== 'cardio' ? 0 : Number(e.distanceKm) || (e.quest.unit === 'km' ? Number(e.value) || 0 : 0);

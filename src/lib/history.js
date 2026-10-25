@@ -47,13 +47,19 @@ export function rebuildEntry(q, entry, patch, userWeightKg) {
     const setDetails = (e.setDetails || []).map(r => Math.max(0, Number(r) || 0));
     if (!setDetails.length) setDetails.push(0);
     const best = Math.max(...setDetails, 0);
-    const assistanceKg = q.unit === 'reps' ? Math.max(0, Number(e.assistanceKg) || 0) : 0;
-    const value = q.unit === 'kg' ? Math.max(0, Number(e.value) || 0) : best;
+    // charge / aide différente selon la série : une valeur par série réalisée
+    const fit = arr => setDetails.map((_, i) => Math.max(0, Number(arr[i] !== undefined ? arr[i] : arr[arr.length - 1]) || 0));
+    const setLoads = q.unit === 'kg' && Array.isArray(e.setLoads) && e.setLoads.length ? fit(e.setLoads) : null;
+    const setAssists = q.unit === 'reps' && Array.isArray(e.setAssists) && e.setAssists.length ? fit(e.setAssists) : null;
+    const assistanceKg = q.unit === 'reps' ? (setAssists ? Math.min(...setAssists) : Math.max(0, Number(e.assistanceKg) || 0)) : 0;
+    const value = q.unit === 'kg' ? (setLoads ? Math.max(...setLoads) : Math.max(0, Number(e.value) || 0)) : best;
+    const totalReps = setDetails.reduce((a, r) => a + r, 0);
+    const mean = arr => (totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * arr[i], 0) / totalReps : arr[0]);
     const calories = calculateStrengthCalories({
       unit: q.unit,
       timed: isTimedQuest(q),
-      weightKg: q.unit === 'kg' ? value : 0,
-      assistanceKg,
+      weightKg: q.unit === 'kg' ? (setLoads ? mean(setLoads) : value) : 0,
+      assistanceKg: setAssists ? mean(setAssists) : assistanceKg,
       setDetails,
       rpe,
       userWeightKg,
@@ -71,6 +77,8 @@ export function rebuildEntry(q, entry, patch, userWeightKg) {
       rpe,
       calories,
     };
+    if (setLoads) rebuilt.setLoads = setLoads;
+    if (setAssists) rebuilt.setAssists = setAssists;
   }
   // Note : si elle était générée automatiquement et que l'utilisateur ne l'a pas réécrite, on la régénère.
   const noteUntouched = patch.note === undefined || patch.note === entry.note;

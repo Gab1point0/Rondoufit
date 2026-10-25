@@ -3,6 +3,7 @@ import { EntryEditor } from '../components/EntryEditor';
 import { normalizeArenaGroup } from '../data/arenas';
 import { Calendar, Trash2 } from '../icons';
 import { isTimedQuest, repUnit } from '../lib/quests';
+import { fmtLoads, isMixed } from '../lib/setLoads';
 
 export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDeleteSessionEntry, handleEditSessionEntry, setSelectedJournalDay }) {
   const [editingId, setEditingId] = useState(null);
@@ -155,12 +156,14 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       {quest.unit === 'kg' && (
                         <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-extrabold">
-                          🏋️ Charge : {entry.value} kg
+                          🏋️ {isMixed(entry.setLoads) ? `Charges : ${fmtLoads(entry.setLoads)}` : `Charge : ${entry.value} kg`}
                         </span>
                       )}
                       {quest.unit === 'reps' && !isTimedQuest(quest) && (
                         <span className="px-2.5 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-extrabold">
-                          {(Number(entry.assistanceKg) || 0) > 0
+                          {isMixed(entry.setAssists)
+                            ? `🪢 Aide élastique : -${fmtLoads(entry.setAssists)}`
+                            : (Number(entry.assistanceKg) || 0) > 0
                             ? `🪢 Aide élastique : -${entry.assistanceKg} kg`
                             : '🦅 Strict (0 kg d’aide)'}
                         </span>

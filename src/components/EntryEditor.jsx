@@ -13,6 +13,9 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
   const [sets, setSets] = useState((entry.setDetails && entry.setDetails.length ? entry.setDetails : [entry.reps || entry.value || 0]).map(String));
   const [value, setValue] = useState(String(entry.value ?? ''));
   const [assist, setAssist] = useState(String(entry.assistanceKg || 0));
+  // charge / aide changée entre deux séries : une valeur par série
+  const [loads, setLoads] = useState(entry.setLoads ? entry.setLoads.map(String) : null);
+  const [assists, setAssists] = useState(entry.setAssists ? entry.setAssists.map(String) : null);
   const [duration, setDuration] = useState(String(entry.durationMin || 25));
   const [elevation, setElevation] = useState(String(entry.elevationM || 0));
 
@@ -24,7 +27,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
     onSave(
       cardio
         ? { date, value, durationMin: duration, elevationM: elevation, rpe, note }
-        : { date, setDetails: sets, value, assistanceKg: assist, rpe, note }
+        : { date, setDetails: sets, value, assistanceKg: assist, rpe, note, ...(loads ? { setLoads: loads } : {}), ...(assists ? { setAssists: assists } : {}) }
     );
   };
 
@@ -50,12 +53,18 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
       ) : (
         <>
           <div>
-            <label className={label}>{isTimedQuest(quest) ? 'Secondes' : 'Répétitions'} réalisées, série par série</label>
+            <label className={label}>{isTimedQuest(quest) ? 'Secondes' : 'Répétitions'} réalisées, série par série{loads ? ' (en dessous : charge en kg)' : assists ? ' (en dessous : aide en kg)' : ''}</label>
             <div className="flex flex-wrap items-center gap-2">
               {sets.map((r, i) => (
                 <div key={i} className="w-16">
                   <span className="block text-center text-[10px] text-slate-500">S{i + 1} ({unit})</span>
                   <input type="number" min="0" value={r} onChange={e => setRep(i, e.target.value)} className={field} />
+                  {loads && (
+                    <input type="number" step="0.5" min="0" title="Charge de cette série (kg)" value={loads[i] ?? loads[loads.length - 1]} onChange={e => setLoads(l => sets.map((_, j) => (j === i ? e.target.value : l[j] ?? l[l.length - 1])))} className={`${field} mt-1 text-amber-300`} />
+                  )}
+                  {assists && (
+                    <input type="number" step="0.5" min="0" title="Aide de cette série (kg)" value={assists[i] ?? assists[assists.length - 1]} onChange={e => setAssists(l => sets.map((_, j) => (j === i ? e.target.value : l[j] ?? l[l.length - 1])))} className={`${field} mt-1 text-violet-300`} />
+                  )}
                 </div>
               ))}
               <div className="flex gap-1 pt-4">

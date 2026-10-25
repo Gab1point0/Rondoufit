@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
+import { assistsOf, fmtLoads, isMixed, loadsOf } from '../lib/setLoads';
 
 // Séance guidée : exercice par exercice, avec repos automatique
 export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
@@ -29,6 +30,10 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const patch = (qid, p) => setG(prev => ({ ...prev, data: { ...prev.data, [qid]: { ...prev.data[qid], ...p } } }));
   const startRest = sec => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest', { detail: sec })); } catch (e) {} };
 
+  // La charge (ou l'aide) se règle entre deux séries : elle s'applique aux séries pas encore faites.
+  const setLoad = v => patch(it.questId, { load: v, loads: loadsOf(d).map((x, i) => (d.done[i] ? x : v)) });
+  const setAssist = v => patch(it.questId, { assist: v, assists: assistsOf(d).map((x, i) => (d.done[i] ? x : v)) });
+
   const toggleSet = i => {
     const wasDone = d.done[i];
     const done = d.done.map((x, k) => (k === i ? !x : x));
@@ -48,8 +53,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     } else setSw({ i, start: Date.now() });
   };
   const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
-  const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false] });
-  const removeSet = () => { if (d.reps.length > 1) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1) }); };
+  const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist] });
+  const removeSet = () => { if (d.reps.length > 1) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1), loads: loadsOf(d).slice(0, -1), assists: assistsOf(d).slice(0, -1) }); };
   const goto = idx => { setSw(null); setG(prev => ({ ...prev, idx: Math.max(0, Math.min(items.length - 1, idx)), phase: 'run' })); };
   const doneCount = it ? d.done.filter(Boolean).length : 0;
   const step = it && it.kind === 'load' ? (it.equip === 'Haltères' ? (d.load < 10 ? 1 : 2) : d.load < 10 ? 1 : 2.5) : 2.5;
@@ -110,22 +115,22 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
 
             {it.kind === 'load' && (
               <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
-                <span className="text-sm font-bold text-slate-300">Charge</span>
+                <span className="text-sm font-bold text-slate-300">Charge<span className="block text-[10px] font-semibold text-slate-500">change-la entre deux séries : elle vaut pour les séries restantes</span></span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => patch(it.questId, { load: Math.max(0, Math.round((d.load - step) * 100) / 100) })} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
-                  <input type="number" step="0.5" value={d.load} onChange={e => patch(it.questId, { load: Number(e.target.value) || 0 })} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
-                  <button onClick={() => patch(it.questId, { load: Math.round((d.load + step) * 100) / 100 })} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
+                  <button onClick={() => setLoad(Math.max(0, Math.round((d.load - step) * 100) / 100))} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
+                  <input type="number" step="0.5" value={d.load} onChange={e => setLoad(Number(e.target.value) || 0)} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
+                  <button onClick={() => setLoad(Math.round((d.load + step) * 100) / 100)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
               </div>
             )}
             {it.kind === 'assisted' && (
               <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
-                <span className="text-sm font-bold text-slate-300">Aide élastique</span>
+                <span className="text-sm font-bold text-slate-300">Aide élastique<span className="block text-[10px] font-semibold text-slate-500">change-la entre deux séries : elle vaut pour les séries restantes</span></span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => patch(it.questId, { assist: Math.max(0, d.assist - 2.5) })} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
-                  <input type="number" step="2.5" value={d.assist} onChange={e => patch(it.questId, { assist: Math.max(0, Number(e.target.value) || 0) })} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
-                  <button onClick={() => patch(it.questId, { assist: d.assist + 2.5 })} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
+                  <button onClick={() => setAssist(Math.max(0, d.assist - 2.5))} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
+                  <input type="number" step="2.5" value={d.assist} onChange={e => setAssist(Math.max(0, Number(e.target.value) || 0))} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
+                  <button onClick={() => setAssist(d.assist + 2.5)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
               </div>
@@ -137,6 +142,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   <div>
                     <p className="text-sm font-black text-white">Série {i + 1}</p>
                     <p className="text-[10px] text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
+                    {it.kind === 'load' && <p className="text-[10px] font-bold text-amber-300">{coachFmt(loadsOf(d)[i])} kg</p>}
+                    {it.kind === 'assisted' && <p className="text-[10px] font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">−</button>
@@ -196,7 +203,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     {dd.rpe ? <span className="ml-2 px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[10px] font-bold">ressenti {dd.rpe}/10</span> : null}
                   </span>
                   <span className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
-                    {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${coachFmt(dd.load)} kg` : x.kind === 'assisted' ? ` · aide ${coachFmt(dd.assist)} kg` : ''}` : 'passé'}
+                    {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${fmtLoads(loadsOf(dd).filter((_, i) => dd.done[i]))}` : x.kind === 'assisted' ? ` · aide ${fmtLoads(assistsOf(dd).filter((_, i) => dd.done[i]))}` : ''}` : 'passé'}
                   </span>
                 </div>
               );

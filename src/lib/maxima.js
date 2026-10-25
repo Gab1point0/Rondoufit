@@ -1,5 +1,6 @@
 import { addDaysISO } from './dates';
 import { isTimedQuest, isStartEntry } from './quests';
+import { entryAssists, entryLoads } from './setLoads';
 
 // Maxima estimés : pour chaque exercice, ce que tu pourrais faire en UNE répétition (charge), ou ta meilleure
 // performance (temps, distance), calculés à partir de ce que tu as déjà réussi.
@@ -88,14 +89,14 @@ function liftedSets(q, state, kind) {
   const out = [];
   for (const e of realEntries(q)) {
     const sets = Array.isArray(e.setDetails) && e.setDetails.length ? e.setDetails : [e.reps || 0];
-    let load;
-    if (kind === 'load') load = Number(e.value) || 0;
-    else {
-      const bw = bodyweightAt(state, e.date) * factor;
-      load = kind === 'assisted' ? bw - (Number(e.assistanceKg) || 0) : bw;
-    }
-    if (!(load > 0)) continue;
-    for (const reps of sets) if (Number(reps) >= 1) out.push({ entry: e, reps: Number(reps), load, bw: kind === 'load' ? 0 : bodyweightAt(state, e.date) * factor });
+    const loads = entryLoads({ ...e, setDetails: sets });
+    const assists = entryAssists({ ...e, setDetails: sets });
+    const bw = kind === 'load' ? 0 : bodyweightAt(state, e.date) * factor;
+    sets.forEach((reps, i) => {
+      // charge réellement soulevée à cette série (elle peut changer d'une série à l'autre)
+      const load = kind === 'load' ? loads[i] : kind === 'assisted' ? bw - assists[i] : bw;
+      if (load > 0 && Number(reps) >= 1) out.push({ entry: e, reps: Number(reps), load, bw });
+    });
   }
   return out;
 }

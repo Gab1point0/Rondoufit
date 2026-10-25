@@ -3,6 +3,7 @@ import { calculateStrengthCalories } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
 import { evaluateQuestProgress } from '../lib/progress';
 import { countValidatedSets, getSetDetailsArray, isTimedQuest } from '../lib/quests';
+import { assistsOf, fmtLoads, isMixed, loadsOf } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useEffect, useState } from 'react';
 import { computeXp, xpNote } from '../lib/xp';
@@ -32,6 +33,8 @@ export function useGuidedSession({
     session.exercises.forEach(e => {
       data[e.questId] = {
         reps: e.targetReps.slice(),
+        loads: e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
+        assists: e.targetReps.map(() => e.assist || 0), // aide de chaque série
         done: e.targetReps.map(() => false),
         load: e.load || 0,
         assist: e.assist || 0
@@ -62,21 +65,28 @@ export function useGuidedSession({
       const dd = g.data[q.id];
       const setDetails = dd.reps.map(r => Math.max(0, Number(r) || 0)).filter((r, i) => dd.done[i]);
       if (!setDetails.length) return q;
+      // charge / aide de chaque série réalisée
+      const doneLoads = loadsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
+      const doneAssists = assistsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
       doneEx++;
       const goalSets = Math.max(1, Number(q.goalSets) || 3);
       const goalReps = Math.max(1, Number(q.goalReps) || Number(q.goalValue) || 6);
       const validatedNow = countValidatedSets(setDetails, goalReps);
       const best = Math.max(...setDetails, 0);
       const isKg = q.unit === 'kg';
-      const effectiveValue = isKg ? Math.max(0, Number(dd.load) || 0) : best;
-      const assistanceUsed = !isKg && it.kind === 'assisted' ? Math.max(0, Number(dd.assist) || 0) : 0;
+      // valeur « de record » : charge la plus lourde, aide la plus faible
+      const effectiveValue = isKg ? Math.max(...doneLoads, 0) : best;
+      const assistanceUsed = !isKg && it.kind === 'assisted' ? Math.min(...doneAssists) : 0;
+      const totalReps = setDetails.reduce((a, r) => a + r, 0);
+      const avgLoad = isKg && totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * doneLoads[i], 0) / totalReps : effectiveValue;
+      const avgAssist = !isKg && it.kind === 'assisted' && totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * doneAssists[i], 0) / totalReps : assistanceUsed;
       // ressenti de cet exercice (1 à 10) ; sinon le ressenti global de la séance
       const exerciseRpe = Math.min(10, Math.max(1, Number(dd.rpe) || g.rpe || 7));
       const calories = calculateStrengthCalories({
         unit: q.unit,
         timed: isTimedQuest(q),
-        weightKg: isKg ? effectiveValue : 0,
-        assistanceKg: assistanceUsed,
+        weightKg: isKg ? avgLoad : 0,
+        assistanceKg: avgAssist,
         setDetails,
         rpe: exerciseRpe,
         userWeightKg: gameState.userWeightKg
@@ -102,10 +112,12 @@ export function useGuidedSession({
         goalSets,
         goalReps,
         assistanceKg: assistanceUsed,
+        ...(isKg && isMixed(doneLoads) ? { setLoads: doneLoads } : {}),
+        ...(!isKg && it.kind === 'assisted' && isMixed(doneAssists) ? { setAssists: doneAssists } : {}),
         rpe: exerciseRpe,
         calories,
         goalBeaten: ev.isBossDefeated,
-        note: `Séance guidée ${g.templateId || ''} • ${isKg ? effectiveValue + ' kg • ' : assistanceUsed > 0 ? 'Aide ' + assistanceUsed + ' kg • ' : ''}${setDetails.join(' - ')} reps`
+        note: `Séance guidée ${g.templateId || ''} • ${isKg ? fmtLoads(doneLoads) + ' • ' : it.kind === 'assisted' && assistanceUsed > 0 ? 'Aide ' + fmtLoads(doneAssists) + ' • ' : ''}${setDetails.join(' - ')} reps`
       };
       const finalQ = { ...cand, history: [...(q.history || []), entry] };
       if (ev.isBossDefeated && !bossQuest) bossQuest = finalQ;
