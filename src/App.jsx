@@ -91,7 +91,7 @@ export function App() {
     setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets,
     formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg,
     formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal,
-    handleSelectCatalogExercise, handleSaveQuestForm,
+    handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion,
   } = useQuestForm({
     gameState, setGameState, setSelectedChartQuestId, triggerToast,
   });
@@ -398,6 +398,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           formType={formType}
           formUnit={formUnit}
           handleSaveQuestForm={handleSaveQuestForm}
+          formSuggestion={formSuggestion}
           handleSelectCatalogExercise={handleSelectCatalogExercise}
           setFormCategory={setFormCategory}
           setFormCurrentValue={setFormCurrentValue}

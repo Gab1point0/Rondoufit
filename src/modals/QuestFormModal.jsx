@@ -5,7 +5,7 @@ import { Target, X } from '../icons';
 import { timedAdvice } from '../lib/quests';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
+  editingQuestId, formCatalogId, formSuggestion, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
@@ -39,6 +39,9 @@ export function QuestFormModal({
                         Choisir un exercice dans le Pokédex
                       </label>
                       <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
+                      {formSuggestion && (
+                        <p className="mt-2 text-[11px] text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">💡 {formSuggestion}</p>
+                      )}
                     </div>
                   )}
 

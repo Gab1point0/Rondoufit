@@ -1,3 +1,4 @@
+import { suggestStart } from '../coach/startSuggestion';
 import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
@@ -42,6 +43,9 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
   const [formGoalReps, setFormGoalReps] = useState(6);
 
   const [formStartAssistanceKg, setFormStartAssistanceKg] = useState(15);
+
+  // Explication de la charge / des séries proposées pour l'exercice choisi (d'après tes maxima et ton profil du moment)
+  const [formSuggestion, setFormSuggestion] = useState('');
 
   const [formGoalAssistanceKg, setFormGoalAssistanceKg] = useState(0);
 
@@ -90,6 +94,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
 
   const handleSelectCatalogExercise = catId => {
     setFormCatalogId(catId);
+    setFormSuggestion('');
     if (catId === 'custom_strength') {
       setFormCustomName('');
       setFormCategory('Pectoraux');
@@ -141,6 +146,14 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormGoalReps(found.defaultGoalReps || 6);
     setFormStartAssistanceKg(found.defaultStartAssistance || 0);
     setFormGoalAssistanceKg(found.defaultGoalAssistance || 0);
+    // charge de départ, séries et répétitions adaptées à tes maxima et à ton profil de travail
+    const s = suggestStart(found, gameState, getTodayISODate(), EXERCISE_CATALOG);
+    setFormStartValue(s.startValue);
+    setFormCurrentValue(s.startValue);
+    setFormGoalValue(s.goalValue);
+    setFormGoalSets(s.goalSets);
+    setFormGoalReps(s.goalReps);
+    setFormSuggestion(s.note);
   };
 
   const handleSaveQuestForm = e => {
@@ -266,5 +279,5 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm };
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion };
 }

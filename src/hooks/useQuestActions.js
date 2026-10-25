@@ -1,3 +1,4 @@
+import { suggestStart } from '../coach/startSuggestion';
 import { getCoachSettings } from '../coach/settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -26,10 +27,12 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       triggerToast('Déjà dans tes objectifs', c.name, 0, 'ℹ️');
       return existing.id;
     }
-    const gSets = c.defaultGoalSets || 3;
-    const gReps = c.defaultGoalReps || 6;
+    // charge de départ, séries et répétitions adaptées à tes maxima et à ton profil de travail du moment
+    const sug = suggestStart(c, gameState, getTodayISODate(), EXERCISE_CATALOG);
+    const gSets = sug.goalSets;
+    const gReps = sug.goalReps;
     const unit = c.unit;
-    const startV = Number(c.defaultStart) || 0;
+    const startV = Number(sug.startValue) || 0;
     const initialSetDetails = Array(gSets).fill(unit === 'reps' ? startV : gReps);
     const assist = unit === 'reps' ? Number(c.defaultStartAssistance) || 0 : 0;
     const cat = normalizeArenaGroup(c.category, c.type);
@@ -46,7 +49,7 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       icon: c.icon,
       startValue: startV,
       currentValue: startV,
-      goalValue: unit === 'reps' ? gReps : Math.max(1, Number(c.defaultGoal) || gReps),
+      goalValue: unit === 'reps' ? gReps : Math.max(1, Number(sug.goalValue) || gReps),
       goalSets: gSets,
       goalReps: gReps,
       setDetails: initialSetDetails,
@@ -68,7 +71,7 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       }]
     };
     setGameState(prev => ({ ...prev, ...computeXp(prev, 40, getTodayISODate(), 'minor').patch, quests: [newQuest, ...prev.quests] }));
-    triggerToast('Exercice ajouté !', `${c.name} : ajuste la charge de départ dans « Quêtes » (✏️).`, 40, c.icon);
+    triggerToast('Exercice ajouté !', `${c.name} : ${sug.note || 'ajuste la charge de départ dans « Quêtes » (✏️).'}`, 40, c.icon);
     return newQuest.id;
   };
 

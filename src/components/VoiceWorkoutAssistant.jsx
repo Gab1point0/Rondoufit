@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { PROFILES, profileOpts } from '../coach/profiles';
+import { coachIsCompound } from '../coach/settings';
 import { normalizeArenaGroup } from '../data/arenas';
+import { isTimedCatalog } from '../lib/quests';
 import { stripAccents } from '../lib/text';
 import { parseSpokenWorkout } from '../voice/parser';
 import { computeXp, xpNote } from '../lib/xp';
@@ -174,6 +177,9 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
             history: [...(q.history || []), newHistoryEntry]
           };
         } else {
+          // profil du moment (sauf cardio et exercices chronométrés)
+          const profileId = profileOpts(prev, getTodayISODate()).profile;
+          const voiceProfile = profileId && item.type === 'strength' && !item.timed && !(item.catalogRef && isTimedCatalog(item.catalogRef)) ? PROFILES[profileId] : null;
           updatedQuests.unshift({
             id: `q_voice_${Date.now()}_${Math.random()}`,
             catalogId: item.catalogRef?.id || 'custom',
@@ -190,9 +196,12 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
             icon: item.icon,
             startValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
             currentValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
-            goalValue: item.catalogRef?.defaultGoal || (item.unit === 'kg' ? item.weightKg + 15 : 10),
-            goalSets: item.catalogRef?.defaultGoalSets || item.setDetails?.length || 3,
-            goalReps: item.catalogRef?.defaultGoalReps || item.setDetails?.[0] || 8,
+            // la charge de départ est celle que tu viens de dicter ; séries et répétitions visées suivent ton profil du moment
+            goalValue: item.unit === 'kg'
+              ? Math.max(item.catalogRef?.defaultGoal || 0, Math.round(item.weightKg * 1.2), item.weightKg + 5)
+              : item.catalogRef?.defaultGoal || 10,
+            goalSets: voiceProfile ? (coachIsCompound(item.name) ? voiceProfile.sets : voiceProfile.setsAccessory) : item.catalogRef?.defaultGoalSets || item.setDetails?.length || 3,
+            goalReps: voiceProfile ? voiceProfile.hi : item.catalogRef?.defaultGoalReps || item.setDetails?.[0] || 8,
             setDetails: item.setDetails || [8, 8, 8],
             startAssistanceKg: item.assistanceKg || 0,
             currentAssistanceKg: item.assistanceKg || 0,
