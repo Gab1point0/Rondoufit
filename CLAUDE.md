@@ -39,6 +39,8 @@ legacy/             googleSheets.js : ancienne sauvegarde, gardée UNIQUEMENT po
 ```
 Accueil : la grande carte **Coach** (`components/CoachBanner.jsx` : prochaine séance, « Lancer ma séance », « Ouvrir le Coach ») est en haut de la page ; l'onglet Coach est le premier de `TabBar`. La dictée vocale (`VoiceWorkoutAssistant`) est un petit bouton « 🎤 Dicter » dans `header/HeaderActions.jsx` qui ouvre une fenêtre.
 
+Navigation : `goToTab(tab)` (App.jsx) ouvre un onglet depuis un bouton du haut de page (carte Coach, en-tête, rappel photo) puis fait défiler en douceur jusqu'à la barre d'onglets (`tabsRef`, `scrollIntoView` après 60 ms) ; la barre d'onglets elle-même utilise `setActiveTab` sans défilement. Photos : `PhotoAddButton` reçoit `capture="environment"` (appareil photo arrière) ou `"user"` (selfie) pour ouvrir directement l'appareil photo du téléphone ; sans `capture` il ouvre la galerie (plusieurs photos possibles).
+
 Pour modifier un écran : le fichier de `tabs/`, `modals/` ou `components/` correspondant. Pour une règle du coach : `coach/`. Pour ajouter un exercice : `data/catalog.js` (+ alias vocaux dans `voice/dictionary.js`).
 
 ## Modèle de données

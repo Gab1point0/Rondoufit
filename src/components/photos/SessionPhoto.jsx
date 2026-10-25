@@ -19,9 +19,17 @@ export function SessionPhoto({ date, label, highlight }) {
           ))}
         </div>
       )}
-      <PhotoAddButton date={date} label={label} className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
-        {photos.length ? '➕ Ajouter une autre photo' : '📷 Prendre / ajouter une photo'}
+      <PhotoAddButton capture="environment" date={date} label={label} className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-500 text-sm font-black text-white">
+        {photos.length ? '📷 Prendre une autre photo' : '📷 Prendre une photo'}
       </PhotoAddButton>
+      <div className="grid grid-cols-2 gap-2">
+        <PhotoAddButton capture="user" date={date} label={label} className="py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
+          🤳 Selfie
+        </PhotoAddButton>
+        <PhotoAddButton date={date} label={label} className="py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">
+          🖼️ Choisir une photo
+        </PhotoAddButton>
+      </div>
       <p className="text-[10px] text-slate-500">Elle sera placée dans ton calendrier 📸 Souvenirs.</p>
     </div>
   );

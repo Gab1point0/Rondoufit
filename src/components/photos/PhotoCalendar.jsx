@@ -146,7 +146,11 @@ export function PhotoCalendar({ gameState }) {
                   <button onClick={() => { if (window.confirm('Supprimer cette photo ?')) PhotoDB.del(p.id); }} className="text-[11px] font-bold text-rose-300">🗑 Supprimer</button>
                 </div>
               ))}
-              <PhotoAddButton date={openDay} className="w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">📷 Ajouter une photo</PhotoAddButton>
+              <PhotoAddButton capture="environment" date={openDay} className="w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">📷 Prendre une photo</PhotoAddButton>
+              <div className="grid grid-cols-2 gap-2">
+                <PhotoAddButton capture="user" date={openDay} className="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">🤳 Selfie</PhotoAddButton>
+                <PhotoAddButton date={openDay} className="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">🖼️ Choisir une photo</PhotoAddButton>
+              </div>
             </div>
           </div>
         </div>

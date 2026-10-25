@@ -1,7 +1,11 @@
 import { useRef, useState } from 'react';
 import { addPhotoFile } from '../../lib/photos';
 
-export function PhotoAddButton({ date, label, className, children, onAdded }) {
+/**
+ * Ajout de photo. `capture` = 'environment' (appareil photo arrière) ou 'user' (selfie) : sur téléphone, le bouton ouvre
+ * directement l'appareil photo ; sans `capture`, il ouvre la galerie / le sélecteur de fichiers.
+ */
+export function PhotoAddButton({ date, label, className, children, onAdded, capture }) {
   const ref = useRef(null);
   const [busy, setBusy] = useState(false);
   const onPick = async e => {
@@ -15,7 +19,7 @@ export function PhotoAddButton({ date, label, className, children, onAdded }) {
   };
   return (
     <>
-      <input ref={ref} type="file" accept="image/*" multiple onChange={onPick} className="hidden" data-testid="photo-input" />
+      <input ref={ref} type="file" accept="image/*" {...(capture ? { capture } : { multiple: true })} onChange={onPick} className="hidden" data-testid="photo-input" />
       <button type="button" disabled={busy} onClick={() => ref.current && ref.current.click()} className={className}>
         {busy ? 'Enregistrement…' : children}
       </button>

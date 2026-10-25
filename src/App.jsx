@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { CoachPanel } from './components/coach/CoachPanel';
 import { GuidedSession } from './components/GuidedSession';
 import { PhotoCalendar } from './components/photos/PhotoCalendar';
@@ -49,6 +49,17 @@ export function App() {
   const [syncOpen, setSyncOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('quests');
+  // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
+  // pour ne pas avoir à descendre à la main.
+  const tabsRef = useRef(null);
+  const goToTab = tab => {
+    setActiveTab(tab);
+    const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // court délai : le temps que le nouvel onglet soit affiché avant de défiler
+    setTimeout(() => {
+      if (tabsRef.current) tabsRef.current.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    }, 60);
+  };
   const [questFilter, setQuestFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState(getTodayISODate());
   const [selectedJournalDay, setSelectedJournalDay] = useState(getTodayISODate());
@@ -202,7 +213,7 @@ export function App() {
         openCreateQuestModal={openCreateQuestModal}
         questFilter={questFilter}
         selectedDate={selectedDate}
-        setActiveTab={setActiveTab}
+        setActiveTab={goToTab}
         setConfirmResetOpen={setConfirmResetOpen}
         setGameState={setGameState}
         setQuestFilter={setQuestFilter}
@@ -215,7 +226,7 @@ export function App() {
 <CoachBanner
   gameState={gameState}
   guidedActive={!!guided}
-  onOpenCoach={() => setActiveTab('coach')}
+  onOpenCoach={() => goToTab('coach')}
   onResumeGuided={() => setGuidedOpen(true)}
   onStartGuided={startGuided}
 />
@@ -234,7 +245,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         <DailySummary dailySummary={dailySummary} handleDeleteSessionEntry={handleDeleteSessionEntry} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
 
         {/* BARRE D'ONGLETS PRINCIPALE */}
-        <TabBar activeTab={activeTab} dailyJournalList={dailyJournalList} gameState={gameState} setActiveTab={setActiveTab} />
+        <div ref={tabsRef} className="scroll-mt-3">
+          <TabBar activeTab={activeTab} dailyJournalList={dailyJournalList} gameState={gameState} setActiveTab={setActiveTab} />
+        </div>
 
         {activeTab === 'coach' && (
           <CoachPanel
@@ -244,7 +257,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
             onOpenLevelUp={openLevelUpModal}
             onAddExercise={addQuestFromCatalog}
             onQuickCardio={() => { setQuickCardioDate(getTodayISODate()); setQuickCardioModalOpen(true); }}
-            onGoTab={setActiveTab}
+            onGoTab={goToTab}
             guidedActive={!!guided}
             onResumeGuided={() => setGuidedOpen(true)}
             onClaimWeekly={handleClaimWeekly}
@@ -298,7 +311,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         )}
 
         {/* ONGLET : BILAN (défis, semaine, records) */}
-        {activeTab !== 'photos' && <PhotoReminder gameState={gameState} onGo={() => setActiveTab('photos')} />}
+        {activeTab !== 'photos' && <PhotoReminder gameState={gameState} onGo={() => goToTab('photos')} />}
         {activeTab === 'photos' && <PhotoCalendar gameState={gameState} />}
 
         {activeTab === 'bilan' && (
