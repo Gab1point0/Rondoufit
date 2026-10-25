@@ -2,6 +2,7 @@ import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calor
 import { getTodayISODate } from '../lib/dates';
 import { evaluateQuestProgress } from '../lib/progress';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
+import { fmtLoads, isMixed, weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
 import { computeXp, xpNote } from '../lib/xp';
@@ -37,6 +38,16 @@ export function useLogSession({
 
   const [logNote, setLogNote] = useState('');
 
+  // Charge (ou aide) différente selon la série : une valeur propre à certaines séries, la valeur de base vaut pour les autres
+  const [logPerSetLoad, setLogPerSetLoad] = useState(false);
+  const [logSetOverrides, setLogSetOverrides] = useState([]);
+  const perSetActive = logPerSetLoad && logEntryMode === 'per_set';
+  const perSetValues = base =>
+    logSetDetails.map((_, i) => {
+      const o = logSetOverrides[i];
+      return o === undefined || o === '' ? Number(base) || 0 : Number(o) || 0;
+    });
+
   const liveModalCalories = useMemo(() => {
     if (!logModalQuest) return 0;
     if (logModalQuest.type === 'cardio') {
@@ -66,9 +77,11 @@ export function useLogSession({
       return calculateStrengthCalories({
         unit: logModalQuest.unit,
         timed: isTimedQuest(logModalQuest),
-        weightKg: logModalQuest.unit === 'kg' ? logValue : 0,
+        weightKg: logModalQuest.unit === 'kg' ? (perSetActive ? weightedMean(activeSets, perSetValues(logValue)) : logValue) : 0,
         assistanceKg:
-          logModalQuest.unit === 'reps' && logUseAssistance ? logAssistanceKg : 0,
+          logModalQuest.unit === 'reps' && logUseAssistance
+            ? perSetActive ? weightedMean(activeSets, perSetValues(logAssistanceKg)) : logAssistanceKg
+            : 0,
         setDetails: activeSets,
         rpe: logRpe,
         userWeightKg: gameState.userWeightKg
@@ -83,6 +96,8 @@ export function useLogSession({
     logUniformSets,
     logUniformReps,
     logSetDetails,
+    logPerSetLoad,
+    logSetOverrides,
     logDurationMin,
     logElevationM,
     logRpe,
@@ -98,6 +113,8 @@ export function useLogSession({
     setLogDate(selectedDate || getTodayISODate());
     setLogRpe(7);
     setLogNote('');
+    setLogPerSetLoad(false);
+    setLogSetOverrides([]);
 
     if (quest.type === 'cardio') {
       setLogValue(Number(quest.currentValue) || Number(quest.startValue) || 5);
@@ -150,7 +167,21 @@ export function useLogSession({
   const handleRemoveSetSlot = () => {
     if (logSetDetails.length <= 1) return;
     setLogSetDetails(prev => prev.slice(0, -1));
+    setLogSetOverrides(prev => prev.slice(0, logSetDetails.length - 1));
   };
+
+  // Active / coupe « charge différente selon la série » (cela impose la saisie série par série)
+  const togglePerSetLoad = on => {
+    setLogPerSetLoad(on);
+    if (on) setLogEntryMode('per_set');
+    else setLogSetOverrides([]);
+  };
+  const handleSetOverride = (index, value) =>
+    setLogSetOverrides(prev => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
 
   const handleApplyUniformToSets = (setsCount, repsCount) => {
     const s = Math.max(1, Math.min(12, Number(setsCount) || 1));
@@ -238,14 +269,17 @@ export function useLogSession({
       const prevSetDetails = getSetDetailsArray(q, goalSets, goalReps);
       const prevValidatedSets = countValidatedSets(prevSetDetails, goalReps);
 
+      // charge / aide de chaque série quand elles diffèrent (record = la plus lourde / la plus faible aide)
+      const loadsList = q.unit === 'kg' && perSetActive ? perSetValues(logValue).map(v => Math.max(0, v)) : null;
+      const assistsList = q.unit === 'reps' && logUseAssistance && perSetActive ? perSetValues(logAssistanceKg).map(v => Math.max(0, v)) : null;
       const assistanceUsed =
         q.unit === 'reps' && logUseAssistance
-          ? Math.max(0, Number(logAssistanceKg) || 0)
+          ? assistsList ? Math.min(...assistsList) : Math.max(0, Number(logAssistanceKg) || 0)
           : 0;
 
       const bestRepInSession = Math.max(...finalSetDetails, 0);
       const effectiveValue =
-        q.unit === 'kg' ? Math.max(0, Number(logValue) || 0) : bestRepInSession;
+        q.unit === 'kg' ? (loadsList ? Math.max(...loadsList) : Math.max(0, Number(logValue) || 0)) : bestRepInSession;
 
       const reducedAssistance =
         q.unit === 'reps' &&
@@ -293,9 +327,9 @@ export function useLogSession({
           ? `Séries : ${formatSetsBreakdown(finalSetDetails)} s • ${validatedSetsNow}/${goalSets} séries validées`
           : q.unit === 'reps'
           ? `Séries : ${formatSetsBreakdown(finalSetDetails)} reps (${
-              assistanceUsed > 0 ? `Aide ${assistanceUsed} kg` : 'Strict 0 kg'
+              assistanceUsed > 0 ? `Aide ${assistsList && isMixed(assistsList) ? fmtLoads(assistsList) : assistanceUsed + ' kg'}` : 'Strict 0 kg'
             }) • ${validatedSetsNow}/${goalSets} séries validées`
-          : `${effectiveValue} kg • Séries : ${formatSetsBreakdown(
+          : `${loadsList && isMixed(loadsList) ? fmtLoads(loadsList) : effectiveValue + ' kg'} • Séries : ${formatSetsBreakdown(
               finalSetDetails
             )} reps (${validatedSetsNow}/${goalSets} validées)`;
 
@@ -310,6 +344,8 @@ export function useLogSession({
         goalSets,
         goalReps,
         assistanceKg: assistanceUsed,
+        ...(loadsList && isMixed(loadsList) ? { setLoads: loadsList } : {}),
+        ...(assistsList && isMixed(assistsList) ? { setAssists: assistsList } : {}),
         rpe: logRpe,
         calories,
         goalBeaten: evalAfter.isBossDefeated,
@@ -367,5 +403,5 @@ export function useLogSession({
     }
   };
 
-  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession };
+  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
 }

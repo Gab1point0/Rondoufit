@@ -1,5 +1,6 @@
 import { calculateCardioCalories, calculateStrengthCalories } from './calories';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest } from './quests';
+import { fmtLoads, isMixed } from './setLoads';
 
 // Correction d'une séance déjà enregistrée (onglet Journal) : on reconstruit l'entrée à partir des valeurs corrigées
 // et on remet l'exercice à jour comme si la séance corrigée avait été saisie telle quelle.
@@ -17,9 +18,9 @@ export function defaultEntryNote(q, e) {
   const goalSets = e.goalSets || goalSetsOf(q);
   if (isTimedQuest(q)) return `Séries : ${formatSetsBreakdown(sets)} s • ${validated}/${goalSets} séries validées`;
   if (q.unit === 'reps') {
-    return `Séries : ${formatSetsBreakdown(sets)} reps (${(Number(e.assistanceKg) || 0) > 0 ? `Aide ${e.assistanceKg} kg` : 'Strict 0 kg'}) • ${validated}/${goalSets} séries validées`;
+    return `Séries : ${formatSetsBreakdown(sets)} reps (${(Number(e.assistanceKg) || 0) > 0 ? `Aide ${isMixed(e.setAssists) ? fmtLoads(e.setAssists) : e.assistanceKg + ' kg'}` : 'Strict 0 kg'}) • ${validated}/${goalSets} séries validées`;
   }
-  return `${e.value} kg • Séries : ${formatSetsBreakdown(sets)} reps (${validated}/${goalSets} validées)`;
+  return `${isMixed(e.setLoads) ? fmtLoads(e.setLoads) : e.value + ' kg'} • Séries : ${formatSetsBreakdown(sets)} reps (${validated}/${goalSets} validées)`;
 }
 
 /**

@@ -3,7 +3,7 @@ import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
 
 export function LogSessionModal({
-  handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession,
+  handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession, handleSetOverride, logPerSetLoad, logSetOverrides, togglePerSetLoad,
   handleUpdateSingleSetRep, liveModalCalories, logAssistanceKg, logDate, logDurationMin,
   logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
   logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
@@ -100,6 +100,12 @@ export function LogSessionModal({
                       +2.5
                     </button>
                   </div>
+                  <label className="mt-2.5 flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" checked={logPerSetLoad} onChange={e => togglePerSetLoad(e.target.checked)} className="mt-0.5" />
+                    <span>
+                      Charge différente selon la série <span className="text-slate-500">(ex. 2 séries à 15 kg puis 2 à 17,5 kg)</span>
+                    </span>
+                  </label>
                 </div>
               )}
 
@@ -171,6 +177,12 @@ export function LogSessionModal({
                           +2.5 kg
                         </button>
                       </div>
+                      <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
+                        <input type="checkbox" checked={logPerSetLoad} onChange={e => togglePerSetLoad(e.target.checked)} className="mt-0.5" />
+                        <span>
+                          Aide différente selon la série <span className="text-slate-500">(ex. 10 kg d’aide, puis 7,5 kg)</span>
+                        </span>
+                      </label>
 
                       <div className="flex flex-wrap gap-1.5">
                         {ELASTIC_PRESETS.filter(p => p.kg > 0).map(preset => (
@@ -294,6 +306,20 @@ export function LogSessionModal({
                             </div>
 
                             <div className="flex items-center gap-2">
+                              {logPerSetLoad && (logModalQuest.unit === 'kg' || logUseAssistance) && (
+                                <span className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    step="0.5"
+                                    min="0"
+                                    title={logModalQuest.unit === 'kg' ? 'Charge de cette série (kg)' : 'Aide de cette série (kg)'}
+                                    value={logSetOverrides[idx] ?? (logModalQuest.unit === 'kg' ? logValue : logAssistanceKg)}
+                                    onChange={e => handleSetOverride(idx, e.target.value)}
+                                    className={`w-16 bg-slate-950 border rounded-lg py-1 text-center font-black text-sm ${logModalQuest.unit === 'kg' ? 'border-amber-500/50 text-amber-300' : 'border-violet-500/50 text-violet-300'}`}
+                                  />
+                                  <span className="text-[10px] text-slate-500 font-bold">kg</span>
+                                </span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleUpdateSingleSetRep(idx, -1)}

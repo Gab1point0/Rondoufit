@@ -36,3 +36,10 @@ export const entryTonnage = e => {
   const loads = entryLoads(e);
   return reps.reduce((s, r, i) => s + num(r) * num(loads[i]), 0);
 };
+
+/** Moyenne des valeurs de chaque série, pondérée par les répétitions (pour les calories). */
+export function weightedMean(reps, values) {
+  const total = reps.reduce((a, r) => a + num(r), 0);
+  if (!(total > 0)) return num(values[0]);
+  return reps.reduce((a, r, i) => a + num(r) * num(values[i]), 0) / total;
+}

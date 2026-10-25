@@ -130,7 +130,7 @@ export function App() {
     logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM,
     setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal,
     handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets,
-    handleSaveSession,
+    handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride,
   } = useLogSession({
     gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay,
     triggerToast,
@@ -318,7 +318,11 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           handleApplyUniformToSets={handleApplyUniformToSets}
           handleRemoveSetSlot={handleRemoveSetSlot}
           handleSaveSession={handleSaveSession}
+          handleSetOverride={handleSetOverride}
           handleUpdateSingleSetRep={handleUpdateSingleSetRep}
+          logPerSetLoad={logPerSetLoad}
+          logSetOverrides={logSetOverrides}
+          togglePerSetLoad={togglePerSetLoad}
           liveModalCalories={liveModalCalories}
           logAssistanceKg={logAssistanceKg}
           logDate={logDate}
