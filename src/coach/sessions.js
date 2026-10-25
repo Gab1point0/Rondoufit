@@ -3,6 +3,7 @@ import { COACH_ARENAS, COACH_TYPES, coachIsCompound, coachRealEntries, coachRoun
 import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
 import { normalizeArenaGroup } from '../data/arenas';
+import { profileOpts } from './profiles';
 import { calculateStrengthCalories } from '../lib/calories';
 
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
@@ -45,11 +46,11 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
       .sort((a, b) => a.sets - b.sets || (b.compound ? 1 : 0) - (a.compound ? 1 : 0));
     if (allThree && cands.length && ex.length < 8) {
       const q = cands[0];
-      ex.push(computeExerciseTarget(q, { today: di.iso, deload: false, reduceSets: false }));
+      ex.push(computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso, deload: false, reduceSets: false }));
     } else if (canSet.length) {
       addSet(canSet[0]);
     } else if (cands.length && ex.length < 8) {
-      ex.push(computeExerciseTarget(cands[0], { today: di.iso, deload: false, reduceSets: false }));
+      ex.push(computeExerciseTarget(cands[0], { ...profileOpts(state, di.iso), today: di.iso, deload: false, reduceSets: false }));
     } else break;
   }
   // Allègement si la séance dépasse nettement la durée voulue
@@ -94,6 +95,7 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   if (opts.tired && !opts.deload) notes.push('Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.');
   let exercises = quests.map(q =>
     computeExerciseTarget(q, {
+      ...profileOpts(state, di.iso),
       today: di.iso,
       deload: eff.deload,
       reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'
@@ -185,6 +187,7 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
   const deloadOn = !!opts.deload || !!opts.tired;
   const exercises = quests.map(q => {
     const e = computeExerciseTarget(q, {
+      ...profileOpts(state, dateIso),
       today: dateIso,
       deload: deloadOn,
       reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'

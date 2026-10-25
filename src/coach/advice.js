@@ -6,6 +6,7 @@ import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO, getWeekStart } from '../lib/dates';
+import { profileOpts } from './profiles';
 import { getAllEntries, isStartEntry, isTimedQuest } from '../lib/quests';
 import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoads';
 import { stripAccents } from '../lib/text';
@@ -124,7 +125,7 @@ export function coachSwapOptions(state, questId, sessionIds) {
 }
 
 // ---- Bilan de fin de séance guidée ----
-export function coachSessionRecap(oldQuests, newQuests, g, today, xp) {
+export function coachSessionRecap(oldQuests, newQuests, g, today, xp, state = null) {
   const rows = [];
   let tonnage = 0, prevTonnage = 0, kcal = 0, prs = 0;
   const tonOf = e => entryTonnage(e);
@@ -146,7 +147,7 @@ export function coachSessionRecap(oldQuests, newQuests, g, today, xp) {
     kcal += Number(entry.calories) || 0;
     const ton = kind === 'load' ? tonOf(entry) : 0;
     if (kind === 'load' && prior.length) { tonnage += ton; prevTonnage += tonOf(prior[prior.length - 1]); }
-    const nt = computeExerciseTarget(nq, { today: addDaysISO(today, 3) });
+    const nt = computeExerciseTarget(nq, { ...(state ? profileOpts(state, addDaysISO(today, 3)) : {}), today: addDaysISO(today, 3) });
     const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, aide ${coachFmt(nt.assist)} kg` : `${nt.sets} × ${nt.goalReps} ${nt.timed ? 's' : 'reps'}`;
     rows.push({
       name: nq.name, icon: nq.icon, pr,

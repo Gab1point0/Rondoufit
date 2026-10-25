@@ -10,6 +10,7 @@ export const COACH_CHANGE_BADGES = {
   down: ['🔽', 'Recul', 'bg-amber-500/20 text-amber-300 border-amber-500/40'],
   resume: ['↩️', 'Reprise', 'bg-amber-500/20 text-amber-300 border-amber-500/40'],
   goal: ['🎯', 'Objectif atteint', 'bg-pink-500/20 text-pink-300 border-pink-500/40'],
+  profile: ['🎯', 'Profil de travail', 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'],
   manual: ['✋', 'Ton choix', 'bg-violet-500/20 text-violet-300 border-violet-500/40'],
   new: ['🆕', 'Départ', 'bg-slate-700/60 text-slate-200 border-slate-600']
 };

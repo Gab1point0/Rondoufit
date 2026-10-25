@@ -1,3 +1,5 @@
+import { PROFILES } from './profiles';
+import { decideProfileTarget } from './profileTarget';
 import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { getTodayISODate } from '../lib/dates';
@@ -26,7 +28,19 @@ export function computeExerciseTarget(q, opts = {}) {
   let reason = '';
   const step = coachStep(q, load);
 
-  if (!last) {
+  // Profil de travail choisi (puissance / hypertrophie / endurance de force) : il fixe la fourchette de répétitions,
+  // les séries, le repos et la charge ; sans profil (« automatique »), c'est l'ancien calcul ci-dessous.
+  const pr = opts.profile && PROFILES[opts.profile] && !T
+    ? decideProfileTarget({ q, P: PROFILES[opts.profile], kind, last, today, opts, boss, load, assist, compound, goalAssist })
+    : null;
+  if (pr) {
+    sets = pr.sets;
+    load = pr.load;
+    assist = pr.assist;
+    reps = pr.reps;
+    change = pr.change;
+    reason = pr.reason;
+  } else if (!last) {
     change = 'new';
     reason =
       kind === 'load'
@@ -153,7 +167,8 @@ export function computeExerciseTarget(q, opts = {}) {
 
   return {
     questId: q.id, name: q.name, icon: q.icon, arena, kind, compound,
-    restSec: compound ? 150 : 90, sets, targetReps: reps, goalReps: R,
+    restSec: pr ? pr.restSec : compound ? 150 : 90, sets, targetReps: reps, goalReps: pr ? pr.hi : R,
+    profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
     load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, suggested
   };
 }

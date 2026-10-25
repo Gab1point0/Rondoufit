@@ -11,7 +11,7 @@ import { stripAccents } from '../lib/text';
 //  - Spiering 2021 : dose minimale pour conserver la force/le muscle (déficit calorique).
 //  - Garthe 2011 : perte de poids ≈ 0,5-1 % du poids de corps par semaine pour préserver la masse maigre.
 // ==========================================================================
-const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [], volleySkips: [], volleyExtra: [], gymSlots: {}, gymSkips: [], splitMode: 'auto', cycleWeeks: 0, cycleStart: null, weeklyClaimed: [], profile: { heightCm: '', age: '', sex: 'm' }, readiness: null, plan: null };
+const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: [4, 5], matchDates: [], deloadWeeks: [], volleySkips: [], volleyExtra: [], gymSlots: {}, gymSkips: [], splitMode: 'auto', cycleWeeks: 0, cycleStart: null, workProfile: 'auto', cycleProfiles: [], weeklyClaimed: [], profile: { heightCm: '', age: '', sex: 'm' }, readiness: null, plan: null };
 
 export const getCoachSettings = state => ({ ...COACH_DEFAULTS, ...((state && state.coach) || {}) });
 

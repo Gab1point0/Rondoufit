@@ -143,7 +143,7 @@ export function useGuidedSession({
     setGuidedOpen(false);
     playGameSound(bossQuest ? 'boss' : 'xp', gameState.soundEnabled);
     triggerToast('Séance guidée terminée !', `${doneEx} exercice(s) enregistré(s)` + xpNote(award), award.gained, bossQuest ? '👑' : '🎵');
-    try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, award.gained)); } catch (err) {}
+    try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, award.gained, gameState)); } catch (err) {}
     if (bossQuest) openLevelUpModal(bossQuest);
   };
 

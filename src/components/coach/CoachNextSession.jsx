@@ -1,5 +1,6 @@
 import { coachSwapOptions } from '../../coach/advice';
 import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
+import { PROFILES, coachProfileAt } from '../../coach/profiles';
 import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { normalizeArenaGroup } from '../../data/arenas';
@@ -123,6 +124,10 @@ export function CoachNextSession({
               {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
             </span>
             <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
+            {(() => {
+              const pf = coachProfileAt(coach, shownDate);
+              return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">🎯 {PROFILES[pf.id].label}</span> : null;
+            })()}
           </div>
           {shownSession.notes.map((n, i) => (
             <p key={i} className="text-xs text-sky-300">ℹ️ {n}</p>

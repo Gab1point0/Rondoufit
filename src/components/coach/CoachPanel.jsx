@@ -4,6 +4,7 @@ import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning'
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
 import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoachSettings } from '../../coach/settings';
+import { profileOpts } from '../../coach/profiles';
 import { computeExerciseTarget } from '../../coach/targets';
 import { normalizeArenaGroup } from '../../data/arenas';
 import { addDaysISO, getTodayISODate, getWeekStart } from '../../lib/dates';
@@ -11,6 +12,7 @@ import { evaluateQuestProgress } from '../../lib/progress';
 import { CoachAdvice } from './CoachAdvice';
 import { CoachBalance } from './CoachBalance';
 import { CoachCycle } from './CoachCycle';
+import { CoachProfile } from './CoachProfile';
 import { CoachHeader } from './CoachHeader';
 import { CoachNextSession } from './CoachNextSession';
 import { CoachObjectives } from './CoachObjectives';
@@ -52,7 +54,7 @@ export function CoachPanel({
         .map(q => ({
           q,
           arena: normalizeArenaGroup(q.category, q.type),
-          target: computeExerciseTarget(q, { today }),
+          target: computeExerciseTarget(q, { ...profileOpts(gameState, today), today }),
           progress: evaluateQuestProgress(q).percent,
           plateau: coachPlateau(q),
           eta: coachEta(q, today)
@@ -266,6 +268,9 @@ export function CoachPanel({
       />
 
       {/* CYCLE */}
+      {/* PROFIL DE TRAVAIL */}
+      <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
+
       <CoachCycle updateCoach={updateCoach} w0={w0} weekStart0={weekStart0} />
 
       {/* SEMAINE */}
