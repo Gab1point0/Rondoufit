@@ -70,13 +70,15 @@ export function useGuidedSession({
       const isKg = q.unit === 'kg';
       const effectiveValue = isKg ? Math.max(0, Number(dd.load) || 0) : best;
       const assistanceUsed = !isKg && it.kind === 'assisted' ? Math.max(0, Number(dd.assist) || 0) : 0;
+      // ressenti de cet exercice (1 à 10) ; sinon le ressenti global de la séance
+      const exerciseRpe = Math.min(10, Math.max(1, Number(dd.rpe) || g.rpe || 7));
       const calories = calculateStrengthCalories({
         unit: q.unit,
         timed: isTimedQuest(q),
         weightKg: isKg ? effectiveValue : 0,
         assistanceKg: assistanceUsed,
         setDetails,
-        rpe: g.rpe || 7,
+        rpe: exerciseRpe,
         userWeightKg: gameState.userWeightKg
       });
       xpEarned += 50 + Math.round(calories * 0.15);
@@ -100,7 +102,7 @@ export function useGuidedSession({
         goalSets,
         goalReps,
         assistanceKg: assistanceUsed,
-        rpe: g.rpe || 7,
+        rpe: exerciseRpe,
         calories,
         goalBeaten: ev.isBossDefeated,
         note: `Séance guidée ${g.templateId || ''} • ${isKg ? effectiveValue + ' kg • ' : assistanceUsed > 0 ? 'Aide ' + assistanceUsed + ' kg • ' : ''}${setDetails.join(' - ')} reps`

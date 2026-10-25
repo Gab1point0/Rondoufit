@@ -63,23 +63,26 @@ export function computeExerciseTarget(q, opts = {}) {
         change = 'hold';
         reason = `Séance précédente ressentie très dure (RPE ${rpe}) : on consolide la même ${holdWord} une séance de plus.`;
       } else if (kind === 'load') {
-        const pct = excess >= 2 ? 0.05 : excess === 1 ? 0.035 : 0.025;
+        let pct = excess >= 2 ? 0.05 : excess === 1 ? 0.035 : 0.025;
+        const easy = rpe <= 6; // ressenti facile : on peut monter un peu plus fort
+        if (easy) pct = Math.min(0.075, pct + 0.025);
         let nl = coachRound(load * (1 + pct), stepL);
         if (nl <= load) nl = coachRound(load + stepL, stepL);
         const goalV = Number(q.goalValue) || 0;
         if (goalV > load && nl > goalV) nl = goalV;
         change = 'up';
-        reason = `${R} reps réussies sur toutes les séries (RPE ${rpe}) → +${coachRound(nl - load, 0.5)} kg (+${Math.round(((nl - load) / Math.max(1, load)) * 100)} %). Repère ACSM : +2 à 10 %.`;
+        reason = `${R} reps réussies sur toutes les séries (ressenti ${rpe}/10${easy ? ', facile : on monte un peu plus' : ''}) → +${coachRound(nl - load, 0.5)} kg (+${Math.round(((nl - load) / Math.max(1, load)) * 100)} %). Repère ACSM : +2 à 10 %.`;
         load = nl;
       } else if (kind === 'assisted') {
         if (assist <= goalAssist) {
           change = 'goal';
           reason = 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Quêtes.';
         } else {
-          const dec = assist >= 20 ? 5 : 2.5;
+          const easy = rpe <= 6; // ressenti facile : l'aide baisse d'un cran de plus
+          const dec = (assist >= 20 ? 5 : 2.5) + (easy ? 2.5 : 0);
           const na = Math.max(goalAssist, assist - dec);
           change = 'assist_down';
-          reason = `${R} reps réussies partout (RPE ${rpe}) → l’aide passe de ${assist} à ${na} kg.`;
+          reason = `${R} reps réussies partout (ressenti ${rpe}/10${easy ? ', facile' : ''}) → l’aide passe de ${assist} à ${na} kg.`;
           assist = na;
         }
       } else {
@@ -95,7 +98,8 @@ export function computeExerciseTarget(q, opts = {}) {
       if (prev) {
         const pSets = Array.from({ length: sets }, (_, i) => Number(coachSetsOf(prev, sets, R)[i]) || 0);
         const sameLoad = kind === 'load' ? Number(prev.value) === Number(last.value) : Number(prev.assistanceKg || 0) === Number(last.assistanceKg || 0);
-        if (sameLoad && Math.min(...pSets) < R) {
+        // un recul n'est justifié que si la dernière séance était vraiment dure (ressenti 8 ou plus)
+        if (sameLoad && Math.min(...pSets) < R && rpe >= 8) {
           if (kind === 'load') {
             const nl = coachRound(load * 0.93, stepL);
             if (nl < load) {

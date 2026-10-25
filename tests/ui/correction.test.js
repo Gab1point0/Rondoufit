@@ -8,7 +8,7 @@ const TIMEOUT = 120000;
 
 const entry = (id, date, sets, assistanceKg) => ({
   id, date, value: Math.max(...sets), sets: sets.length, reps: Math.max(...sets), setDetails: sets,
-  validatedSets: sets.filter(r => r >= 10).length, goalSets: 3, goalReps: 10, assistanceKg, rpe: 7, calories: 50,
+  validatedSets: sets.filter(r => r >= 10).length, goalSets: 3, goalReps: 10, assistanceKg, rpe: 8, calories: 50,
   note: `Séries : ${sets.join(' - ')} reps (Aide ${assistanceKg} kg) • ${sets.filter(r => r >= 10).length}/3 séries validées`,
 });
 const dips = {

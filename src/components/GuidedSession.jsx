@@ -55,6 +55,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const step = it && it.kind === 'load' ? (it.equip === 'Haltères' ? (d.load < 10 ? 1 : 2) : d.load < 10 ? 1 : 2.5) : 2.5;
 
   const RPE_LABELS = { 6: 'Facile', 7: 'Modéré', 8: 'Dur', 9: 'Très dur', 10: 'Maximum' };
+  // Échelle de ressenti d'un exercice (1 à 10), avec le nombre de répétitions qu'il restait « en réserve »
+  const FELT = {
+    1: 'Aucun effort', 2: 'Très facile', 3: 'Facile', 4: 'Assez facile', 5: 'Modéré',
+    6: 'Soutenu (encore 4 reps possibles)', 7: 'Dur (encore 3 reps possibles)', 8: 'Très dur (encore 2 reps possibles)',
+    9: 'Presque au maximum (encore 1 rep possible)', 10: 'Maximum (aucune rep de plus)',
+  };
 
   return (
     <div className="fixed inset-0 z-[60] bg-slate-950 overflow-y-auto">
@@ -153,6 +159,27 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               </div>
               <p className="text-[11px] text-slate-500">« Faite » lance automatiquement le chrono de repos (bouton en bas à droite).</p>
             </div>
+
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+              <p className="text-xs font-bold text-slate-300">
+                Ressenti sur cet exercice : à quel point c’était dur ? <span className="text-slate-500 font-semibold">(1 = très facile, 10 = maximum)</span>
+              </p>
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => patch(it.questId, { rpe: d.rpe === n ? undefined : n })}
+                    className={`py-2 rounded-lg text-sm font-black border ${d.rpe === n ? 'bg-violet-600 border-violet-300 text-white' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'}`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {d.rpe ? `${d.rpe}/10 : ${FELT[d.rpe]}. Le coach s’en servira pour adapter la prochaine séance.` : 'Pas noté : le ressenti global de la séance sera utilisé. Plus tu notes, plus le coach est précis.'}
+              </p>
+            </div>
           </div>
         )}
 
@@ -164,7 +191,10 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               const reps = dd.reps.filter((r, i) => dd.done[i]);
               return (
                 <div key={x.questId} className="flex items-center justify-between gap-2 text-sm bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-                  <span className="font-bold text-white truncate">{x.icon} {x.name}</span>
+                  <span className="font-bold text-white truncate">
+                    {x.icon} {x.name}
+                    {dd.rpe ? <span className="ml-2 px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[10px] font-bold">ressenti {dd.rpe}/10</span> : null}
+                  </span>
                   <span className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
                     {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${coachFmt(dd.load)} kg` : x.kind === 'assisted' ? ` · aide ${coachFmt(dd.assist)} kg` : ''}` : 'passé'}
                   </span>
@@ -172,7 +202,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               );
             })}
             <div>
-              <p className="text-xs font-bold text-slate-300 mb-1.5">Ressenti global de la séance (RPE)</p>
+              <p className="text-xs font-bold text-slate-300 mb-1.5">Ressenti global de la séance (utilisé pour les exercices sans note de ressenti)</p>
               <div className="grid grid-cols-5 gap-1.5">
                 {[6, 7, 8, 9, 10].map(n => (
                   <button key={n} onClick={() => setG(prev => ({ ...prev, rpe: n }))}
@@ -181,7 +211,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">Le coach s’en sert : si la séance était très dure, il consolide au lieu d’augmenter.</p>
+              <p className="text-[11px] text-slate-500 mt-1">Le coach s’en sert, exercice par exercice : si c’était très dur il consolide au lieu d’augmenter, si c’était facile il augmente davantage.</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => goto(items.length - 1)} className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-200 font-bold text-sm">Retour</button>

@@ -5,7 +5,7 @@ import { defaultEntryNote, questAfterHistoryChange, rebuildEntry } from './histo
 const TODAY = '2026-10-21';
 const entry = (id, date, sets, assistanceKg, extra = {}) => ({
   id, date, value: Math.max(...sets), sets: sets.length, reps: Math.max(...sets), setDetails: sets,
-  validatedSets: sets.filter(r => r >= 10).length, goalSets: 3, goalReps: 10, assistanceKg, rpe: 7, calories: 50, note: '', ...extra,
+  validatedSets: sets.filter(r => r >= 10).length, goalSets: 3, goalReps: 10, assistanceKg, rpe: 8, calories: 50, note: '', ...extra,
 });
 // Dips assistés : objectif 3 × 10, 10 kg d'aide
 const dips = history => ({
