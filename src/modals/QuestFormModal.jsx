@@ -13,8 +13,8 @@ export function QuestFormModal({
   setFormUnit, setQuestModalOpen,
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-              <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 overflow-y-auto">
+              <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Target className="w-5 h-5 text-pink-400" />

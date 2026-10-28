@@ -245,8 +245,8 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-pink-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 overflow-y-auto">
+          <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🎤</span>
