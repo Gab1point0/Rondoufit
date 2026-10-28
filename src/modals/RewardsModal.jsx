@@ -1,3 +1,4 @@
+import { ModalCloseBar } from '../components/ModalCloseBar';
 import { ACCESSORIES, THEMES, TITLES, activeCosmetics } from '../data/rewards';
 import { X } from '../icons';
 
@@ -29,7 +30,7 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
   const choose = patch => setGameState(prev => ({ ...prev, cosmetics: { ...(prev.cosmetics || {}), ...patch } }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
@@ -76,6 +77,7 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
           </div>
         </section>
       </div>
+      <ModalCloseBar onClose={onClose} />
     </div>
   );
 }

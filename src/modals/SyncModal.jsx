@@ -1,3 +1,4 @@
+import { ModalCloseBar } from '../components/ModalCloseBar';
 import { useState } from 'react';
 import { X } from '../icons';
 import { EMPTY_CONFIG, isConfigured, readCarnetConfig } from '../sync/storage';
@@ -49,7 +50,7 @@ export function SyncModal({ sync, onClose, triggerToast }) {
             : '✅ À jour.';
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
@@ -146,6 +147,7 @@ export function SyncModal({ sync, onClose, triggerToast }) {
         <p className={`text-xs ${status === 'error' ? 'text-rose-300' : 'text-slate-400'}`}>{statusText}</p>
 
       </div>
+      <ModalCloseBar onClose={onClose} />
     </div>
   );
 }
