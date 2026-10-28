@@ -1,9 +1,9 @@
 import { coachSessionRecap } from '../coach/advice';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
-import { evaluateQuestProgress } from '../lib/progress';
-import { countValidatedSets, getSetDetailsArray, isTimedQuest } from '../lib/quests';
-import { assistsOf, fmtLoads, isMixed, loadsOf } from '../lib/setLoads';
+import { isTimedQuest } from '../lib/quests';
+import { applyStrengthSession } from '../lib/sessionRecord';
+import { assistsOf, loadsOf, weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useEffect, useState } from 'react';
 import { computeXp, xpNote } from '../lib/xp';
@@ -65,23 +65,15 @@ export function useGuidedSession({
       const dd = g.data[q.id];
       const setDetails = dd.reps.map(r => Math.max(0, Number(r) || 0)).filter((r, i) => dd.done[i]);
       if (!setDetails.length) return q;
+      const isKg = q.unit === 'kg';
       // charge / aide de chaque série réalisée
       const doneLoads = loadsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
       const doneAssists = assistsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
       doneEx++;
-      const goalSets = Math.max(1, Number(q.goalSets) || 3);
-      const goalReps = Math.max(1, Number(q.goalReps) || Number(q.goalValue) || 6);
-      const validatedNow = countValidatedSets(setDetails, goalReps);
-      const best = Math.max(...setDetails, 0);
-      const isKg = q.unit === 'kg';
-      // valeur « de record » : charge la plus lourde, aide la plus faible
-      const effectiveValue = isKg ? Math.max(...doneLoads, 0) : best;
-      const assistanceUsed = !isKg && it.kind === 'assisted' ? Math.min(...doneAssists) : 0;
-      const totalReps = setDetails.reduce((a, r) => a + r, 0);
-      const avgLoad = isKg && totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * doneLoads[i], 0) / totalReps : effectiveValue;
-      const avgAssist = !isKg && it.kind === 'assisted' && totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * doneAssists[i], 0) / totalReps : assistanceUsed;
       // ressenti de cet exercice (1 à 10) ; sinon le ressenti global de la séance
       const exerciseRpe = Math.min(10, Math.max(1, Number(dd.rpe) || g.rpe || 7));
+      const avgLoad = isKg && setDetails.reduce((a, r) => a + r, 0) > 0 ? weightedMean(setDetails, doneLoads) : Math.max(...doneLoads, 0);
+      const avgAssist = !isKg && it.kind === 'assisted' && setDetails.reduce((a, r) => a + r, 0) > 0 ? weightedMean(setDetails, doneAssists) : (it.kind === 'assisted' ? Math.min(...doneAssists) : 0);
       const calories = calculateStrengthCalories({
         unit: q.unit,
         timed: isTimedQuest(q),
@@ -91,37 +83,19 @@ export function useGuidedSession({
         rpe: exerciseRpe,
         userWeightKg: gameState.userWeightKg
       });
-      xpEarned += 50 + Math.round(calories * 0.15);
-      const prevDetails = getSetDetailsArray(q, goalSets, goalReps);
-      const reducedAssistance = !isKg && assistanceUsed < (Number(q.currentAssistanceKg) || 0);
-      const increasedLoad = isKg && effectiveValue > (Number(q.currentValue) || 0);
-      if (reducedAssistance) { newUnlocked.add('elastic_drop'); xpEarned += 100; }
-      if (validatedNow >= goalSets) { newUnlocked.add('sets_master'); xpEarned += 150; }
-      else if (validatedNow > countValidatedSets(prevDetails, goalReps) || increasedLoad || reducedAssistance) xpEarned += 120;
-      const cand = { ...q, currentValue: effectiveValue, currentAssistanceKg: !isKg ? assistanceUsed : 0, setDetails };
-      const ev = evaluateQuestProgress(cand);
-      if (ev.isBossDefeated) { xpEarned += 500; newUnlocked.add('boss_slayer'); }
-      const entry = {
-        id: `h_${Date.now()}_${q.id}`,
+      const r = applyStrengthSession(q, {
         date: today,
-        value: effectiveValue,
-        sets: setDetails.length,
-        reps: best,
         setDetails,
-        validatedSets: validatedNow,
-        goalSets,
-        goalReps,
-        assistanceKg: assistanceUsed,
-        ...(isKg && isMixed(doneLoads) ? { setLoads: doneLoads } : {}),
-        ...(!isKg && it.kind === 'assisted' && isMixed(doneAssists) ? { setAssists: doneAssists } : {}),
+        loads: isKg ? doneLoads : null,
+        assists: !isKg && it.kind === 'assisted' ? doneAssists : null,
         rpe: exerciseRpe,
         calories,
-        goalBeaten: ev.isBossDefeated,
-        note: `Séance guidée ${g.templateId || ''} • ${isKg ? fmtLoads(doneLoads) + ' • ' : it.kind === 'assisted' && assistanceUsed > 0 ? 'Aide ' + fmtLoads(doneAssists) + ' • ' : ''}${setDetails.join(' - ')} reps`
-      };
-      const finalQ = { ...cand, history: [...(q.history || []), entry] };
-      if (ev.isBossDefeated && !bossQuest) bossQuest = finalQ;
-      return finalQ;
+        guidedLabel: g.templateId || '',
+      });
+      xpEarned += r.xp;
+      r.unlocked.forEach(u => newUnlocked.add(u));
+      if (r.bossDefeated && !bossQuest) bossQuest = r.quest;
+      return r.quest;
     });
     if (doneEx === 0) {
       setGuided(null); setGuidedOpen(false);

@@ -1,8 +1,10 @@
+import { profileOpts } from '../coach/profiles';
+import { computeExerciseTarget } from '../coach/targets';
 import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, calculateStrengthCalories, cardioInputNote } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
-import { evaluateQuestProgress } from '../lib/progress';
-import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
-import { fmtLoads, isMixed, weightedMean } from '../lib/setLoads';
+import { applyStrengthSession } from '../lib/sessionRecord';
+import { getSetDetailsArray, isTimedQuest } from '../lib/quests';
+import { weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
 import { computeXp, xpNote } from '../lib/xp';
@@ -154,6 +156,24 @@ export function useLogSession({
     }
   };
 
+  // « Comme prévu par le coach » : remplit séries, répétitions et charge (ou aide) avec la proposition du coach pour cet exercice
+  const applyCoachTarget = () => {
+    const q = logModalQuest;
+    if (!q || q.type !== 'strength') return;
+    const today = getTodayISODate();
+    const t = computeExerciseTarget(q, { ...profileOpts(gameState, today), today });
+    const reps = t.targetReps.map(r => Math.max(0, Number(r) || 0));
+    setLogSetDetails(reps);
+    setLogUniformSets(reps.length);
+    setLogUniformReps(reps[0] || 0);
+    setLogEntryMode('per_set');
+    setLogPerSetLoad(false);
+    setLogSetOverrides([]);
+    if (t.kind === 'load') setLogValue(t.load);
+    else if (t.kind === 'assisted') { setLogUseAssistance(t.assist > 0); setLogAssistanceKg(t.assist); }
+    triggerToast('Proposition du coach reprise', 'Ajuste si besoin, puis valide la séance.', 0, '🧠');
+  };
+
   const handleUpdateSingleSetRep = (index, deltaOrValue, isAbsolute = false) => {
     setLogSetDetails(prev => {
       const next = [...prev];
@@ -271,108 +291,22 @@ export function useLogSession({
           : Array(Math.max(1, Number(logUniformSets) || 1)).fill(
               Math.max(0, Number(logUniformReps) || 0)
             );
-
-      const goalSets = Math.max(1, Number(q.goalSets) || 3);
-      const goalReps = Math.max(1, Number(q.goalReps) || Number(q.goalValue) || 6);
-      const validatedSetsNow = countValidatedSets(finalSetDetails, goalReps);
-      const allSetsRepsValidated = validatedSetsNow >= goalSets;
-
-      const prevSetDetails = getSetDetailsArray(q, goalSets, goalReps);
-      const prevValidatedSets = countValidatedSets(prevSetDetails, goalReps);
-
-      // charge / aide de chaque série quand elles diffèrent (record = la plus lourde / la plus faible aide)
-      const loadsList = q.unit === 'kg' && perSetActive ? perSetValues(logValue).map(v => Math.max(0, v)) : null;
-      const assistsList = q.unit === 'reps' && logUseAssistance && perSetActive ? perSetValues(logAssistanceKg).map(v => Math.max(0, v)) : null;
-      const assistanceUsed =
-        q.unit === 'reps' && logUseAssistance
-          ? assistsList ? Math.min(...assistsList) : Math.max(0, Number(logAssistanceKg) || 0)
-          : 0;
-
-      const bestRepInSession = Math.max(...finalSetDetails, 0);
-      const effectiveValue =
-        q.unit === 'kg' ? (loadsList ? Math.max(...loadsList) : Math.max(0, Number(logValue) || 0)) : bestRepInSession;
-
-      const reducedAssistance =
-        q.unit === 'reps' &&
-        assistanceUsed < (Number.isFinite(Number(q.currentAssistanceKg)) ? Number(q.currentAssistanceKg) : 0);
-      const moreSetsValidated = validatedSetsNow > prevValidatedSets;
-      const increasedLoad =
-        q.unit === 'kg' && effectiveValue > (Number(q.currentValue) || 0);
-
-      if (reducedAssistance) {
-        newUnlocked.add('elastic_drop');
-        xpEarned += 100;
-      }
-
-      if (allSetsRepsValidated) {
-        newUnlocked.add('sets_master');
-        xpEarned += 150;
-        bannerTitle = `Format ${goalSets}×${goalReps} Validé !`;
-        bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps}+ ${repUnit(q)} réussies (${formatSetsBreakdown(finalSetDetails)})`;
-        bannerBadge = '🔴';
-      } else if (moreSetsValidated || increasedLoad || reducedAssistance) {
-        xpEarned += 120;
-        bannerTitle = 'Progression sur l’Objectif !';
-        bannerSubtitle = `${validatedSetsNow}/${goalSets} séries de ${goalReps} ${repUnit(q)} validées (${formatSetsBreakdown(finalSetDetails)})`;
-        bannerBadge = '🔥';
-      }
-
-      const updatedQuestCandidate = {
-        ...q,
-        currentValue: effectiveValue,
-        currentAssistanceKg: q.unit === 'reps' ? assistanceUsed : 0,
-        setDetails: finalSetDetails
-      };
-
-      const evalAfter = evaluateQuestProgress(updatedQuestCandidate);
-      if (evalAfter.isBossDefeated) {
-        xpEarned += 500;
-        bannerTitle = `🎵 OBJECTIF VAINCU : ${q.name} !`;
-        bannerSubtitle = `Passage au Niveau ${(Number(q.level) || 1) + 1} disponible !`;
-        bannerBadge = '👑';
-        newUnlocked.add('boss_slayer');
-      }
-
-      const defaultNote =
-        isTimedQuest(q)
-          ? `Séries : ${formatSetsBreakdown(finalSetDetails)} s • ${validatedSetsNow}/${goalSets} séries validées`
-          : q.unit === 'reps'
-          ? `Séries : ${formatSetsBreakdown(finalSetDetails)} reps (${
-              assistanceUsed > 0 ? `Aide ${assistsList && isMixed(assistsList) ? fmtLoads(assistsList) : assistanceUsed + ' kg'}` : 'Strict 0 kg'
-            }) • ${validatedSetsNow}/${goalSets} séries validées`
-          : `${loadsList && isMixed(loadsList) ? fmtLoads(loadsList) : effectiveValue + ' kg'} • Séries : ${formatSetsBreakdown(
-              finalSetDetails
-            )} reps (${validatedSetsNow}/${goalSets} validées)`;
-
-      const newEntry = {
-        id: `h_${Date.now()}`,
-        date: logDate,
-        value: effectiveValue,
-        sets: finalSetDetails.length,
-        reps: bestRepInSession,
-        setDetails: finalSetDetails,
-        validatedSets: validatedSetsNow,
-        goalSets,
-        goalReps,
-        assistanceKg: assistanceUsed,
-        ...(loadsList && isMixed(loadsList) ? { setLoads: loadsList } : {}),
-        ...(assistsList && isMixed(assistsList) ? { setAssists: assistsList } : {}),
-        rpe: logRpe,
-        calories,
-        goalBeaten: evalAfter.isBossDefeated,
-        note: logNote.trim() || defaultNote
-      };
-
-      const finalQuest = {
-        ...updatedQuestCandidate,
-        history: [...(q.history || []), newEntry]
-      };
-
-      if (evalAfter.isBossDefeated) {
-        questForAutoLevelUp = finalQuest;
-      }
-
-      return finalQuest;
+      const n = finalSetDetails.length;
+      // charge / aide de chaque série (une même valeur partout, sauf si « différente selon la série » est coché)
+      const loads = q.unit === 'kg' ? (perSetActive ? perSetValues(logValue) : Array(n).fill(Number(logValue) || 0)) : null;
+      const assists = q.unit === 'reps' && logUseAssistance
+        ? (perSetActive ? perSetValues(logAssistanceKg) : Array(n).fill(Number(logAssistanceKg) || 0))
+        : null;
+      const r = applyStrengthSession(q, {
+        date: logDate, setDetails: finalSetDetails, loads, assists, rpe: logRpe, calories, note: logNote.trim(),
+      });
+      xpEarned = r.xp;
+      r.unlocked.forEach(u => newUnlocked.add(u));
+      bannerTitle = r.banner.title;
+      bannerSubtitle = r.banner.subtitle;
+      bannerBadge = r.banner.badge;
+      if (r.bossDefeated) questForAutoLevelUp = r.quest;
+      return r.quest;
     });
 
     const hasStrength = updatedQuests.some(
@@ -414,5 +348,5 @@ export function useLogSession({
     }
   };
 
-  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
+  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, applyCoachTarget, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
 }

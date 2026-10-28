@@ -4,7 +4,7 @@ import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
 
 export function LogSessionModal({
-  handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession, handleSetOverride, logPerSetLoad, logSetOverrides, togglePerSetLoad,
+  applyCoachTarget, handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession, handleSetOverride, logPerSetLoad, logSetOverrides, togglePerSetLoad,
   handleUpdateSingleSetRep, liveModalCalories, logAssistanceKg, logDate, logDurationMin,
   logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
   logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
@@ -46,6 +46,12 @@ export function LogSessionModal({
             </div>
           );
         })()}
+
+        {logModalQuest.type === 'strength' && !isTimedQuest(logModalQuest) && (
+          <button type="button" onClick={applyCoachTarget} className="w-full py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-sm font-black">
+            🧠 Remplir comme prévu par le coach
+          </button>
+        )}
 
         <form onSubmit={handleSaveSession} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">

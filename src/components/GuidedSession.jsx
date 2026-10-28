@@ -29,7 +29,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const it = items[g.idx];
   const d = it ? g.data[it.questId] : null;
   const patch = (qid, p) => setG(prev => ({ ...prev, data: { ...prev.data, [qid]: { ...prev.data[qid], ...p } } }));
-  const startRest = sec => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest', { detail: sec })); } catch (e) {} };
+  // détail = durée du repos + rappel de ce qui vient ensuite (affiché sur le minuteur)
+  const startRest = (sec, next = '') => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest', { detail: { sec, next } })); } catch (e) {} };
 
   // La charge (ou l'aide) se règle entre deux séries : elle s'applique aux séries pas encore faites.
   const setLoad = v => patch(it.questId, { load: v, loads: loadsOf(d).map((x, i) => (d.done[i] ? x : v)) });
@@ -42,7 +43,14 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     if (!wasDone) {
       const isLastSet = i === d.done.length - 1;
       const isLastEx = g.idx === items.length - 1;
-      if (!(isLastSet && isLastEx)) startRest(it.restSec);
+      if (!(isLastSet && isLastEx)) {
+        const j = d.done.findIndex((x, k) => k > i && !x);
+        const nx = items[g.idx + 1];
+        const next = j >= 0
+          ? `Série ${j + 1}/${d.done.length}${it.kind === 'load' ? ` · ${coachFmt(loadsOf(d)[j])} kg` : it.kind === 'assisted' ? ` · aide ${coachFmt(assistsOf(d)[j])} kg` : ''} · ${d.reps[j]} ${it.timed ? 's' : 'reps'}`
+          : nx ? `Ensuite : ${nx.name}` : '';
+        startRest(it.restSec, next);
+      }
     }
   };
   // Échauffement : calculé d'après la charge de travail du moment et les exercices déjà faits dans la séance
@@ -173,9 +181,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     {it.kind === 'assisted' && <p className="text-[10px] font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">−</button>
+                    {i > 0 && !d.done[i] && (
+                      <button onClick={() => setReps(i, d.reps[i - 1])} title="Mêmes répétitions que la série précédente" aria-label="Comme la série précédente" className="w-9 h-11 rounded-lg bg-slate-800 text-sky-300 text-base font-black">=</button>
+                    )}
+                    <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
                     <input type="number" value={r} onChange={e => setReps(i, Number(e.target.value) || 0)} className="w-14 text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-lg font-black text-white" />
-                    <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="w-9 h-9 rounded-lg bg-slate-800 text-white text-lg font-black">+</button>
+                    <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                     {it.timed && (
                       <button onClick={() => toggleSw(i)} className={`px-2 h-9 rounded-lg text-xs font-black ${sw && sw.i === i ? 'bg-rose-600 text-white' : 'bg-cyan-700 text-white'}`}>
                         {sw && sw.i === i ? `■ ${Math.max(0, Math.round((now - sw.start) / 1000))} s` : '⏱ Chrono'}

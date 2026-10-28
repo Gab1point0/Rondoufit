@@ -82,42 +82,12 @@ export function App() {
     syncStatus: sync.status, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast,
   });
 
-  const {
-    levelUpModalQuest, setLevelUpModalQuest, nextGoalMode, setNextGoalMode, nextGoalValue,
-    setNextGoalValue, nextGoalSets, setNextGoalSets, nextGoalReps, setNextGoalReps,
-    nextGoalAssistanceKg, setNextGoalAssistanceKg, openLevelUpModal, handleConfirmLevelUp,
-  } = useLevelUp({
-    gameState, setGameState, triggerToast,
-  });
+  // Un objet par sujet (levelUp, form, quick, log, weight) : il est donné tel quel à la fenêtre correspondante.
+  const levelUp = useLevelUp({ gameState, setGameState, triggerToast });
+  const form = useQuestForm({ gameState, setGameState, setSelectedChartQuestId, triggerToast });
 
-  const {
-    questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName,
-    setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed,
-    setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue,
-    setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets,
-    formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg,
-    formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal,
-    handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion,
-  } = useQuestForm({
-    gameState, setGameState, setSelectedChartQuestId, triggerToast,
-  });
-
-  const {
-    quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId,
-    quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin,
-    setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioInput, setQuickCardioInput, quickResolved, quickCardioRpe,
-    setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote,
-    liveQuickCardioCalories, handleSaveQuickCardio,
-  } = useQuickCardio({
-    gameState, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
-  });
-
-  const {
-    newWeightInput, setNewWeightInput, newWeightDate, setNewWeightDate, newWeightNote,
-    setNewWeightNote, handleAddWeightEntry, handleDeleteWeightEntry,
-  } = useWeightLog({
-    gameState, registerUndo, setGameState, triggerToast,
-  });
+  const quick = useQuickCardio({ gameState, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast });
+  const weight = useWeightLog({ gameState, registerUndo, setGameState, triggerToast });
 
   const {
     confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON,
@@ -141,22 +111,14 @@ export function App() {
     levelInfo, isLoaded, syncStatus: sync.status, soundEnabled: gameState.soundEnabled, triggerToast,
   });
 
-  const {
-    logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance,
-    setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode,
-    logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM,
-    setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal,
-    handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets,
-    handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride,
-  } = useLogSession({
-    gameState, openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay,
-    triggerToast,
+  const log = useLogSession({
+    gameState, openLevelUpModal: levelUp.openLevelUpModal, selectedDate, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
   });
 
   const {
     guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap,
   } = useGuidedSession({
-    gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+    gameState, openLevelUpModal: levelUp.openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
   });
 
   const {
@@ -249,9 +211,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
             gameState={gameState}
             setGameState={setGameState}
             onStartGuided={startGuided}
-            onOpenLevelUp={openLevelUpModal}
+            onOpenLevelUp={levelUp.openLevelUpModal}
             onAddExercise={addQuestFromCatalog}
-            onQuickCardio={() => { setQuickCardioDate(getTodayISODate()); setQuickCardioModalOpen(true); }}
+            onQuickCardio={() => { quick.setQuickCardioDate(getTodayISODate()); quick.setQuickCardioModalOpen(true); }}
             onGoTab={goToTab}
             guidedActive={!!guided}
             onResumeGuided={() => setGuidedOpen(true)}
@@ -266,10 +228,10 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
             filteredQuests={filteredQuests}
             gameState={gameState}
             handleDeleteQuest={handleDeleteQuest}
-            openCreateQuestModal={openCreateQuestModal}
-            openEditQuestModal={openEditQuestModal}
-            openLevelUpModal={openLevelUpModal}
-            openLogModal={openLogModal}
+            openCreateQuestModal={form.openCreateQuestModal}
+            openEditQuestModal={form.openEditQuestModal}
+            openLevelUpModal={levelUp.openLevelUpModal}
+            openLogModal={log.openLogModal}
             questFilter={questFilter}
             setActiveTab={setActiveTab}
             setQuestFilter={setQuestFilter}
@@ -284,7 +246,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 
         {/* ONGLET 3 : COURBES DE PROGRESSION */}
         {activeTab === 'charts' && (
-          <ChartsTab activeChartQuest={activeChartQuest} gameState={gameState} openLogModal={openLogModal} setSelectedChartQuestId={setSelectedChartQuestId} />
+          <ChartsTab activeChartQuest={activeChartQuest} gameState={gameState} openLogModal={log.openLogModal} setSelectedChartQuestId={setSelectedChartQuestId} />
         )}
 
         {/* ONGLET : 💯 MES MAXIMA */}
@@ -292,18 +254,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 
         {/* ONGLET 4 : ⚖️ SUIVI DU POIDS */}
         {activeTab === 'weight' && (
-          <WeightTab
-            gameState={gameState}
-            handleAddWeightEntry={handleAddWeightEntry}
-            handleDeleteWeightEntry={handleDeleteWeightEntry}
-            newWeightDate={newWeightDate}
-            newWeightInput={newWeightInput}
-            newWeightNote={newWeightNote}
-            setGameState={setGameState}
-            setNewWeightDate={setNewWeightDate}
-            setNewWeightInput={setNewWeightInput}
-            setNewWeightNote={setNewWeightNote}
-          />
+          <WeightTab gameState={gameState} setGameState={setGameState} {...weight} />
         )}
 
         {/* ONGLET : BILAN (défis, semaine, records) */}
@@ -321,125 +272,14 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       </main>
 
       {/* MODALE 1 : NOTER UNE SÉANCE */}
-      {logModalQuest && (
-        <LogSessionModal
-          handleAddSetSlot={handleAddSetSlot}
-          handleApplyUniformToSets={handleApplyUniformToSets}
-          handleRemoveSetSlot={handleRemoveSetSlot}
-          handleSaveSession={handleSaveSession}
-          handleSetOverride={handleSetOverride}
-          handleUpdateSingleSetRep={handleUpdateSingleSetRep}
-          logPerSetLoad={logPerSetLoad}
-          logSetOverrides={logSetOverrides}
-          togglePerSetLoad={togglePerSetLoad}
-          liveModalCalories={liveModalCalories}
-          logAssistanceKg={logAssistanceKg}
-          logDate={logDate}
-          logDurationMin={logDurationMin}
-          logElevationM={logElevationM}
-          logCardioInput={logCardioInput}
-          setLogCardioInput={setLogCardioInput}
-          cardioFigures={cardioFigures}
-          logEntryMode={logEntryMode}
-          logModalQuest={logModalQuest}
-          logNote={logNote}
-          logSetDetails={logSetDetails}
-          logUniformReps={logUniformReps}
-          logUniformSets={logUniformSets}
-          logUseAssistance={logUseAssistance}
-          logValue={logValue}
-          setLogAssistanceKg={setLogAssistanceKg}
-          setLogDate={setLogDate}
-          setLogDurationMin={setLogDurationMin}
-          setLogElevationM={setLogElevationM}
-          setLogEntryMode={setLogEntryMode}
-          setLogModalQuest={setLogModalQuest}
-          setLogNote={setLogNote}
-          setLogUseAssistance={setLogUseAssistance}
-          setLogValue={setLogValue}
-        />
-      )}
+      {log.logModalQuest && <LogSessionModal {...log} />}
 
-      {/* MODALE 2 : OBJECTIF VALIDÉ & PASSAGE AU NIVEAU SUPÉRIEUR */}
-      {levelUpModalQuest && (
-        <LevelUpModal
-          handleConfirmLevelUp={handleConfirmLevelUp}
-          levelUpModalQuest={levelUpModalQuest}
-          nextGoalAssistanceKg={nextGoalAssistanceKg}
-          nextGoalMode={nextGoalMode}
-          nextGoalReps={nextGoalReps}
-          nextGoalSets={nextGoalSets}
-          nextGoalValue={nextGoalValue}
-          setLevelUpModalQuest={setLevelUpModalQuest}
-          setNextGoalAssistanceKg={setNextGoalAssistanceKg}
-          setNextGoalMode={setNextGoalMode}
-          setNextGoalReps={setNextGoalReps}
-          setNextGoalSets={setNextGoalSets}
-          setNextGoalValue={setNextGoalValue}
-        />
-      )}
+      {levelUp.levelUpModalQuest && <LevelUpModal {...levelUp} />}
 
-      {/* MODALE 3 : CRÉER OU AJUSTER UN OBJECTIF */}
-      {questModalOpen && (
-        <QuestFormModal
-          editingQuestId={editingQuestId}
-          formCatalogId={formCatalogId}
-          formCategory={formCategory}
-          formCustomName={formCustomName}
-          formGoalAssistanceKg={formGoalAssistanceKg}
-          formGoalMode={formGoalMode}
-          formGoalReps={formGoalReps}
-          formGoalSets={formGoalSets}
-          formGoalValue={formGoalValue}
-          formStartAssistanceKg={formStartAssistanceKg}
-          formStartValue={formStartValue}
-          formTimed={formTimed}
-          formType={formType}
-          formUnit={formUnit}
-          handleSaveQuestForm={handleSaveQuestForm}
-          formSuggestion={formSuggestion}
-          handleSelectCatalogExercise={handleSelectCatalogExercise}
-          setFormCategory={setFormCategory}
-          setFormCurrentValue={setFormCurrentValue}
-          setFormCustomName={setFormCustomName}
-          setFormGoalAssistanceKg={setFormGoalAssistanceKg}
-          setFormGoalMode={setFormGoalMode}
-          setFormGoalReps={setFormGoalReps}
-          setFormGoalSets={setFormGoalSets}
-          setFormGoalValue={setFormGoalValue}
-          setFormStartAssistanceKg={setFormStartAssistanceKg}
-          setFormStartValue={setFormStartValue}
-          setFormTimed={setFormTimed}
-          setFormUnit={setFormUnit}
-          setQuestModalOpen={setQuestModalOpen}
-        />
-      )}
+      {form.questModalOpen && <QuestFormModal {...form} />}
 
       {/* MODALE 4 : AJOUT RAPIDE "+ COURSE / MARCHE DU JOUR" */}
-      {quickCardioModalOpen && (
-        <QuickCardioModal
-          handleSaveQuickCardio={handleSaveQuickCardio}
-          liveQuickCardioCalories={liveQuickCardioCalories}
-          quickCardioCatalogId={quickCardioCatalogId}
-          quickCardioDate={quickCardioDate}
-          quickCardioDistanceKm={quickCardioDistanceKm}
-          quickCardioDurationMin={quickCardioDurationMin}
-          quickCardioElevationM={quickCardioElevationM}
-          quickCardioInput={quickCardioInput}
-          setQuickCardioInput={setQuickCardioInput}
-          quickResolved={quickResolved}
-          quickCardioNote={quickCardioNote}
-          quickCardioRpe={quickCardioRpe}
-          setQuickCardioCatalogId={setQuickCardioCatalogId}
-          setQuickCardioDate={setQuickCardioDate}
-          setQuickCardioDistanceKm={setQuickCardioDistanceKm}
-          setQuickCardioDurationMin={setQuickCardioDurationMin}
-          setQuickCardioElevationM={setQuickCardioElevationM}
-          setQuickCardioModalOpen={setQuickCardioModalOpen}
-          setQuickCardioNote={setQuickCardioNote}
-          setQuickCardioRpe={setQuickCardioRpe}
-        />
-      )}
+      {quick.quickCardioModalOpen && <QuickCardioModal {...quick} />}
 
       {/* MODALE 5 : AVERTISSEMENT DE RÉINITIALISATION SÉCURISÉ */}
       {confirmResetOpen && (
@@ -482,8 +322,8 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 
       {!(guided && guidedOpen) && (
         <QuickAddMenu
-          onCourse={() => { setQuickCardioDate(selectedDate); setQuickCardioModalOpen(true); }}
-          onExercise={openCreateQuestModal}
+          onCourse={() => { quick.setQuickCardioDate(selectedDate); quick.setQuickCardioModalOpen(true); }}
+          onExercise={form.openCreateQuestModal}
           onTimer={() => window.dispatchEvent(new CustomEvent('rondoufit-rest-open'))}
           onVoice={() => window.dispatchEvent(new CustomEvent('rondoufit-voice'))}
         />

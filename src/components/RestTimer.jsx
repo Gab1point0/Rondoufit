@@ -6,6 +6,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
   const [endAt, setEndAt] = useState(null);
   const [left, setLeft] = useState(0);
   const [total, setTotal] = useState(90);
+  const [next, setNext] = useState('');
   useEffect(() => {
     if (!endAt) return;
     const id = setInterval(() => {
@@ -22,9 +23,13 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
   }, [endAt]);
   const start = sec => { setTotal(sec); setLeft(sec); setEndAt(Date.now() + sec * 1000); };
   const addTime = () => { setTotal(t => t + 30); setLeft(l => l + 30); setEndAt(e => (e || Date.now()) + 30000); };
-  const stop = () => { setEndAt(null); setLeft(0); };
+  const stop = () => { setEndAt(null); setLeft(0); setNext(''); };
   useEffect(() => {
-    const h = e => { const s = Number(e.detail) || 90; start(s); };
+    const h = e => {
+      const d = e.detail;
+      start(Number(d && typeof d === 'object' ? d.sec : d) || 90);
+      setNext(d && typeof d === 'object' && d.next ? d.next : '');
+    };
     const o = () => setOpen(true);
     window.addEventListener('rondoufit-rest', h);
     window.addEventListener('rondoufit-rest-open', o);
@@ -63,6 +68,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
           </div>
         </div>
       )}
+      {running && next && <span className="px-3 py-1 rounded-full bg-slate-900/95 border border-emerald-400/50 text-[11px] font-bold text-emerald-100 shadow-lg max-w-[16rem] truncate">{next}</span>}
       <button
         onClick={() => setOpen(o => !o)}
         title="Minuteur de repos"
