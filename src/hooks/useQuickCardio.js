@@ -1,5 +1,5 @@
 import { EXERCISE_CATALOG } from '../data/catalog';
-import { calculateCardioCalories } from '../lib/calories';
+import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, cardioInputNote, resolveCardioInputs } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
 import { playGameSound } from '../lib/sound';
 import { useMemo, useState } from 'react';
@@ -19,6 +19,14 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
 
   const [quickCardioRpe, setQuickCardioRpe] = useState(7);
 
+  // saisie « vitesse + durée » et/ou pente en % (voir lib/calories.js resolveCardioInputs)
+  const [quickCardioInput, setQuickCardioInputRaw] = useState(DEFAULT_CARDIO_INPUT);
+  const setQuickCardioInput = p => setQuickCardioInputRaw(prev => ({ ...prev, ...p }));
+  const quickResolved = resolveCardioInputs({
+    ...quickCardioInput, distanceKm: quickCardioDistanceKm, durationMin: quickCardioDurationMin, elevationM: quickCardioElevationM,
+    slopePct: quickCardioInput.slopePct,
+  });
+
   const [quickCardioDate, setQuickCardioDate] = useState(getTodayISODate());
 
   const [quickCardioNote, setQuickCardioNote] = useState('');
@@ -29,17 +37,17 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
       EXERCISE_CATALOG.find(c => c.id === 'running_endurance');
     return calculateCardioCalories({
       cardioMode: cat?.cardioMode || 'run',
-      distanceKm: quickCardioDistanceKm,
+      distanceKm: quickResolved.distanceKm,
       durationMin: quickCardioDurationMin,
-      elevationM: quickCardioElevationM,
+      elevationM: quickResolved.elevationM,
       rpe: quickCardioRpe,
       userWeightKg: gameState.userWeightKg
     });
   }, [
     quickCardioCatalogId,
-    quickCardioDistanceKm,
+    quickResolved.distanceKm,
     quickCardioDurationMin,
-    quickCardioElevationM,
+    quickResolved.elevationM,
     quickCardioRpe,
     gameState.userWeightKg
   ]);
@@ -50,9 +58,10 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
       EXERCISE_CATALOG.find(c => c.id === quickCardioCatalogId) ||
       EXERCISE_CATALOG.find(c => c.id === 'running_endurance');
 
-    const dist = Math.max(0.1, Number(quickCardioDistanceKm) || 5);
+    const dist = Math.max(0.1, quickCardioInput.inputMode === 'speed' ? quickResolved.distanceKm : Number(quickResolved.distanceKm) || 5);
     const dur = Math.max(1, Number(quickCardioDurationMin) || 25);
-    const elev = Math.max(0, Number(quickCardioElevationM) || 0);
+    const elev = quickResolved.elevationM;
+    const how = cardioInputNote(quickCardioInput);
     const calories = liveQuickCardioCalories;
     const primaryValue = cat.unit === 'min' ? dur : dist;
     const xpGain = 85 + Math.round(calories * 0.15);
@@ -69,7 +78,7 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
       goalBeaten: false,
       note:
         quickCardioNote.trim() ||
-        `${cat.name} : ${dist} km en ${dur} min (D+ ${elev}m)`
+        `${cat.name} : ${dist} km en ${dur} min (D+ ${elev}m${how ? ', ' + how : ''})`
     };
 
     let questFound = false;
@@ -131,5 +140,5 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
     );
   };
 
-  return { quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId, quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin, setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioRpe, setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote, liveQuickCardioCalories, handleSaveQuickCardio };
+  return { quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId, quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin, setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioInput, setQuickCardioInput, quickResolved, quickCardioRpe, setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote, liveQuickCardioCalories, handleSaveQuickCardio };
 }

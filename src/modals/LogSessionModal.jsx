@@ -1,3 +1,4 @@
+import { CardioInputToggles } from '../components/CardioInputToggles';
 import { ELASTIC_PRESETS } from '../data/presets';
 import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
@@ -7,7 +8,7 @@ export function LogSessionModal({
   handleUpdateSingleSetRep, liveModalCalories, logAssistanceKg, logDate, logDurationMin,
   logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
   logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
-  setLogElevationM, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
+  setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -388,7 +389,9 @@ export function LogSessionModal({
             </>
           ) : (
             <div className="bg-slate-950 border border-emerald-500/30 rounded-xl p-4 space-y-3">
+              <CardioInputToggles ci={logCardioInput} setCi={setLogCardioInput} distanceKm={cardioFigures(logModalQuest).distanceKm} elevationM={cardioFigures(logModalQuest).elevationM} />
               <div className="grid grid-cols-3 gap-3">
+                {!(logModalQuest.unit === 'km' && logCardioInput.inputMode === 'speed') && (
                 <div>
                   <label className="block text-[11px] font-bold text-slate-400 mb-1">
                     {logModalQuest.unit === 'km' ? 'Distance (km)' : 'Durée (min)'}
@@ -401,6 +404,7 @@ export function LogSessionModal({
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-black text-white"
                   />
                 </div>
+                )}
                 {logModalQuest.unit === 'km' && (
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 mb-1">
@@ -414,6 +418,7 @@ export function LogSessionModal({
                     />
                   </div>
                 )}
+                {logCardioInput.slopeMode !== 'percent' && (
                 <div>
                   <label className="block text-[11px] font-bold text-slate-400 mb-1">
                     Dénivelé D+ (m)
@@ -425,6 +430,7 @@ export function LogSessionModal({
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-black text-white"
                   />
                 </div>
+                )}
               </div>
             </div>
           )}

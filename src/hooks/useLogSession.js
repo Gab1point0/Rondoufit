@@ -1,4 +1,4 @@
-import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
+import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, calculateStrengthCalories, cardioInputNote } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
 import { evaluateQuestProgress } from '../lib/progress';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
@@ -34,6 +34,20 @@ export function useLogSession({
 
   const [logElevationM, setLogElevationM] = useState(30);
 
+  // saisie « vitesse + durée » et/ou pente en % (cardio)
+  const [logCardioInput, setLogCardioInputRaw] = useState(DEFAULT_CARDIO_INPUT);
+  const setLogCardioInput = p => setLogCardioInputRaw(prev => ({ ...prev, ...p }));
+  // distance, durée et dénivelé réellement retenus pour une sortie (selon le mode de saisie)
+  const cardioFigures = quest => {
+    const ci = logCardioInput;
+    const isKm = quest.unit === 'km';
+    const dur = isKm ? Number(logDurationMin) || 25 : Number(logValue) || 20;
+    let dist = isKm ? Number(logValue) || 0 : (dur / 60) * 5.2;
+    if (ci.inputMode === 'speed') dist = Math.round(Math.max(0, Number(ci.speedKmh) || 0) * dur / 60 * 100) / 100;
+    const elev = ci.slopeMode === 'percent' ? Math.round(Math.max(0, Number(ci.slopePct) || 0) / 100 * dist * 1000) : Math.max(0, Number(logElevationM) || 0);
+    return { distanceKm: dist, durationMin: dur, elevationM: elev };
+  };
+
   const [logRpe, setLogRpe] = useState(7);
 
   const [logNote, setLogNote] = useState('');
@@ -51,19 +65,12 @@ export function useLogSession({
   const liveModalCalories = useMemo(() => {
     if (!logModalQuest) return 0;
     if (logModalQuest.type === 'cardio') {
-      const distanceKm =
-        logModalQuest.unit === 'km'
-          ? Number(logValue) || 0
-          : ((Number(logValue) || 20) / 60) * 5.2;
-      const durationMin =
-        logModalQuest.unit === 'min'
-          ? Number(logValue) || 20
-          : Number(logDurationMin) || 25;
+      const { distanceKm, durationMin, elevationM } = cardioFigures(logModalQuest);
       return calculateCardioCalories({
         cardioMode: logModalQuest.cardioMode || 'run',
         distanceKm,
         durationMin,
-        elevationM: logElevationM,
+        elevationM,
         rpe: logRpe,
         userWeightKg: gameState.userWeightKg
       });
@@ -100,6 +107,7 @@ export function useLogSession({
     logSetOverrides,
     logDurationMin,
     logElevationM,
+    logCardioInput,
     logRpe,
     gameState.userWeightKg
   ]);
@@ -113,6 +121,7 @@ export function useLogSession({
     setLogDate(selectedDate || getTodayISODate());
     setLogRpe(7);
     setLogNote('');
+    setLogCardioInputRaw(DEFAULT_CARDIO_INPUT);
     setLogPerSetLoad(false);
     setLogSetOverrides([]);
 
@@ -210,9 +219,11 @@ export function useLogSession({
       if (q.id !== quest.id) return q;
 
       if (q.type === 'cardio') {
-        const val = Math.max(0.1, Number(logValue) || 0);
-        const dur = Math.max(1, Number(logDurationMin) || 20);
-        const elev = Math.max(0, Number(logElevationM) || 0);
+        const fig = cardioFigures(q);
+        const val = Math.max(0.1, q.unit === 'km' ? fig.distanceKm : Number(logValue) || 0);
+        const dur = Math.max(1, fig.durationMin);
+        const elev = fig.elevationM;
+        const how = cardioInputNote(logCardioInput);
         const isPR = val > (Number(q.currentValue) || 0);
         const isBoss = val >= (Number(q.goalValue) || 10);
 
@@ -239,7 +250,7 @@ export function useLogSession({
           goalBeaten: isBoss,
           note:
             logNote.trim() ||
-            `Sortie ${q.name} : ${val} ${q.unit} en ${dur} min (${calories} kcal)`
+            `Sortie ${q.name} : ${val} ${q.unit} en ${dur} min${how ? ', ' + how : ''} (${calories} kcal)`
         };
 
         const updatedCardioQuest = {
@@ -403,5 +414,5 @@ export function useLogSession({
     }
   };
 
-  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
+  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
 }

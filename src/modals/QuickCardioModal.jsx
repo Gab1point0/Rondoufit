@@ -1,4 +1,5 @@
 import { EXERCISE_CATALOG } from '../data/catalog';
+import { CardioInputToggles } from '../components/CardioInputToggles';
 import { Footprints, X } from '../icons';
 import { formatPaceAndSpeed } from '../lib/calories';
 
@@ -7,8 +8,10 @@ export function QuickCardioModal({
   quickCardioDistanceKm, quickCardioDurationMin, quickCardioElevationM, quickCardioNote,
   quickCardioRpe, setQuickCardioCatalogId, setQuickCardioDate, setQuickCardioDistanceKm,
   setQuickCardioDurationMin, setQuickCardioElevationM, setQuickCardioModalOpen, setQuickCardioNote,
-  setQuickCardioRpe,
+  setQuickCardioRpe, quickCardioInput, setQuickCardioInput, quickResolved,
 }) {
+  const speedMode = quickCardioInput.inputMode === 'speed';
+  const percentMode = quickCardioInput.slopeMode === 'percent';
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
@@ -50,7 +53,10 @@ export function QuickCardioModal({
             </select>
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5">
+          <CardioInputToggles ci={quickCardioInput} setCi={setQuickCardioInput} distanceKm={quickResolved.distanceKm} elevationM={quickResolved.elevationM} />
+
+          <div className={`grid gap-2.5 ${(speedMode ? 0 : 1) + 1 + (percentMode ? 0 : 1) === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            {!speedMode && (
             <div>
               <label className="block text-[11px] font-bold text-slate-400 mb-1">
                 Distance (km)
@@ -64,6 +70,7 @@ export function QuickCardioModal({
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 text-center font-black text-white text-sm"
               />
             </div>
+            )}
             <div>
               <label className="block text-[11px] font-bold text-slate-400 mb-1">
                 Durée (min)
@@ -76,6 +83,7 @@ export function QuickCardioModal({
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 text-center font-black text-white text-sm"
               />
             </div>
+            {!percentMode && (
             <div>
               <label className="block text-[11px] font-bold text-slate-400 mb-1">
                 Dénivelé D+ (m)
@@ -88,14 +96,15 @@ export function QuickCardioModal({
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 text-center font-black text-white text-sm"
               />
             </div>
+            )}
           </div>
 
           <div className="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-xs">
             <div>
               <span className="text-slate-400 block">Allure & Vitesse</span>
               <span className="font-extrabold text-emerald-300">
-                {formatPaceAndSpeed(quickCardioDistanceKm, quickCardioDurationMin).pace} •{' '}
-                {formatPaceAndSpeed(quickCardioDistanceKm, quickCardioDurationMin).speed}
+                {formatPaceAndSpeed(quickResolved.distanceKm, quickCardioDurationMin).pace} •{' '}
+                {formatPaceAndSpeed(quickResolved.distanceKm, quickCardioDurationMin).speed}
               </span>
             </div>
             <div className="text-right">

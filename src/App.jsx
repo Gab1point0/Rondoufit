@@ -99,7 +99,7 @@ export function App() {
   const {
     quickCardioModalOpen, setQuickCardioModalOpen, quickCardioCatalogId, setQuickCardioCatalogId,
     quickCardioDistanceKm, setQuickCardioDistanceKm, quickCardioDurationMin,
-    setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioRpe,
+    setQuickCardioDurationMin, quickCardioElevationM, setQuickCardioElevationM, quickCardioInput, setQuickCardioInput, quickResolved, quickCardioRpe,
     setQuickCardioRpe, quickCardioDate, setQuickCardioDate, quickCardioNote, setQuickCardioNote,
     liveQuickCardioCalories, handleSaveQuickCardio,
   } = useQuickCardio({
@@ -139,7 +139,7 @@ export function App() {
     logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance,
     setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode,
     logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM,
-    setLogElevationM, logNote, setLogNote, liveModalCalories, openLogModal,
+    setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal,
     handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets,
     handleSaveSession, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride,
   } = useLogSession({
@@ -341,6 +341,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           logDate={logDate}
           logDurationMin={logDurationMin}
           logElevationM={logElevationM}
+          logCardioInput={logCardioInput}
+          setLogCardioInput={setLogCardioInput}
+          cardioFigures={cardioFigures}
           logEntryMode={logEntryMode}
           logModalQuest={logModalQuest}
           logNote={logNote}
@@ -426,6 +429,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           quickCardioDistanceKm={quickCardioDistanceKm}
           quickCardioDurationMin={quickCardioDurationMin}
           quickCardioElevationM={quickCardioElevationM}
+          quickCardioInput={quickCardioInput}
+          setQuickCardioInput={setQuickCardioInput}
+          quickResolved={quickResolved}
           quickCardioNote={quickCardioNote}
           quickCardioRpe={quickCardioRpe}
           setQuickCardioCatalogId={setQuickCardioCatalogId}
