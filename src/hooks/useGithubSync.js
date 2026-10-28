@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { normalizeState } from '../data/state';
-import { fetchLegacySave } from '../legacy/googleSheets';
 import { PhotoDB } from '../lib/photos';
 import { syncOnce } from '../sync/engine';
 import * as github from '../sync/github';
-import { mergeStates } from '../sync/merge';
 import { syncPhotos } from '../sync/photoSync';
 import * as store from '../sync/storage';
 
@@ -154,21 +152,5 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     };
   }, [scheduleSync]);
 
-  /** Reprend UNE FOIS les données de l'ancien Google Sheets (fusionnées avec celles de cet appareil). */
-  const importLegacy = useCallback(async () => {
-    const { data, savedAt } = await fetchLegacySave();
-    const remote = normalizeState(data);
-    const local = stateRef.current;
-    const merged = store.getLocalTs() === 0
-      ? remote // cet appareil n'a que les données de départ : on prend celles du Sheets telles quelles
-      : mergeStates(null, local, remote, { preferLocal: store.getLocalTs() >= savedAt });
-    applyRemote(merged);
-    version.current++;
-    store.markDirty();
-    store.setLocalTs(Math.max(Date.now(), savedAt));
-    scheduleSync(200);
-    return { quests: merged.quests.length };
-  }, [stateRef, version, applyRemote, scheduleSync]);
-
-  return { config, configured, status, error, lastSync, setConfig, syncNow, scheduleSync, importLegacy, isLoaded };
+  return { config, configured, status, error, lastSync, setConfig, syncNow, scheduleSync, isLoaded };
 }

@@ -17,7 +17,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
           >
             <span>{q.icon}</span>
             <span>{q.name}</span>
-            <span className="px-1.5 py-0.5 rounded bg-slate-950/60 text-[10px] text-pink-200">
+            <span className="px-1.5 py-0.5 rounded bg-slate-950/60 text-[0.7rem] text-pink-200">
               Niv.{q.level || 1}
             </span>
           </button>
@@ -96,7 +96,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                     x={width - padX}
                     y={goalY - 6}
                     textAnchor="end"
-                    className="fill-amber-400 text-[10px] font-bold"
+                    className="fill-amber-400 text-[0.7rem] font-bold"
                   >
                     Objectif : {goalVal} {activeChartQuest.unit}
                   </text>
@@ -133,7 +133,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                           x={cx}
                           y={cy - 12}
                           textAnchor="middle"
-                          className="fill-white text-[10px] font-bold"
+                          className="fill-white text-[0.7rem] font-bold"
                         >
                           {activeChartQuest.type === 'strength'
                             ? `${

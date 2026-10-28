@@ -38,11 +38,11 @@ export function TrophiesTab({ achStats, gameState }) {
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-pink-500" style={{ width: `${(cur / pr.max) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] text-slate-400">{Math.round(cur * 10) / 10} / {pr.max}</span>
+                      <span className="text-[0.7rem] text-slate-400">{Math.round(cur * 10) / 10} / {pr.max}</span>
                     </div>
                   );
                 })()}
-                <span className="inline-block mt-2 text-[11px] font-bold text-pink-300">
+                <span className="inline-block mt-2 text-[0.75rem] font-bold text-pink-300">
                   Bonus : +{ach.xpBonus} EXP
                 </span>
               </div>

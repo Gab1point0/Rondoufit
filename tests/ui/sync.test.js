@@ -119,15 +119,4 @@ describe('sauvegarde GitHub dans l’application', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('récupère une dernière fois les données de l’ancien Google Sheets', async () => {
-    const srv = fakeGithub(null);
-    srv.legacy = SAVE({ xp: 4242, _savedAt: 99 });
-    const h = await start(srv, { 'rondoufit:github': CFG });
-    await settle(h);
-    await clickEl(h, pillButton(h));
-    await clickText(h, 'Récupérer mes données de Google Sheets');
-    await settle(h, 3500);
-    expect(pageText(h)).toContain('4242 EXP');
-    expect(srv.puts[srv.puts.length - 1].xp).toBe(4242);
-  }, TIMEOUT);
 });

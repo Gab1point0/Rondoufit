@@ -32,24 +32,6 @@ export function computeWeekStats(entries, weekStart) {
   };
 }
 
-const CHALLENGE_POOL = [
-  { id: 'sessions', icon: '💪', title: 'Assidu', desc: 'Enregistrer 4 séances', key: 'sessions', target: 4, xp: 150 },
-  { id: 'days', icon: '📆', title: 'Régulier', desc: 'S’entraîner 3 jours différents', key: 'days', target: 3, xp: 150 },
-  { id: 'kcal', icon: '🔥', title: 'Fournaise', desc: 'Brûler 800 kcal', key: 'kcal', target: 800, xp: 200 },
-  { id: 'km', icon: '🏃', title: 'Globe-trotteur', desc: 'Parcourir 10 km', key: 'km', target: 10, xp: 200 },
-  { id: 'arenas', icon: '🧭', title: 'Touche-à-tout', desc: 'Travailler 3 groupes différents', key: 'arenas', target: 3, xp: 150 },
-  { id: 'reps', icon: '🔁', title: 'Marathon de reps', desc: 'Cumuler 150 répétitions', key: 'reps', target: 150, xp: 150 },
-  { id: 'volley', icon: '🏐', title: 'Match de la semaine', desc: 'Jouer 1 séance de volley', key: 'volley', target: 1, xp: 120 }
-];
-
-export function getWeekChallenges(weekStart) {
-  const n = Math.floor(Date.parse(weekStart + 'T00:00:00Z') / 604800000);
-  return [0, 1, 2].map(k => {
-    const c = CHALLENGE_POOL[(n + k * 2) % CHALLENGE_POOL.length];
-    return { ...c, uid: `${weekStart}:${c.id}` };
-  });
-}
-
 export function computePersonalRecords(state) {
   const out = [];
   (state.quests || []).forEach(q => {

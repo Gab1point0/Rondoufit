@@ -73,7 +73,7 @@ export function decideProfileTarget({ q, P, kind, last, today, opts, boss, load,
   }
 
   if (boss && minReps >= lo) {
-    return result({ ...keep, reps: fill(hi), change: 'goal', reason: 'Objectif atteint ! Valide le niveau suivant dans l’onglet Quêtes pour définir un nouveau but.' });
+    return result({ ...keep, reps: fill(hi), change: 'goal', reason: 'Objectif atteint ! Valide le niveau suivant dans l’onglet Exercices pour définir un nouveau but.' });
   }
 
   const inRange = m >= lo && m <= hi;
@@ -92,7 +92,7 @@ export function decideProfileTarget({ q, P, kind, last, today, opts, boss, load,
         return result({ load: nl, assist: 0, reps: fill(lo), change: 'up', reason: `${minReps >= hi ? `${hi} reps réussies partout` : `Séries faciles (ressenti ${rpe}/10)`} → +${coachRound(nl - curLoad, 0.5)} kg, et on repart de ${lo} reps (profil ${P.label}).` });
       }
       if (kind === 'assisted') {
-        if (curAssist <= goalAssist) return result({ ...keep, reps: fill(hi), change: 'goal', reason: 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Quêtes.' });
+        if (curAssist <= goalAssist) return result({ ...keep, reps: fill(hi), change: 'goal', reason: 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Exercices.' });
         const na = Math.max(goalAssist, curAssist - (curAssist >= 20 ? 5 : 2.5));
         return result({ load: 0, assist: na, reps: fill(lo), change: 'assist_down', reason: `${hi} reps réussies partout → l’aide passe de ${curAssist} à ${na} kg, et on repart de ${lo} reps.` });
       }

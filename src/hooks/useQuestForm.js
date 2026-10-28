@@ -272,7 +272,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
         quests: [newQuest, ...prev.quests]
       }));
       setSelectedChartQuestId(newQuest.id);
-      triggerToast('Nouvelle Quête Créée !', `${cleanName} ajouté au Pokédex.`, 40, formIcon);
+      triggerToast('Nouvel exercice créé !', `${cleanName} ajouté au Pokédex.`, 40, formIcon);
     }
 
     setQuestModalOpen(false);

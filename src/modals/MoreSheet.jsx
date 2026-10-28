@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { PLUS_TABS } from '../components/TabBar';
+import { readSafetyCopy } from '../lib/safetyCopy';
+import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExport, onGoTab, onOpenSync, onReset, setGameState, syncStatus }) {
+export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExport, onGoTab, onOpenSync, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
+  const [prefs, setPrefs] = useState(readUiPrefs);
+  const safety = readSafetyCopy();
+  const toggleBigText = () => { const p = { ...prefs, bigText: !prefs.bigText }; setPrefs(p); saveUiPrefs(p); };
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="w-full sm:max-w-md bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-4 pb-8 sm:pb-4 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -14,7 +20,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
         </div>
 
         <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-wider text-pink-300">Pages</p>
+          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Pages</p>
           {PLUS_TABS.map(t => (
             <button key={t.id} onClick={close(() => onGoTab(t.id))} className={`${row} ${activeTab === t.id ? 'border-pink-500/60' : ''}`}>
               <span className="text-lg">{t.icon}</span>
@@ -24,10 +30,14 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
         </div>
 
         <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-wider text-pink-300">Réglages</p>
+          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Réglages</p>
           <button onClick={() => setGameState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))} className={row}>
             <span className="text-lg">{gameState.soundEnabled ? '🔊' : '🔇'}</span>
             <span>Sons : {gameState.soundEnabled ? 'activés' : 'coupés'}</span>
+          </button>
+          <button onClick={toggleBigText} className={row}>
+            <span className="text-lg">🔠</span>
+            <span>Texte : {prefs.bigText ? 'grand' : 'normal'}</span>
           </button>
           <button onClick={close(onOpenSync)} className={row}>
             <span className="text-lg">☁️</span>
@@ -43,7 +53,13 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
           </button>
         </div>
 
-        <div className="pt-1 border-t border-slate-800">
+        <div className="pt-1 border-t border-slate-800 space-y-2">
+          {safety && (
+            <button onClick={close(onRestore)} className={row}>
+              <span className="text-lg">↩️</span>
+              <span>Retrouver mes données {safety.reason} <span className="block text-[0.7rem] font-semibold text-slate-400">copie du {new Date(safety.savedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span></span>
+            </button>
+          )}
           <button onClick={close(onReset)} className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-rose-950/30 border border-rose-900/60 text-left text-sm font-bold text-rose-200" title="Réinitialiser l'aventure à zéro">
             <span className="text-lg">♻️</span>
             <span>Réinitialiser l’aventure</span>

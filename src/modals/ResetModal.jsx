@@ -21,17 +21,10 @@ export function ResetModal({ handleResetAll, setConfirmResetOpen }) {
         <div className="space-y-2 pt-2">
           <button
             type="button"
-            onClick={() => handleResetAll(false)}
+            onClick={() => handleResetAll()}
             className="w-full py-2.5 px-4 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white transition"
           >
-            🔄 Réinitialiser au Jour 1 (avec les exercices de base)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleResetAll(true)}
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-800 hover:bg-rose-950 text-rose-300 border border-rose-500/30 transition"
-          >
-            🧹 Réinitialiser avec une page vierge (0 exercice)
+            🧹 Tout effacer et repartir d’une page vierge
           </button>
           <button
             type="button"

@@ -34,12 +34,25 @@ export function QuestsTab({
           >
             <span>{g.icon}</span>
             <span>{g.label}</span>
-            <span className={`px-1.5 rounded-full text-[10px] font-black ${questFilter === g.id ? 'bg-white/20' : 'bg-slate-800 text-pink-300'}`}>Niv. {(arenaLevels.find(a => a.id === g.id) || {}).groupLevel || 1}</span>
+            <span className={`px-1.5 rounded-full text-[0.7rem] font-black ${questFilter === g.id ? 'bg-white/20' : 'bg-slate-800 text-pink-300'}`}>Niv. {(arenaLevels.find(a => a.id === g.id) || {}).groupLevel || 1}</span>
           </button>
         ))}
       </div>
 
-      {filteredQuests.length === 0 ? (
+      {gameState.quests.length === 0 ? (
+        <div className="bg-slate-900/70 border border-pink-500/30 rounded-2xl p-8 text-center space-y-3">
+          <p className="text-4xl">👋</p>
+          <p className="text-lg font-black text-white">Bienvenue !</p>
+          <p className="text-sm text-slate-300">Ajoute ton premier exercice : le coach te proposera ensuite tes séances, avec les charges et les répétitions.</p>
+          <button
+            onClick={openCreateQuestModal}
+            className="px-4 py-2.5 rounded-xl text-sm font-black bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Ajouter mon premier exercice
+          </button>
+          <p className="text-[0.75rem] text-slate-500">Astuce : le bouton « + » en bas à droite permet aussi de dicter une séance ou d’ajouter une course.</p>
+        </div>
+      ) : filteredQuests.length === 0 ? (
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
           <p className="text-sm font-bold text-slate-300">
             Aucun exercice actif dans cette catégorie.
@@ -88,12 +101,12 @@ export function QuestsTab({
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                          <span className="text-[0.7rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40">
                             Niv. {questLevel} • {normalizeArenaGroup(quest.category, quest.type)}
                           </span>
 
                           {quest.type === 'strength' && (
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                            <span className="text-[0.7rem] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
                               {goalMode === 'weight_only'
                                 ? `🏋️ Objectif Poids : ${quest.goalValue} kg`
                                 : goalMode === 'reps_only'
@@ -160,12 +173,12 @@ export function QuestsTab({
                         </div>
 
                         {isTimedQuest(quest) ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                             ⏱ Chronométré • Cible {quest.goalValue || goalReps} s
                           </span>
                         ) : quest.unit === 'reps' ? (
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+                            className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold border ${
                               (Number(quest.currentAssistanceKg) || 0) > 0
                                 ? 'bg-violet-500/20 text-violet-300 border-violet-500/40'
                                 : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -180,7 +193,7 @@ export function QuestsTab({
                               : '🦅 Strict • 0 kg d’aide'}
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                             🏋️ {quest.currentValue} kg / Cible {quest.goalValue} kg
                           </span>
                         )}
@@ -202,7 +215,7 @@ export function QuestsTab({
                                     : 'bg-slate-900 border-slate-800 text-slate-400'
                                 }`}
                               >
-                                <span className="text-[11px] uppercase tracking-wider">
+                                <span className="text-[0.75rem] uppercase tracking-wider">
                                   Série {idx + 1}
                                 </span>
                                 <span className="flex items-center gap-1 font-black">
@@ -210,7 +223,7 @@ export function QuestsTab({
                                   {isValidated ? (
                                     <span title="Pokéball validée">🔴</span>
                                   ) : (
-                                    <span className="text-[10px] text-amber-400">⚪</span>
+                                    <span className="text-[0.7rem] text-amber-400">⚪</span>
                                   )}
                                 </span>
                               </div>
@@ -221,7 +234,7 @@ export function QuestsTab({
 
                       <div className="grid grid-cols-3 gap-2 pt-1 text-center text-xs">
                         <div className="bg-slate-900/90 rounded-lg p-2 border border-slate-800/80">
-                          <span className="text-[10px] uppercase text-slate-400 block">
+                          <span className="text-[0.7rem] uppercase text-slate-400 block">
                             Départ (Niv.{questLevel})
                           </span>
                           <span className="font-bold text-slate-200">
@@ -230,7 +243,7 @@ export function QuestsTab({
                               : `${quest.startValue} ${repUnit(quest)}`}
                           </span>
                           {quest.unit === 'reps' && !isTimedQuest(quest) && (
-                            <span className="block text-[10px] text-violet-300">
+                            <span className="block text-[0.7rem] text-violet-300">
                               {Number(quest.startAssistanceKg) > 0
                                 ? `Aide ${quest.startAssistanceKg}kg`
                                 : 'Strict 0kg'}
@@ -239,7 +252,7 @@ export function QuestsTab({
                         </div>
 
                         <div className="bg-pink-950/30 rounded-lg p-2 border border-pink-500/30">
-                          <span className="text-[10px] uppercase text-pink-300 block">
+                          <span className="text-[0.7rem] uppercase text-pink-300 block">
                             Actuel
                           </span>
                           <span className="font-extrabold text-white">
@@ -247,7 +260,7 @@ export function QuestsTab({
                               ? `${quest.currentValue} kg`
                               : `${formatSetsBreakdown(currentSetsArray)} ${repUnit(quest)}`}
                           </span>
-                          <span className="block text-[10px] text-pink-300">
+                          <span className="block text-[0.7rem] text-pink-300">
                             {quest.unit === 'kg'
                               ? `Barre à ${quest.currentValue} kg`
                               : isTimedQuest(quest) ? 'Chronométré'
@@ -258,7 +271,7 @@ export function QuestsTab({
                         </div>
 
                         <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-500/30">
-                          <span className="text-[10px] uppercase text-amber-300 block">
+                          <span className="text-[0.7rem] uppercase text-amber-300 block">
                             Objectif Niv.{questLevel + 1}
                           </span>
                           <span className="font-extrabold text-amber-300">
@@ -268,7 +281,7 @@ export function QuestsTab({
                               ? `${goalReps} ${repUnit(quest)}`
                               : `${goalSets} × ${goalReps} ${repUnit(quest)}`}
                           </span>
-                          <span className="block text-[10px] text-amber-200/80">
+                          <span className="block text-[0.7rem] text-amber-200/80">
                             {quest.unit === 'kg'
                               ? `à ${quest.goalValue} kg`
                               : isTimedQuest(quest) ? 'par série'
@@ -283,7 +296,7 @@ export function QuestsTab({
                     <div className="mt-4 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="bg-slate-900 rounded-lg p-2 border border-slate-800">
-                          <span className="text-[10px] uppercase text-slate-400 block">
+                          <span className="text-[0.7rem] uppercase text-slate-400 block">
                             Départ (Niv.{questLevel})
                           </span>
                           <span className="font-bold text-slate-200">
@@ -291,7 +304,7 @@ export function QuestsTab({
                           </span>
                         </div>
                         <div className="bg-emerald-950/40 rounded-lg p-2 border border-emerald-500/30">
-                          <span className="text-[10px] uppercase text-emerald-300 block">
+                          <span className="text-[0.7rem] uppercase text-emerald-300 block">
                             Record Actuel
                           </span>
                           <span className="font-extrabold text-white">
@@ -299,7 +312,7 @@ export function QuestsTab({
                           </span>
                         </div>
                        <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-500/30">
-                          <span className="text-[10px] uppercase text-amber-300 block">
+                          <span className="text-[0.7rem] uppercase text-amber-300 block">
                             {goalMode === 'free_mode' ? 'Objectif' : `Objectif Niv.${questLevel + 1}`}
                           </span>
                           <span className="font-extrabold text-amber-300">

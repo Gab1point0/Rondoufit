@@ -32,7 +32,7 @@ describe('navigation', () => {
     }
     await clickEl(h, [...feuille.querySelectorAll('button')].find(b => b.textContent.includes('Bilan')));
     expect(pageText(h)).not.toContain('Réinitialiser l’aventure'); // la feuille se ferme
-    expect(pageText(h)).toContain('Défis de la semaine');
+    expect(pageText(h)).toContain('Bilan de la semaine');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

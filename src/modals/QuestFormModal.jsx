@@ -40,7 +40,7 @@ export function QuestFormModal({
                       </label>
                       <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
                       {formSuggestion && (
-                        <p className="mt-2 text-[11px] text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">💡 {formSuggestion}</p>
+                        <p className="mt-2 text-[0.75rem] text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">💡 {formSuggestion}</p>
                       )}
                     </div>
                   )}
@@ -119,7 +119,7 @@ export function QuestFormModal({
                             }`}
                           >
                             <div className="text-xs font-black">{mode.title}</div>
-                            <div className="text-[10px] opacity-80 mt-0.5">{mode.desc}</div>
+                            <div className="text-[0.7rem] opacity-80 mt-0.5">{mode.desc}</div>
                           </button>
                         ))}
                       </div>
@@ -154,7 +154,7 @@ export function QuestFormModal({
 
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">
                                 Nombre de séries cibles
                               </label>
                               <input
@@ -167,7 +167,7 @@ export function QuestFormModal({
                               />
                             </div>
                             <div>
-                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">
                                 {formTimed ? 'Secondes par série' : 'Répétitions par série'}
                               </label>
                               <input
@@ -188,7 +188,7 @@ export function QuestFormModal({
 
                       {formGoalMode === 'reps_only' && (
                         <div className="pt-2">
-                          <label className="block text-[11px] font-bold text-pink-200 mb-1">
+                          <label className="block text-[0.75rem] font-bold text-pink-200 mb-1">
                             {formTimed ? 'Durée à atteindre (secondes)' : 'Objectif de répétitions à atteindre'}
                           </label>
                           <input
@@ -217,10 +217,10 @@ export function QuestFormModal({
                         const adv = timedAdvice(formCustomName);
                         return (
                           <div className="space-y-2">
-                            <p className="text-[11px] text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
+                            <p className="text-[0.75rem] text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[11px] font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
+                                <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
                                 <input type="number" min="1" max="600" value={formStartValue}
                                   onChange={e => { setFormStartValue(e.target.value); if (!editingQuestId) setFormCurrentValue(e.target.value); }}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
@@ -248,7 +248,7 @@ export function QuestFormModal({
                     <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-bold text-violet-300 mb-1">
+                          <label className="block text-[0.75rem] font-bold text-violet-300 mb-1">
                             🪢 Aide Élastique Départ (kg)
                           </label>
                           <input
@@ -261,7 +261,7 @@ export function QuestFormModal({
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-bold text-emerald-300 mb-1">
+                          <label className="block text-[0.75rem] font-bold text-emerald-300 mb-1">
                             🦅 Aide Cible Objectif (0 = Strict)
                           </label>
                           <input
@@ -280,7 +280,7 @@ export function QuestFormModal({
                   {formType === 'strength' && (formUnit === 'kg' || formGoalMode === 'weight_only') && (
                     <div className="grid grid-cols-2 gap-3 bg-slate-950 border border-slate-800 rounded-xl p-4">
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                           Charge de départ (kg)
                         </label>
                         <input
@@ -295,7 +295,7 @@ export function QuestFormModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-amber-300 mb-1">
+                        <label className="block text-[0.75rem] font-bold text-amber-300 mb-1">
                           Charge Objectif (kg)
                         </label>
                         <input
@@ -318,11 +318,11 @@ export function QuestFormModal({
                       {formGoalMode !== 'free_mode' && (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[11px] font-bold text-slate-400 mb-1">Départ ({formUnit})</label>
+                            <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Départ ({formUnit})</label>
                             <input type="number" step="0.5" value={formStartValue} onChange={e => { setFormStartValue(e.target.value); setFormCurrentValue(e.target.value); }} className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
                           </div>
                           <div>
-                            <label className="block text-[11px] font-bold text-emerald-300 mb-1">Objectif ({formUnit})</label>
+                            <label className="block text-[0.75rem] font-bold text-emerald-300 mb-1">Objectif ({formUnit})</label>
                             <input type="number" step="0.5" value={formGoalValue} onChange={e => setFormGoalValue(e.target.value)} className="w-full bg-slate-900 border border-emerald-500/40 rounded-xl py-2 text-center font-black text-emerald-300" />
                           </div>
                         </div>

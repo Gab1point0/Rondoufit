@@ -1,4 +1,5 @@
 import { INITIAL_STATE } from '../data/initialState';
+import { readSafetyCopy, saveSafetyCopy } from '../lib/safetyCopy';
 import { getTodayISODate } from '../lib/dates';
 import { useRef, useState } from 'react';
 
@@ -31,6 +32,7 @@ export function useDataTransfer({ gameState, paidAchievementsRef, setGameState, 
         const parsed = JSON.parse(reader.result);
         if (!parsed || !Array.isArray(parsed.quests)) throw new Error('format');
         if (!window.confirm('Remplacer toute votre progression actuelle par cette sauvegarde ?')) return;
+        saveSafetyCopy(gameState, 'avant un import');
         paidAchievementsRef.current = new Set(parsed.unlockedAchievements || []);
         skipPRRef.current = true;
         setGameState({
@@ -46,34 +48,41 @@ export function useDataTransfer({ gameState, paidAchievementsRef, setGameState, 
     reader.readAsText(file);
   };
 
-  const handleResetAll = (blankMode = false) => {
-    const nextState = blankMode
-      ? {
-          ...INITIAL_STATE,
-          xp: 0,
-          streak: 1,
-          unlockedAchievements: [],
-          quests: [],
-          weightHistory: [
-            {
-              id: `w_init_${Date.now()}`,
-              date: getTodayISODate(),
-              weightKg: gameState.userWeightKg || 82,
-              note: 'Point de départ (Remise à zéro)'
-            }
-          ]
+  // Remet les données d'avant le dernier import / la dernière réinitialisation
+  const handleRestoreSafetyCopy = () => {
+    const c = readSafetyCopy();
+    if (!c) { triggerToast('Aucune copie de sécurité', 'Rien à restaurer sur cet appareil.', 0, 'ℹ️'); return; }
+    if (!window.confirm('Remettre les données d’avant ' + c.reason + ' ? Les données actuelles seront remplacées.')) return;
+    saveSafetyCopy(gameState, 'avant la restauration');
+    paidAchievementsRef.current = new Set(c.state.unlockedAchievements || []);
+    skipPRRef.current = true;
+    setGameState({ ...INITIAL_STATE, ...c.state });
+    triggerToast('Copie de sécurité restaurée', 'Tes données d’avant sont revenues.', 0, '↩️');
+  };
+
+  const handleResetAll = () => {
+    saveSafetyCopy(gameState, 'avant la réinitialisation');
+    const nextState = {
+      ...INITIAL_STATE,
+      weightHistory: [
+        {
+          id: `w_init_${Date.now()}`,
+          date: getTodayISODate(),
+          weightKg: gameState.userWeightKg || 82,
+          note: 'Point de départ (Remise à zéro)'
         }
-      : INITIAL_STATE;
+      ]
+    };
 
     setGameState(nextState);
     setConfirmResetOpen(false);
     triggerToast(
       'Pokédex Réinitialisé',
-      blankMode ? 'Page vierge (0 exercice) prête !' : 'Retour au Jour 1 !',
+      'Page vierge prête : ajoute ton premier exercice avec le bouton +.',
       0,
       '🔄'
     );
   };
 
-  return { confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON, handleResetAll };
+  return { confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON, handleResetAll, handleRestoreSafetyCopy };
 }

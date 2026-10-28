@@ -3,7 +3,7 @@ import { X } from '../icons';
 import { EMPTY_CONFIG, isConfigured, readCarnetConfig } from '../sync/storage';
 
 const inputClass = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white placeholder:text-slate-600';
-const labelClass = 'block text-[11px] font-bold text-slate-400 mb-1';
+const labelClass = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
 
 function Field({ label, children }) {
   return (
@@ -15,10 +15,9 @@ function Field({ label, children }) {
 }
 
 export function SyncModal({ sync, onClose, triggerToast }) {
-  const { config, configured, status, error, lastSync, setConfig, syncNow, importLegacy } = sync;
+  const { config, configured, status, error, lastSync, setConfig, syncNow } = sync;
   const [draft, setDraft] = useState(config);
   const [showToken, setShowToken] = useState(false);
-  const [legacyBusy, setLegacyBusy] = useState(false);
   const patch = p => setDraft(d => ({ ...d, ...p }));
   const dirty = JSON.stringify(draft) !== JSON.stringify(config);
   const carnet = !configured ? readCarnetConfig() : null;
@@ -36,19 +35,6 @@ export function SyncModal({ sync, onClose, triggerToast }) {
     setConfig({ ...EMPTY_CONFIG });
     setDraft({ ...EMPTY_CONFIG });
     triggerToast('Sauvegarde GitHub désactivée', 'Les données restent sur cet appareil.', 0, '☁️');
-  };
-
-  const recoverLegacy = async () => {
-    if (!window.confirm("Reprendre les données de l'ancien Google Sheets et les fusionner avec celles de cet appareil ?")) return;
-    setLegacyBusy(true);
-    try {
-      const r = await importLegacy();
-      triggerToast('Anciennes données reprises', `${r.quests} exercice(s) au total après fusion.`, 0, '📥');
-    } catch (err) {
-      triggerToast('Récupération impossible', err instanceof Error ? err.message : 'Google Sheets injoignable.', 0, '⚠️');
-    } finally {
-      setLegacyBusy(false);
-    }
   };
 
   const statusText =
@@ -159,19 +145,6 @@ export function SyncModal({ sync, onClose, triggerToast }) {
 
         <p className={`text-xs ${status === 'error' ? 'text-rose-300' : 'text-slate-400'}`}>{statusText}</p>
 
-        <div className="border-t border-slate-800 pt-3 space-y-2">
-          <p className="text-[11px] text-slate-500">
-            <strong className="text-slate-400">Ancienne sauvegarde Google Sheets :</strong> elle n’est plus utilisée. Si ce téléphone ou cet ordinateur n’a pas encore repris ses données, vous pouvez les récupérer une dernière fois ici.
-          </p>
-          <button
-            type="button"
-            disabled={legacyBusy}
-            onClick={recoverLegacy}
-            className="px-3 py-2 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-40"
-          >
-            📥 Récupérer mes données de Google Sheets
-          </button>
-        </div>
       </div>
     </div>
   );

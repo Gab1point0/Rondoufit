@@ -42,7 +42,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-1.5 text-[0.75rem]">
                     <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">
                       {dayObj.items.length} exercice(s)
                     </span>
@@ -103,11 +103,11 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                           <h4 className="font-extrabold text-white text-base">
                             {quest.name}
                           </h4>
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-bold text-slate-300">
+                          <span className="px-2 py-0.5 rounded bg-slate-800 text-[0.7rem] font-bold text-slate-300">
                             {normalizeArenaGroup(quest.category, quest.type)}
                           </span>
                           {comparison.goalBeaten && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-[0.7rem] font-black">
                               ⭐ OBJECTIF BATTU !
                             </span>
                           )}
@@ -193,11 +193,11 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-extrabold uppercase tracking-wider text-[11px] text-slate-300">
+                      <span className="font-extrabold uppercase tracking-wider text-[0.75rem] text-slate-300">
                         🔍 Comparaison avec la séance précédente
                       </span>
                       {!comparison.isFirst && (
-                        <span className="text-[11px] font-bold text-slate-300">
+                        <span className="text-[0.75rem] font-bold text-slate-300">
                           {comparison.prevSummary} <span className="text-pink-400">➔</span>{' '}
                           <strong className="text-white">{comparison.currSummary}</strong>
                         </span>
@@ -209,13 +209,13 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                         comparison.badges.map((b, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[11px]"
+                            className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[0.75rem]"
                           >
                             {b}
                           </span>
                         ))
                       ) : (
-                        <span className="text-slate-400 text-[11px]">
+                        <span className="text-slate-400 text-[0.75rem]">
                           Maintien des acquis (même charge / volume que la séance précédente).
                         </span>
                       )}

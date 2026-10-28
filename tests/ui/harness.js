@@ -6,6 +6,7 @@ import { TextDecoder, TextEncoder } from 'node:util';
 import { JSDOM } from 'jsdom';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
 import * as esbuild from 'esbuild';
+import { DEMO_STATE } from './demo.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FIXED_NOW = new Date(2026, 9, 21, 10, 0, 0).getTime();
@@ -64,7 +65,9 @@ const PRELUDE = `
  * Démarre l'application. `storage` : contenu initial du localStorage. `fetchImpl` : faux réseau.
  * Les erreurs de la page sont collectées dans `h.errors`.
  */
-export async function launch({ storage = {}, fetchImpl } = {}) {
+export async function launch({ storage = {}, fetchImpl, empty = false } = {}) {
+  // sans précision, l'application de test démarre avec les données de démonstration (l'application réelle démarre vide)
+  if (!empty && !('rondoudou_save_v1' in storage) && !('rondoufit:github' in storage)) storage = { ...storage, rondoudou_save_v1: JSON.stringify(DEMO_STATE) };
   const code = await buildApp();
   const errors = [];
   const dom = new JSDOM('<!doctype html><html lang="fr"><body><div id="root"></div></body></html>', {
@@ -149,7 +152,7 @@ export function rng(seed) {
   return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-const SKIP = /Exporter|Importer|Réinitialiser|tout effacer|Oui, |☁️|⏳|⚠️|Réessayer|Google Sheets/i;
+const SKIP = /Exporter|Importer|Réinitialiser|tout effacer|Oui, |☁️|⏳|⚠️|Réessayer/i;
 
 /** « Singe » : N actions au hasard (clics, saisies) pour débusquer les plantages. */
 export async function monkey(h, seed, steps) {
@@ -176,7 +179,7 @@ export async function monkey(h, seed, steps) {
 const MAIN = 'rondoufit-data.json';
 export function fakeGithub(initial) {
   const files = new Map(); // chemin -> { content, sha }
-  const srv = { files, n: 0, puts: [], gets: 0, photoPuts: [], photoDeletes: [], legacy: null, offline: false };
+  const srv = { files, n: 0, puts: [], gets: 0, photoPuts: [], photoDeletes: [], offline: false };
   const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
   const put = (path, content) => files.set(path, { content, sha: 'sha' + ++srv.n });
   // le fichier de données principal, accessible directement
@@ -187,10 +190,6 @@ export function fakeGithub(initial) {
   if (initial) srv.file = { content: JSON.stringify(initial), sha: 'sha0' };
   srv.fetch = async (url, opts = {}) => {
     url = String(url);
-    if (url.startsWith('https://script.google.com')) {
-      if (!srv.legacy) throw new TypeError('Failed to fetch');
-      return res(200, { data: srv.legacy });
-    }
     if (srv.offline) throw new TypeError('Failed to fetch');
     const m = url.match(/^https:\/\/api\.github\.com\/repos\/([^/]+)\/([^/?]+)(?:\/contents\/([^?]+))?/);
     if (!m) return res(404, { message: 'Not Found' });

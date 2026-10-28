@@ -77,7 +77,6 @@ export function App() {
 
   const {
     paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats,
-    handleClaimChallenge,
   } = useRewards({
     syncStatus: sync.status, gameState, isLoaded, setGameState, setGameStateAuto, triggerToast,
   });
@@ -91,7 +90,7 @@ export function App() {
 
   const {
     confirmResetOpen, setConfirmResetOpen, importInputRef, handleExportJSON, handleImportJSON,
-    handleResetAll,
+    handleResetAll, handleRestoreSafetyCopy,
   } = useDataTransfer({
     gameState, paidAchievementsRef, setGameState, skipPRRef, triggerToast,
   });
@@ -262,7 +261,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {activeTab === 'photos' && <PhotoCalendar gameState={gameState} />}
 
         {activeTab === 'bilan' && (
-          <BilanTab gameState={gameState} handleClaimChallenge={handleClaimChallenge} levelInfo={levelInfo} records={records} weekData={weekData} />
+          <BilanTab gameState={gameState} levelInfo={levelInfo} records={records} weekData={weekData} />
         )}
 
         {/* ONGLET 5 : TROPHÉES */}
@@ -315,6 +314,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onGoTab={goToTab}
           onOpenSync={() => setSyncOpen(true)}
           onReset={() => setConfirmResetOpen(true)}
+          onRestore={handleRestoreSafetyCopy}
           setGameState={setGameState}
           syncStatus={sync.status}
         />

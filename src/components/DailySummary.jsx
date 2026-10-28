@@ -31,7 +31,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
 
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">
+            <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">
               🏋️ Musculation
             </span>
             <span className="text-sm sm:text-base font-black text-pink-300">
@@ -39,7 +39,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </span>
           </div>
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">
+            <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">
               🏃 Course / Cardio
             </span>
             <span className="text-sm sm:text-base font-black text-emerald-300">
@@ -47,7 +47,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </span>
           </div>
           <div className="bg-gradient-to-br from-orange-500/20 to-rose-500/20 border border-orange-500/40 rounded-xl px-3 py-2 text-center">
-            <span className="text-[10px] font-bold uppercase text-orange-300 block">
+            <span className="text-[0.7rem] font-bold uppercase text-orange-300 block">
               🔥 Total Jour
             </span>
             <span className="text-sm sm:text-base font-black text-orange-300">
@@ -91,7 +91,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
                     )}
                   </span>
                 )}
-                <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold text-[11px]">
+                <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold text-[0.75rem]">
                   🔥 {act.calories || 0} kcal
                 </span>
                 <button

@@ -2,7 +2,7 @@ import { ACHIEVEMENTS_LIST } from '../data/gamification';
 import { addDaysISO, getTodayISODate, getWeekStart } from '../lib/dates';
 import { getAllEntries } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
-import { computeAchievementStats, computeDerivedAchievements, computePersonalRecords, computeWeekStats, getWeekChallenges } from '../lib/stats';
+import { computeAchievementStats, computeDerivedAchievements, computePersonalRecords, computeWeekStats } from '../lib/stats';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { computeXp } from '../lib/xp';
 
@@ -94,19 +94,12 @@ export function useRewards({ syncStatus, gameState, isLoaded, setGameState, setG
   const weekData = useMemo(() => {
     const entries = getAllEntries(gameState);
     const ws = getWeekStart();
-    return { ws, cur: computeWeekStats(entries, ws), prev: computeWeekStats(entries, addDaysISO(ws, -7)), challenges: getWeekChallenges(ws) };
+    return { ws, cur: computeWeekStats(entries, ws), prev: computeWeekStats(entries, addDaysISO(ws, -7)) };
   }, [gameState.quests]);
 
   const records = useMemo(() => computePersonalRecords(gameState), [gameState.quests]);
 
   const achStats = useMemo(() => computeAchievementStats(gameState), [gameState]);
 
-  const handleClaimChallenge = c => {
-    if ((gameState.claimedChallenges || []).includes(c.uid)) return;
-    setGameState(prev => ({ ...prev, ...computeXp(prev, c.xp, getTodayISODate(), 'reward').patch, claimedChallenges: [...(prev.claimedChallenges || []), c.uid] }));
-    playGameSound('boss', gameState.soundEnabled);
-    triggerToast(`Défi relevé : ${c.title}`, c.desc, c.xp, c.icon);
-  };
-
-  return { paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats, handleClaimChallenge };
+  return { paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats };
 }

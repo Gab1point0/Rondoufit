@@ -71,7 +71,7 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       }]
     };
     setGameState(prev => ({ ...prev, ...computeXp(prev, 40, getTodayISODate(), 'minor').patch, quests: [newQuest, ...prev.quests] }));
-    triggerToast('Exercice ajouté !', `${c.name} : ${sug.note || 'ajuste la charge de départ dans « Quêtes » (✏️).'}`, 40, c.icon);
+    triggerToast('Exercice ajouté !', `${c.name} : ${sug.note || 'ajuste la charge de départ dans « Exercices » (✏️).'}`, 40, c.icon);
     return newQuest.id;
   };
 
@@ -163,12 +163,12 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
   };
 
   const handleDeleteQuest = questId => {
-    registerUndo('Quête retirée');
+    registerUndo('Exercice retiré');
     setGameState(prev => ({
       ...prev,
       quests: prev.quests.filter(q => q.id !== questId)
     }));
-    triggerToast('Quête retirée', 'L’exercice a été retiré du Pokédex.', 0, '🗑️');
+    triggerToast('Exercice retiré', 'L’exercice a été retiré du Pokédex.', 0, '🗑️');
   };
 
   return { handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleEditSessionEntry, handleDeleteQuest };

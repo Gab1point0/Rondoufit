@@ -79,7 +79,7 @@ export function computeExerciseTarget(q, opts = {}) {
     } else if (minReps >= R) {
       if (boss) {
         change = 'goal';
-        reason = 'Objectif atteint ! Valide le niveau suivant dans l’onglet Quêtes pour définir un nouveau but.';
+        reason = 'Objectif atteint ! Valide le niveau suivant dans l’onglet Exercices pour définir un nouveau but.';
       } else if (rpe >= 9 && excess < 2) {
         change = 'hold';
         reason = `Séance précédente ressentie très dure (RPE ${rpe}) : on consolide la même ${holdWord} une séance de plus.`;
@@ -97,7 +97,7 @@ export function computeExerciseTarget(q, opts = {}) {
       } else if (kind === 'assisted') {
         if (assist <= goalAssist) {
           change = 'goal';
-          reason = 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Quêtes.';
+          reason = 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Exercices.';
         } else {
           const easy = rpe <= 6; // ressenti facile : l'aide baisse d'un cran de plus
           const dec = (assist >= 20 ? 5 : 2.5) + (easy ? 2.5 : 0);
@@ -108,7 +108,7 @@ export function computeExerciseTarget(q, opts = {}) {
         }
       } else {
         change = 'goal';
-        reason = T ? 'Objectif de durée atteint ! Valide le niveau suivant dans l’onglet Quêtes.' : 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Quêtes.';
+        reason = T ? 'Objectif de durée atteint ! Valide le niveau suivant dans l’onglet Exercices.' : 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Exercices.';
       }
       reps = Array(sets).fill(R);
     } else {

@@ -77,7 +77,7 @@ export function BottomNav({ activeTab, moreOpen, onOpenMore, setActiveTab }) {
       {items.map(i => (
         <button key={i.key} onClick={i.go} className={`flex flex-col items-center justify-center gap-0.5 py-2 ${i.on ? 'text-pink-300' : 'text-slate-400'}`}>
           <span className="text-xl leading-none">{i.icon}</span>
-          <span className={`text-[11px] ${i.on ? 'font-black' : 'font-bold'}`}>{i.label}</span>
+          <span className={`text-[0.75rem] ${i.on ? 'font-black' : 'font-bold'}`}>{i.label}</span>
         </button>
       ))}
     </nav>

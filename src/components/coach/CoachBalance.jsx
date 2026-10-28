@@ -22,7 +22,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
           );
         })}
       </div>
-      <p className="text-[11px] text-slate-500">
+      <p className="text-[0.75rem] text-slate-500">
         Repères : au moins 2 séances par semaine par groupe (Schoenfeld 2016) et environ 10 séries/semaine pour gagner du muscle (Schoenfeld 2017). Pendant une perte de poids, 6 séries ou plus suffisent généralement pour conserver sa masse musculaire (Spiering 2021).
       </p>
       {balance.ratio !== null && (

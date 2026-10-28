@@ -302,7 +302,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
           </div>
 
           {/* Bouton de test avec fautes de frappe volontaires + 4 exercices en une seule phrase */}
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5 text-[0.75rem]">
             <span className="text-slate-400 font-bold">Tester une phrase complète avec fautes :</span>
             <button
               type="button"
@@ -337,7 +337,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                     <div className="flex items-center gap-2">
                       <span className="text-base">{item.icon}</span>
                       <strong className="text-white">{item.name}</strong>
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 font-bold">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[0.7rem] text-slate-300 font-bold">
                         {item.category}
                       </span>
                       <span className="text-pink-300 font-bold">{item.summary}</span>

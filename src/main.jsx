@@ -2,8 +2,10 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { startUpdateCheck } from './lib/updateCheck';
+import { applyUiPrefs, readUiPrefs } from './lib/uiPrefs';
 import './styles.css';
 
+applyUiPrefs(readUiPrefs());
 createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
 
 // Mode hors ligne : l'application reste utilisable sans réseau (salle de sport) une fois ouverte une première fois.

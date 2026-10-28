@@ -58,7 +58,7 @@ export function QuickCardioModal({
           <div className={`grid gap-2.5 ${(speedMode ? 0 : 1) + 1 + (percentMode ? 0 : 1) === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {!speedMode && (
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                 Distance (km)
               </label>
               <input
@@ -72,7 +72,7 @@ export function QuickCardioModal({
             </div>
             )}
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                 Durée (min)
               </label>
               <input
@@ -85,7 +85,7 @@ export function QuickCardioModal({
             </div>
             {!percentMode && (
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                 Dénivelé D+ (m)
               </label>
               <input
@@ -117,7 +117,7 @@ export function QuickCardioModal({
 
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                 Date
               </label>
               <input
@@ -128,7 +128,7 @@ export function QuickCardioModal({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                 Intensité RPE ({quickCardioRpe}/10)
               </label>
               <input

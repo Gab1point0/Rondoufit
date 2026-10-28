@@ -49,7 +49,7 @@ export function MaximaTab({ gameState, setGameState }) {
             <strong>Tenir compte de l’effort ressenti</strong> : une séance notée « 8/10 » compte comme si tu avais encore 2 répétitions en réserve (méthode RPE/RIR). L’estimation monte, mais elle n’est juste que si tu notes honnêtement ton effort.
           </span>
         </label>
-        <details className="text-[11px] text-slate-400">
+        <details className="text-[0.75rem] text-slate-400">
           <summary className="cursor-pointer font-bold text-slate-300">📚 Comment c’est calculé (sources)</summary>
           <ul className="mt-2 space-y-1.5 list-disc pl-5">
             <li><strong>Charges :</strong> moyenne de 7 équations de prédiction du 1RM (Epley 1985, Brzycki 1993, Lander 1985, Lombardi 1989, Mayhew 1992, O’Conner 1989, Wathen 1994) appliquées à tes séries de 1 à 15 répétitions. Aucune n’est la meilleure pour tous les exercices : une étude de 2024 comparant neuf équations sur le développé couché, le squat et le curl le confirme (

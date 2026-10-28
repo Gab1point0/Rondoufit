@@ -16,7 +16,7 @@ function Choice({ item, selected, unlocked, onPick, children }) {
       }`}
     >
       {children}
-      <span className="block text-[10px] mt-1 text-slate-400">
+      <span className="block text-[0.7rem] mt-1 text-slate-400">
         {unlocked ? (selected ? '✔ Choisi' : 'Débloqué') : `🔒 niveau ${item.level}`}
       </span>
     </button>
