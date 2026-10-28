@@ -1,4 +1,3 @@
-import { ModalCloseBar } from '../components/ModalCloseBar';
 import { X } from '../icons';
 
 export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, trialRank }) {
@@ -55,7 +54,6 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
           {trialEval.done ? '⚔️ Valider l’épreuve' : 'Objectifs pas encore atteints'}
         </button>
       </div>
-      <ModalCloseBar onClose={onClose} />
     </div>
   );
 }

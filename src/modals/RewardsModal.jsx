@@ -1,4 +1,3 @@
-import { ModalCloseBar } from '../components/ModalCloseBar';
 import { ACCESSORIES, THEMES, TITLES, activeCosmetics } from '../data/rewards';
 import { X } from '../icons';
 
@@ -77,7 +76,6 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
           </div>
         </section>
       </div>
-      <ModalCloseBar onClose={onClose} />
     </div>
   );
 }

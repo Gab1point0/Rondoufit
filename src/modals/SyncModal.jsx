@@ -1,4 +1,3 @@
-import { ModalCloseBar } from '../components/ModalCloseBar';
 import { useState } from 'react';
 import { X } from '../icons';
 import { EMPTY_CONFIG, isConfigured, readCarnetConfig } from '../sync/storage';
@@ -147,7 +146,6 @@ export function SyncModal({ sync, onClose, triggerToast }) {
         <p className={`text-xs ${status === 'error' ? 'text-rose-300' : 'text-slate-400'}`}>{statusText}</p>
 
       </div>
-      <ModalCloseBar onClose={onClose} />
     </div>
   );
 }
