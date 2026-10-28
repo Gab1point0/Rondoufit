@@ -26,7 +26,6 @@ export function computeExerciseTarget(q, opts = {}) {
   let reps = Array(sets).fill(R);
   let change = 'new';
   let reason = '';
-  const step = coachStep(q, load);
 
   // Profil de travail choisi (puissance / hypertrophie / endurance de force) : il fixe la fourchette de répétitions,
   // les séries, le repos et la charge ; sans profil (« automatique »), c'est l'ancien calcul ci-dessous.

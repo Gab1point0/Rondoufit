@@ -5,7 +5,7 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 
 export function QuestsTab({
-  filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
+  arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
   openLevelUpModal, openLogModal, questFilter, setActiveTab, setQuestFilter,
   setSelectedChartQuestId,
 }) {
@@ -34,6 +34,7 @@ export function QuestsTab({
           >
             <span>{g.icon}</span>
             <span>{g.label}</span>
+            <span className={`px-1.5 rounded-full text-[10px] font-black ${questFilter === g.id ? 'bg-white/20' : 'bg-slate-800 text-pink-300'}`}>Niv. {(arenaLevels.find(a => a.id === g.id) || {}).groupLevel || 1}</span>
           </button>
         ))}
       </div>

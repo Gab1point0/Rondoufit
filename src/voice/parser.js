@@ -26,7 +26,7 @@ function levenshteinDistance(a = '', b = '') {
 }
 
 // Convertit les nombres écrits en toutes lettres par la dictée vocale
-export function normalizeSpokenNumbers(text = '') {
+function normalizeSpokenNumbers(text = '') {
   return text
     .replace(/,/g, '.')
     .replace(/\b(une|un)\b/gi, '1')

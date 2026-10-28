@@ -1,11 +1,11 @@
 // Profil de travail du coach : choix général et par cycle.
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickText, launch, pageText, setInput } from './harness';
+import { clickText, expandCoachDetails, launch, pageText, setInput } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const start = async () => { const h = await launch(); open.push(h); await clickText(h, '🧠 Coach'); return h; };
+const start = async () => { const h = await launch(); open.push(h); await clickText(h, '🧠 Coach'); await clickText(h, 'Réglages et détails du coach'); return h; };
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const section = h => [...h.doc.querySelectorAll('section')].find(s => s.querySelector('h3') && s.querySelector('h3').textContent.includes('Profil de travail'));
 
@@ -22,7 +22,8 @@ describe('profil de travail', () => {
     const t = pageText(h);
     expect(t).toContain('3 à 5'); // fiche du profil
     expect(t).toContain('🎯 Puissance'); // pastille dans la prochaine séance
-    expect(t).toContain('Profil Puissance'); // explications de chaque exercice
+    await expandCoachDetails(h);
+    expect(pageText(h)).toContain('Profil Puissance'); // explications de chaque exercice
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

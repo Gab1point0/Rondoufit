@@ -12,6 +12,7 @@ import { evaluateQuestProgress } from '../../lib/progress';
 import { CoachAdvice } from './CoachAdvice';
 import { CoachBalance } from './CoachBalance';
 import { CoachCycle } from './CoachCycle';
+import { Fold } from './Fold';
 import { CoachProfile } from './CoachProfile';
 import { CoachHeader } from './CoachHeader';
 import { CoachNextSession } from './CoachNextSession';
@@ -227,9 +228,6 @@ export function CoachPanel({
         <CoachAdvice advice={advice} missedMsgs={missedMsgs} />
       )}
 
-      {/* OBJECTIFS DE LA SEMAINE */}
-      <CoachWeeklyGoals onClaimWeekly={onClaimWeekly} weeklyGoals={weeklyGoals} />
-
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
@@ -267,11 +265,8 @@ export function CoachPanel({
         updateCoach={updateCoach}
       />
 
-      {/* CYCLE */}
-      {/* PROFIL DE TRAVAIL */}
-      <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
-
-      <CoachCycle updateCoach={updateCoach} w0={w0} weekStart0={weekStart0} />
+      {/* OBJECTIFS DE LA SEMAINE */}
+      <CoachWeeklyGoals onClaimWeekly={onClaimWeekly} weeklyGoals={weeklyGoals} />
 
       {/* SEMAINE */}
       <CoachWeek
@@ -283,56 +278,64 @@ export function CoachPanel({
         today={today}
       />
 
-      {/* CALENDRIER & RÉGLAGES */}
-      <CoachSettings
-        addMatches={addMatches}
-        addSeries={addSeries}
-        coach={coach}
-        dayShort={dayShort}
-        extraVolleyInput={extraVolleyInput}
-        matchInput={matchInput}
-        matchList={matchList}
-        serie={serie}
-        setExtraVolleyInput={setExtraVolleyInput}
-        setMatchInput={setMatchInput}
-        setSerie={setSerie}
-        today={today}
-        toggleGymSkip={toggleGymSkip}
-        toggleMatch={toggleMatch}
-        toggleVolleyDay={toggleVolleyDay}
-        toggleVolleySkip={toggleVolleySkip}
-        upcomingGym={upcomingGym}
-        upcomingVolley={upcomingVolley}
-        updateCoach={updateCoach}
-      />
-
       {/* OBJECTIFS */}
       <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
 
-      {/* ÉQUILIBRE */}
-      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
+      {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
+      <Fold title="⚙️ Réglages et détails du coach" subtitle="Profil de travail, cycle, matchs, équilibre, poids, volley, sources">
+        {/* PROFIL DE TRAVAIL */}
+        <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
 
-      {/* POIDS & SANTÉ */}
-      <CoachWeightHealth
-        activity={activity}
-        coach={coach}
-        gameState={gameState}
-        nutrition={nutrition}
-        onQuickCardio={onQuickCardio}
-        pace={pace}
-        protein={protein}
-        setGameState={setGameState}
-        strengthTrend={strengthTrend}
-        updateCoach={updateCoach}
-      />
+        <CoachCycle updateCoach={updateCoach} w0={w0} weekStart0={weekStart0} />
 
-      {/* VOLLEY */}
-      {(coach.volleyDays || []).length > 0 && (
-        <CoachVolley gameState={gameState} onAddExercise={onAddExercise} />
-      )}
+        {/* CALENDRIER & RÉGLAGES */}
+        <CoachSettings
+          addMatches={addMatches}
+          addSeries={addSeries}
+          coach={coach}
+          dayShort={dayShort}
+          extraVolleyInput={extraVolleyInput}
+          matchInput={matchInput}
+          matchList={matchList}
+          serie={serie}
+          setExtraVolleyInput={setExtraVolleyInput}
+          setMatchInput={setMatchInput}
+          setSerie={setSerie}
+          today={today}
+          toggleGymSkip={toggleGymSkip}
+          toggleMatch={toggleMatch}
+          toggleVolleyDay={toggleVolleyDay}
+          toggleVolleySkip={toggleVolleySkip}
+          upcomingGym={upcomingGym}
+          upcomingVolley={upcomingVolley}
+          updateCoach={updateCoach}
+        />
 
-      {/* SOURCES */}
-      <CoachSources setShowSources={setShowSources} showSources={showSources} />
+        {/* ÉQUILIBRE */}
+        <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
+
+        {/* POIDS & SANTÉ */}
+        <CoachWeightHealth
+          activity={activity}
+          coach={coach}
+          gameState={gameState}
+          nutrition={nutrition}
+          onQuickCardio={onQuickCardio}
+          pace={pace}
+          protein={protein}
+          setGameState={setGameState}
+          strengthTrend={strengthTrend}
+          updateCoach={updateCoach}
+        />
+
+        {/* VOLLEY */}
+        {(coach.volleyDays || []).length > 0 && (
+          <CoachVolley gameState={gameState} onAddExercise={onAddExercise} />
+        )}
+
+        {/* SOURCES */}
+        <CoachSources setShowSources={setShowSources} showSources={showSources} />
+      </Fold>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
-import { assistsOf, fmtLoads, isMixed, loadsOf } from '../lib/setLoads';
+import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 
 // Séance guidée : exercice par exercice, avec repos automatique
 export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {

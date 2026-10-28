@@ -13,7 +13,7 @@ afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
 const CFG = JSON.stringify({ owner: 'Gab1point0', repo: 'rondoufit-donnees', path: 'rondoufit-data.json', branch: 'main', token: 'github_pat_test' });
 const SAVE = (extra = {}) => ({ xp: 10, quests: [], weightHistory: [], unlockedAchievements: [], claimedChallenges: [], soundEnabled: true, ...extra });
-const pill = h => (rootHtml(h).match(/(☁️|⏳|⚠️)[^<]*/) || [''])[0];
+const pill = h => [...h.doc.querySelectorAll('button')].find(b => b.title === 'Réglages de la sauvegarde GitHub').textContent;
 const settle = async (h, ms = 3000) => { for (let i = 0; i < 4; i++) { await advance(h, ms / 4); await sleep(40); } };
 const pillButton = h => [...h.doc.querySelectorAll('button')].find(b => b.title === 'Réglages de la sauvegarde GitHub');
 
@@ -64,8 +64,7 @@ describe('sauvegarde GitHub dans l’application', () => {
     expect(srv.puts).toHaveLength(1);
     expect(srv.puts[0].xp).toBe(10);
     const avant = srv.puts.length;
-    const [son] = [...h.doc.querySelectorAll('button')].filter(b => b.title === 'Activer / couper la Berceuse de Rondoudou');
-    await clickEl(h, son);
+    await clickText(h, 'Sons :');
     expect(srv.puts).toHaveLength(avant); // pas d'envoi immédiat
     await settle(h, 3000);
     expect(srv.puts).toHaveLength(avant + 1);

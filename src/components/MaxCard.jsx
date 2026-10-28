@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PREDICTED_DISTANCES, formatDuration, workingLoads } from '../lib/maxima';
+import { formatDuration, workingLoads } from '../lib/maxima';
 
 const fmt = x => String(Math.round(x * 10) / 10).replace('.', ',');
 const fmtDate = iso => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '');

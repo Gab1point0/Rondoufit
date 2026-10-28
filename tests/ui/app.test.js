@@ -12,7 +12,7 @@ describe('application', () => {
   it('affiche l’accueil sans erreur', async () => {
     const h = await start();
     expect(h.doc.querySelector('h1').textContent).toContain('From Grosdoudou to Rondoudou');
-    expect(pageText(h)).toContain('Quêtes & Objectifs');
+    expect(pageText(h)).toContain('Exercices');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
@@ -25,14 +25,16 @@ describe('application', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('le micro est un petit bouton de l’en-tête qui ouvre la dictée', async () => {
+  it('le micro est une action du bouton « + » qui ouvre la dictée', async () => {
     const h = await start();
-    const micro = [...h.doc.querySelectorAll('header button')].find(b => b.title === 'Dicter toute ma séance à la voix');
+    await clickEl(h, h.doc.querySelector('button[aria-label="Ajouter"]'));
+    const micro = [...h.doc.querySelectorAll('button')].find(b => b.title === 'Dicter toute ma séance à la voix');
     expect(micro).toBeTruthy();
     await clickEl(h, micro);
     expect(pageText(h)).toContain('Micro Magique de Rondoudou');
     expect(h.doc.querySelector('textarea')).toBeTruthy();
-    await clickText(h, '✕');
+    const fenetre = h.doc.querySelector('textarea').closest('.fixed');
+    await clickEl(h, [...fenetre.querySelectorAll('button')].find(b => b.textContent.trim() === '✕'));
     expect(pageText(h)).not.toContain('Micro Magique de Rondoudou');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
@@ -43,11 +45,11 @@ describe('application', () => {
       ['🧠 Coach', 'Prochaine séance'],
       ['📅 Journal', 'Journal'],
       ['Courbes', 'Courbe'],
-      ['⚖️ Suivi du Poids', 'Poids'],
+      ['⚖️ Poids', 'Poids'],
       ['📸 Souvenirs', 'Souvenirs'],
       ['📊 Bilan', 'Bilan'],
       ['Trophées', 'Trophées'],
-      ['Quêtes & Objectifs', 'Noter Séance'],
+      ['🏋️ Exercices', 'Noter Séance'],
     ];
     for (const [onglet, texte] of attendus) {
       await clickText(h, onglet);

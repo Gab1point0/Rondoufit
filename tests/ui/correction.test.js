@@ -1,6 +1,6 @@
 // Corriger une séance dans le journal, et aller à l'encontre de la proposition du coach.
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickText, findByText, launch, pageText, setInput } from './harness';
+import { clickText, expandCoachDetails, findByText, launch, pageText, setInput } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -59,6 +59,7 @@ describe('aller à l’encontre du coach', () => {
   it('le coach propose de reculer : je choisis moins d’aide, puis je reviens à sa proposition', async () => {
     const h = await start();
     await clickText(h, '🧠 Coach');
+    await expandCoachDetails(h);
     expect(pageText(h)).toContain('aide 12,5 kg'); // la proposition du coach : l'aide remonte
     await clickText(h, 'Moins d’aide'); // 12,5 → 10
     expect(pageText(h)).toContain('aide 10 kg');
@@ -76,6 +77,7 @@ describe('aller à l’encontre du coach', () => {
   it('plus d’aide : le choix s’additionne à chaque clic', async () => {
     const h = await start();
     await clickText(h, '🧠 Coach');
+    await expandCoachDetails(h);
     await clickText(h, 'Plus d’aide');
     await clickText(h, 'Plus d’aide');
     expect(saved(h).quests[0].coachOverride.assist).toBe(17.5);

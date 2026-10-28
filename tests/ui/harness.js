@@ -116,8 +116,22 @@ export async function clickEl(h, el) {
   await advance(h);
 }
 
+/** Déplie les « Pourquoi ? / Ajuster » de la prochaine séance du coach (repliés par défaut). */
+export async function expandCoachDetails(h) {
+  for (const b of [...h.doc.querySelectorAll('button')].filter(x => x.textContent.includes('Pourquoi ? / Ajuster'))) await clickEl(h, b);
+}
+
 export async function clickText(h, text) {
-  const [el] = findByText(h, text);
+  let [el] = findByText(h, text);
+  // actions rangées dans le bouton « + » (course, exercice…) ou dans le menu ⚙️ (exporter, réinitialiser…)
+  if (!el) {
+    const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
+    if (fab) { await clickEl(h, fab); [el] = findByText(h, text); }
+  }
+  if (!el) {
+    const more = h.doc.querySelector('button[aria-label="Réglages et données"]');
+    if (more) { await clickEl(h, more); [el] = findByText(h, text); }
+  }
   if (!el) throw new Error('Texte introuvable : ' + text);
   await clickEl(h, el.closest('button, a, [role=button]') || el);
 }

@@ -1,12 +1,16 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { startUpdateCheck } from './lib/updateCheck';
 import './styles.css';
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
 
 // Mode hors ligne : l'application reste utilisable sans réseau (salle de sport) une fois ouverte une première fois.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker indisponible', err));
+    // bandeau « Nouvelle version disponible » quand un déploiement plus récent existe
+    startUpdateCheck(() => window.dispatchEvent(new Event('rondoufit-update')));
   });
 }

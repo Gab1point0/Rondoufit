@@ -1,0 +1,61 @@
+// Navigation : barre du bas, menu « Plus », bouton « + », Coach repliable.
+import { afterEach, describe, expect, it } from 'vitest';
+import { clickEl, clickText, launch, pageText } from './harness';
+
+const open = [];
+afterEach(() => { while (open.length) open.pop().close(); });
+const TIMEOUT = 120000;
+const start = async () => { const h = await launch(); open.push(h); return h; };
+const nav = h => h.doc.querySelector('nav[aria-label="Navigation"]');
+const bas = (h, texte) => [...nav(h).querySelectorAll('button')].find(b => b.textContent.includes(texte));
+
+describe('navigation', () => {
+  it('barre du bas : 5 entrées, « Suivi » ouvre le poids avec ses sous-onglets', async () => {
+    const h = await start();
+    expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Suivi', 'Plus']);
+    await clickEl(h, bas(h, 'Suivi'));
+    expect(pageText(h)).toContain('Poids');
+    const sous = h.doc.querySelector('[aria-label="Sous-onglets"]');
+    expect(sous.textContent).toContain('Courbes');
+    expect(sous.textContent).toContain('Mes maxima');
+    await clickEl(h, [...sous.querySelectorAll('button')].find(b => b.textContent.includes('Mes maxima')));
+    expect(pageText(h)).toContain('💯 Mes maxima');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('« Plus » : pages secondaires, sons, exporter, réinitialiser', async () => {
+    const h = await start();
+    await clickEl(h, bas(h, 'Plus'));
+    const feuille = h.doc.querySelector('.fixed.inset-0');
+    for (const t of ['Souvenirs', 'Bilan', 'Trophées', 'Sons :', 'Sauvegarde GitHub', 'Exporter mes données', 'Importer une sauvegarde', 'Réinitialiser l’aventure']) {
+      expect(feuille.textContent, t).toContain(t);
+    }
+    await clickEl(h, [...feuille.querySelectorAll('button')].find(b => b.textContent.includes('Bilan')));
+    expect(pageText(h)).not.toContain('Réinitialiser l’aventure'); // la feuille se ferme
+    expect(pageText(h)).toContain('Défis de la semaine');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('bouton « + » : course, exercice, dictée, minuteur', async () => {
+    const h = await start();
+    const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
+    await clickEl(h, fab);
+    for (const t of ['+ Course / Marche', '+ Objectif / Exercice', 'Dicter ma séance', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
+    expect(pageText(h)).not.toContain('Repos entre séries');
+    await clickText(h, 'Minuteur de repos');
+    expect(pageText(h)).toContain('Repos entre séries');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('le Coach garde ses réglages repliés, et les ouvre à la demande', async () => {
+    const h = await start();
+    await clickText(h, '🧠 Coach');
+    expect(pageText(h)).toContain('Prochaine séance');
+    expect(pageText(h)).not.toContain('Cycle d’entraînement');
+    expect(pageText(h)).not.toContain('Sources scientifiques');
+    await clickText(h, 'Réglages et détails du coach');
+    expect(pageText(h)).toContain('Cycle d’entraînement');
+    expect(pageText(h)).toContain('Sources scientifiques');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

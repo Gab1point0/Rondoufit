@@ -20,7 +20,12 @@ import { QuestsTab } from './tabs/QuestsTab';
 import { QuickCardioModal } from './modals/QuickCardioModal';
 import { ResetModal } from './modals/ResetModal';
 import { SyncModal } from './modals/SyncModal';
-import { TabBar } from './components/TabBar';
+import { BottomNav, SubTabs, TabBar } from './components/TabBar';
+import { MoreSheet } from './modals/MoreSheet';
+import { QuickAddMenu } from './components/QuickAddMenu';
+import { UpdateBanner } from './components/UpdateBanner';
+import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
+import { playGameSound } from './lib/sound';
 import { ToastBanner } from './components/ToastBanner';
 import { TrophiesTab } from './tabs/TrophiesTab';
 import { UndoBar } from './components/UndoBar';
@@ -47,6 +52,7 @@ import { useWeightLog } from './hooks/useWeightLog';
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
   const [syncOpen, setSyncOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('quests');
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
@@ -182,7 +188,7 @@ export function App() {
   }, [dailyJournalList, selectedJournalDay]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-pink-500 selection:text-white pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-pink-500 selection:text-white pb-24 md:pb-16">
       {/* TOAST NOTIFICATION POKÉMON RONDOUDOU */}
       {toast && (
         <ToastBanner dismissToast={dismissToast} toast={toast} />
@@ -194,35 +200,23 @@ export function App() {
 
       {/* EN-TÊTE : AVATAR RONDOUDOU NATUREL EN HAUT À GAUCHE */}
       <AppHeader
-        arenaLevels={arenaLevels}
         currentStreak={currentStreak}
         gameState={gameState}
-        handleExportJSON={handleExportJSON}
-        handleImportJSON={handleImportJSON}
-        importInputRef={importInputRef}
         levelInfo={levelInfo}
         lifetimeStats={lifetimeStats}
+        onOpenMore={() => setMoreOpen(true)}
         onOpenRewards={() => setRewardsOpen(true)}
         onOpenSync={() => setSyncOpen(true)}
         onOpenTrial={() => setTrialOpen(true)}
         onRetrySync={sync.syncNow}
+        setActiveTab={goToTab}
         streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
-        triggerToast={triggerToast}
         trialRank={trialRank}
-        openCreateQuestModal={openCreateQuestModal}
-        questFilter={questFilter}
-        selectedDate={selectedDate}
-        setActiveTab={goToTab}
-        setConfirmResetOpen={setConfirmResetOpen}
-        setGameState={setGameState}
-        setQuestFilter={setQuestFilter}
-        setQuickCardioDate={setQuickCardioDate}
-        setQuickCardioModalOpen={setQuickCardioModalOpen}
       />
 
       {/* CONTENU PRINCIPAL */}
-      <main className="max-w-6xl mx-auto px-4 pt-6 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 space-y-4 sm:space-y-6 pb-8">
 <CoachBanner
   gameState={gameState}
   guidedActive={!!guided}
@@ -240,13 +234,14 @@ onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 />
 )}
-<RestTimer soundEnabled={gameState.soundEnabled} />
+<RestTimer guidedOpen={!!(guided && guidedOpen)} soundEnabled={gameState.soundEnabled} />
         {/* BANNIÈRE BILAN ÉNERGÉTIQUE & SÉANCE DU JOUR (AVEC SUPPRESSION D'UNE SÉANCE) */}
         <DailySummary dailySummary={dailySummary} handleDeleteSessionEntry={handleDeleteSessionEntry} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
 
         {/* BARRE D'ONGLETS PRINCIPALE */}
-        <div ref={tabsRef} className="scroll-mt-3">
-          <TabBar activeTab={activeTab} dailyJournalList={dailyJournalList} gameState={gameState} setActiveTab={setActiveTab} />
+        <div ref={tabsRef} className="scroll-mt-3 space-y-3">
+          <TabBar activeTab={activeTab} gameState={gameState} setActiveTab={setActiveTab} />
+          <SubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
 
         {activeTab === 'coach' && (
@@ -267,6 +262,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {/* ONGLET 1 : CARTES DES QUÊTES & OBJECTIFS */}
         {activeTab === 'quests' && (
           <QuestsTab
+            arenaLevels={arenaLevels}
             filteredQuests={filteredQuests}
             gameState={gameState}
             handleDeleteQuest={handleDeleteQuest}
@@ -464,6 +460,36 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       {trialOpen && trialRank && (
         <RankTrialModal levelInfo={levelInfo} onClose={() => setTrialOpen(false)} onValidate={validateTrial} trialEval={trialEval} trialRank={trialRank} />
       )}
+
+      {/* DICTÉE VOCALE (ouverte depuis le bouton « + ») */}
+      <VoiceWorkoutAssistant gameState={gameState} setGameState={setGameState} selectedDate={selectedDate} triggerToast={triggerToast} playGameSound={playGameSound} />
+      <input ref={importInputRef} type="file" accept="application/json,.json" onChange={handleImportJSON} className="hidden" />
+
+      {moreOpen && (
+        <MoreSheet
+          activeTab={activeTab}
+          gameState={gameState}
+          importInputRef={importInputRef}
+          onClose={() => setMoreOpen(false)}
+          onExport={handleExportJSON}
+          onGoTab={goToTab}
+          onOpenSync={() => setSyncOpen(true)}
+          onReset={() => setConfirmResetOpen(true)}
+          setGameState={setGameState}
+          syncStatus={sync.status}
+        />
+      )}
+
+      {!(guided && guidedOpen) && (
+        <QuickAddMenu
+          onCourse={() => { setQuickCardioDate(selectedDate); setQuickCardioModalOpen(true); }}
+          onExercise={openCreateQuestModal}
+          onTimer={() => window.dispatchEvent(new CustomEvent('rondoufit-rest-open'))}
+          onVoice={() => window.dispatchEvent(new CustomEvent('rondoufit-voice'))}
+        />
+      )}
+      <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
+      <UpdateBanner />
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}
       {celebration && <RankUpModal celebration={celebration} onClose={closeCelebration} />}

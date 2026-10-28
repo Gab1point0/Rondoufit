@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { coachSwapOptions } from '../../coach/advice';
 import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
 import { PROFILES, coachProfileAt } from '../../coach/profiles';
@@ -12,6 +13,10 @@ export function CoachNextSession({
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
 }) {
+  // détails d'un exercice (explication du coach + « Tu décides ») : repliés par défaut pour raccourcir la page
+  const [openEx, setOpenEx] = useState({});
+  const toggleEx = id => setOpenEx(o => ({ ...o, [id]: !o[id] }));
+  const [showRating, setShowRating] = useState(false);
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -158,7 +163,11 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1">{e.reason}</p>
+                  <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-[11px] font-bold text-sky-300">
+                    {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
+                  </button>
+                  {openEx[e.questId] && <p className="text-[11px] text-slate-400 mt-1">{e.reason}</p>}
+                  {openEx[e.questId] && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
                     <span className="text-slate-500 font-bold">Tu décides :</span>
                     <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
@@ -173,6 +182,7 @@ export function CoachNextSession({
                       </button>
                     )}
                   </div>
+                  )}
                   {swapFor === e.questId && (() => {
                     const opt = coachSwapOptions(gameState, e.questId, shownSession.exercises.map(x => x.questId));
                     return (
@@ -203,7 +213,7 @@ export function CoachNextSession({
               );
             })}
           </div>
-          {shownSession.warmup && <p className="text-[11px] text-slate-400">🔥 {shownSession.warmup}</p>}
+          {/* l'échauffement de chaque exercice est maintenant calculé dans la séance guidée (coach/warmup.js) */}
           {!plan && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
               <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
@@ -234,6 +244,10 @@ export function CoachNextSession({
               <p className="text-[11px] text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
             </div>
           </div>
+          <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-[11px] font-bold text-sky-300">
+            {showRating ? '▾ Masquer le détail' : `▸ Voir le détail (${rating.items.length})`}
+          </button>
+          {showRating && (
           <div className="space-y-1.5">
             {rating.items.map((it, i) => (
               <div key={i} className="text-xs">
@@ -244,7 +258,8 @@ export function CoachNextSession({
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>
+          )}
+          {showRating && <p className="text-[10px] text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>}
         </div>
       )}
 

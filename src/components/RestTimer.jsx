@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { playGameSound } from '../lib/sound';
 
-export function RestTimer({ soundEnabled }) {
+export function RestTimer({ guidedOpen = false, soundEnabled }) {
   const [open, setOpen] = useState(false);
   const [endAt, setEndAt] = useState(null);
   const [left, setLeft] = useState(0);
@@ -25,13 +25,17 @@ export function RestTimer({ soundEnabled }) {
   const stop = () => { setEndAt(null); setLeft(0); };
   useEffect(() => {
     const h = e => { const s = Number(e.detail) || 90; start(s); };
+    const o = () => setOpen(true);
     window.addEventListener('rondoufit-rest', h);
-    return () => window.removeEventListener('rondoufit-rest', h);
+    window.addEventListener('rondoufit-rest-open', o);
+    return () => { window.removeEventListener('rondoufit-rest', h); window.removeEventListener('rondoufit-rest-open', o); };
   });
   const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   const running = !!endAt;
+  // pendant une séance guidée : en bas à droite ; sinon seulement s'il tourne ou s'il est ouvert, à gauche pour laisser la place au bouton « + »
+  if (!guidedOpen && !running && !open) return null;
   return (
-    <div className="fixed bottom-24 right-4 z-[70] flex flex-col items-end gap-2">
+    <div className={`fixed z-[70] flex flex-col gap-2 ${guidedOpen ? 'bottom-24 right-4 items-end' : 'bottom-20 md:bottom-6 left-4 items-start'}`}>
       {open && (
         <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 space-y-2.5">
           <div className="flex items-center justify-between">

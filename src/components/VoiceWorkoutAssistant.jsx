@@ -10,6 +10,12 @@ import { getTodayISODate } from '../lib/dates';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
+  // ouverture depuis le bouton « + » (QuickAddMenu)
+  useEffect(() => {
+    const h = () => { setIsOpen(true); setTimeout(() => inputRef.current?.focus(), 100); };
+    window.addEventListener('rondoufit-voice', h);
+    return () => window.removeEventListener('rondoufit-voice', h);
+  }, []);
   const [spokenText, setSpokenText] = useState('');
   const [interimText, setInterimText] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -238,19 +244,6 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(true);
-          setTimeout(() => inputRef.current?.focus(), 100);
-        }}
-        title="Dicter toute ma séance à la voix"
-        className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-pink-500/40 text-pink-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition"
-      >
-        <span>🎤</span>
-        <span className="hidden sm:inline">Dicter</span>
-      </button>
-
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
           <div className="bg-slate-900 border border-pink-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3">

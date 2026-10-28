@@ -10,7 +10,6 @@ export function PhotoCalendar({ gameState }) {
   const today = getTodayISODate();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [openDay, setOpenDay] = useState(null);
-  const [view, setView] = useState(null);
   const byDay = useMemo(() => {
     const m = {};
     photos.forEach(p => { (m[p.date] = m[p.date] || []).push(p); });

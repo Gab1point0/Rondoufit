@@ -16,7 +16,7 @@ import { entryAssists, entryLoads } from './setLoads';
 //    (pompes : 64 % du poids du corps, Ebben et al. 2011 ; pompes sur les genoux 49 % ; tractions, dips… : 100 %, approximation).
 //  - cardio : formule de Riegel (1977/1981), T2 = T1 × (D2 / D1)^1,06, valable pour des efforts de 3,5 à 230 minutes.
 
-export const FORMULAS = {
+const FORMULAS = {
   Epley: (w, r) => w * (1 + r / 30),
   Brzycki: (w, r) => (r < 37 ? (w * 36) / (37 - r) : NaN),
   Lander: (w, r) => (100 * w) / (101.3 - 2.67123 * r),
@@ -26,7 +26,7 @@ export const FORMULAS = {
   Wathen: (w, r) => (100 * w) / (48.8 + 53.8 * Math.exp(-0.075 * r)),
 };
 
-export const MAX_REPS_FOR_ESTIMATE = 15;
+const MAX_REPS_FOR_ESTIMATE = 15;
 const RECENT_DAYS = 90;
 const round05 = x => Math.round(x * 2) / 2;
 
@@ -67,14 +67,14 @@ export function bodyweightFactor(name) {
 }
 
 /** Poids du corps connu à une date (dernière pesée avant cette date, sinon la plus proche). */
-export function bodyweightAt(state, date) {
+function bodyweightAt(state, date) {
   const list = (state.weightHistory || []).filter(w => w.date && Number(w.weightKg) > 0).sort((a, b) => (a.date < b.date ? -1 : 1));
   if (!list.length) return Number(state.userWeightKg) || 80;
   const before = list.filter(w => w.date <= date);
   return Number((before.length ? before[before.length - 1] : list[0]).weightKg);
 }
 
-export function maxKind(q) {
+function maxKind(q) {
   if (q.type === 'cardio') return 'cardio';
   if (isTimedQuest(q)) return 'timed';
   if (q.unit === 'kg') return 'load';

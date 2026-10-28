@@ -45,7 +45,7 @@ export const PROFILES = {
     summary: 'Charges légères, beaucoup de répétitions, repos courts. Pour tenir l’effort plus longtemps.',
   },
 };
-export const PROFILE_IDS = Object.keys(PROFILES);
+const PROFILE_IDS = Object.keys(PROFILES);
 export const PROFILE_CHOICES = [{ id: 'auto', label: 'Automatique (comme avant)' }, ...PROFILE_IDS.map(id => ({ id, label: `${PROFILES[id].icon} ${PROFILES[id].label}` }))];
 
 // % du 1RM selon le nombre de répétitions possibles (tableau NSCA jusqu'à 12 ; au-delà, estimation approchée)

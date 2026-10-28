@@ -8,8 +8,8 @@ import { getAllEntries } from './quests';
 // Le plafond du jour évite de gonfler son niveau en saisissant plein de petites séances : au-delà de
 // DAILY_FULL_XP EXP gagnées dans la journée, l'EXP de séance ne compte plus qu'à moitié.
 export const DAILY_FULL_XP = 600;
-export const STREAK_STEP_PCT = 10;   // +10 % par semaine d'affilée…
-export const STREAK_MAX_PCT = 50;    // …jusqu'à +50 %
+const STREAK_STEP_PCT = 10;   // +10 % par semaine d'affilée…
+const STREAK_MAX_PCT = 50;    // …jusqu'à +50 %
 const KEEP_WEEKS = 60;
 
 /**

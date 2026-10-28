@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Calendar, Flame, Trash2 } from '../icons';
 import { formatSetsBreakdown, getSetDetailsArray } from '../lib/quests';
 
 export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedDate, setSelectedDate }) {
+  // la liste des séances du jour est repliée par défaut (gain de place sur téléphone)
+  const [showActs, setShowActs] = useState(false);
   return (
-    <section className="bg-gradient-to-r from-slate-900 via-slate-900/95 to-pink-950/30 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+    <section className="bg-gradient-to-r from-slate-900 via-slate-900/95 to-pink-950/30 border border-slate-800 rounded-2xl p-3 sm:p-5 shadow-xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -20,7 +23,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
               />
             </div>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="hidden sm:block text-xs text-slate-400">
             Cumul automatique des calories brûlées (Musculation & Course) par Rondoudou le{' '}
             <span className="text-slate-200 font-semibold">{selectedDate}</span>. Cliquez sur 🗑️ à droite d'une séance pour la supprimer en cas d'erreur.
           </p>
@@ -55,7 +58,12 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
       </div>
 
       {dailySummary.activities.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap gap-2">
+        <button type="button" onClick={() => setShowActs(v => !v)} aria-expanded={showActs} className="mt-3 w-full text-left text-xs font-bold text-sky-300">
+          {showActs ? '▾ Masquer' : '▸ Voir'} les {dailySummary.activities.length} séance(s) de ce jour
+        </button>
+      )}
+      {dailySummary.activities.length > 0 && showActs && (
+        <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap gap-2">
           {dailySummary.activities.map(act => {
             const setsArr =
               act.questType === 'strength'

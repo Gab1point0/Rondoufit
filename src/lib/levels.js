@@ -11,7 +11,7 @@ export const MAX_LEVEL = 100;
 /** EXP cumulée à avoir pour atteindre le niveau L (niveau 1 = 0). */
 export const xpForLevel = L => (L <= 1 ? 0 : Math.round(XP_BASE * Math.pow(L - 1, XP_EXPONENT)));
 
-export const rankForLevel = level => [...RPG_RANKS].reverse().find(r => level >= r.minLevel) || RPG_RANKS[0];
+const rankForLevel = level => [...RPG_RANKS].reverse().find(r => level >= r.minLevel) || RPG_RANKS[0];
 
 /**
  * Niveau, avancement dans le niveau, rang actuel et prochain rang pour une quantité d'EXP.
