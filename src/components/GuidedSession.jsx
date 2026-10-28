@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
+import { warmupSets } from '../coach/warmup';
 import { assistsOf, fmtLoads, isMixed, loadsOf } from '../lib/setLoads';
 
 // Séance guidée : exercice par exercice, avec repos automatique
@@ -43,6 +44,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
       const isLastEx = g.idx === items.length - 1;
       if (!(isLastSet && isLastEx)) startRest(it.restSec);
     }
+  };
+  // Échauffement : calculé d'après la charge de travail du moment et les exercices déjà faits dans la séance
+  const warmRows = it && d ? warmupSets(it, items.slice(0, g.idx), d.load, d.assist) : [];
+  const toggleWarm = (i, w) => {
+    const wdone = warmRows.map((_, k) => (k === i ? !(d.wdone && d.wdone[k]) : !!(d.wdone && d.wdone[k])));
+    patch(it.questId, { wdone });
+    if (wdone[i]) startRest(w.restSec);
   };
   const [sw, setSw] = useState(null);
   const toggleSw = i => {
@@ -111,8 +119,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
             </div>
             <p className="text-[11px] text-slate-400">{it.reason}</p>
-            {g.idx === 0 && g.warmup && <p className="text-[11px] text-amber-200 bg-amber-950/30 border border-amber-500/30 rounded-lg p-2">🔥 {g.warmup}</p>}
-
+            
             {it.kind === 'load' && (
               <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
                 <span className="text-sm font-bold text-slate-300">Charge<span className="block text-[10px] font-semibold text-slate-500">change-la entre deux séries : elle vaut pour les séries restantes</span></span>
@@ -133,6 +140,26 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   <button onClick={() => setAssist(d.assist + 2.5)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
+              </div>
+            )}
+
+            {warmRows.length > 0 && (
+              <div className="space-y-2" data-testid="warmup">
+                <p className="text-[11px] font-black uppercase tracking-wider text-amber-400">🔥 Échauffement · {warmRows.length === 1 ? '1 série' : `${warmRows.length} séries`} avant les séries de travail</p>
+                {warmRows.map((w, i) => {
+                  const wd = !!(d.wdone && d.wdone[i]);
+                  return (
+                    <div key={i} className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 ${wd ? 'bg-amber-950/30 border-amber-500/50' : 'bg-slate-950 border-amber-500/20'}`}>
+                      <div>
+                        <p className="text-sm font-black text-amber-100">Échauffement {warmRows.length > 1 ? i + 1 : ''}</p>
+                        <p className="text-[11px] text-amber-200/80">{w.label}{it.timed ? ' s' : ''} · pas compté dans la séance</p>
+                      </div>
+                      <button onClick={() => toggleWarm(i, w)} className={`px-3 py-2 rounded-lg text-sm font-black ${wd ? 'bg-amber-600 text-white' : 'bg-slate-800 text-amber-200'}`}>
+                        {wd ? '✔ Fait' : 'Fait'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
