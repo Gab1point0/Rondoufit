@@ -39,6 +39,24 @@ describe('voir le mouvement', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
+  it('plusieurs angles de vue : profil, face ou dos selon l’exercice', async () => {
+    const h = await start();
+    h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'pullups' } }));
+    await advance(h);
+    const groupe = dialog(h).querySelector('[role="group"][aria-label="Angle de vue"]');
+    expect(groupe.textContent).toContain('Vue de profil');
+    expect(groupe.textContent).toContain('Vue de dos');
+    const avant = dialog(h).querySelector('svg').innerHTML;
+    await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Vue de dos')));
+    expect(dialog(h).querySelector('svg').innerHTML).not.toBe(avant);
+    expect(dialog(h).querySelector('[aria-pressed="true"]').textContent).toContain('Vue de dos');
+    // un exercice sans autre angle n'affiche pas le sélecteur
+    h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'fp_plank' } }));
+    await advance(h);
+    expect(dialog(h).querySelector('[aria-label="Angle de vue"]')).toBeNull();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
   it('exercice personnalisé reconnu par son nom, sinon choix dans la liste', async () => {
     const h = await start();
     h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { name: 'Squat gobelet maison' } }));

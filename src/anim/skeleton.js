@@ -65,7 +65,7 @@ export function lerpPose(a, b, t) {
       out[k] = lerp(va, vb, t);
     }
   }
-  for (const k of ['hand', 'foot', 'arm', 'leg', 'farHand', 'farFoot', 'knee']) {
+  for (const k of ['hand', 'foot', 'arm', 'leg', 'farHand', 'farFoot', 'knee', 'handL', 'footL', 'kneeL']) {
     const va = a[k] || b[k];
     const vb = b[k] || a[k];
     if (va) out[k] = lerpPt(va, vb, t);
@@ -111,13 +111,18 @@ export function solveFront(p) {
   const out = { c, hy, sy, headC: [c, sy - 17 * (1 - 0.4 * (p.bend || 0))] };
   for (const side of [1, -1]) {
     const shoulder = [c + side * SHOULDER_HALF, sy + 4];
-    const hand = p.hand ? [c + side * (p.hand[0] - c), p.hand[1]] : [shoulder[0] + side * 4, shoulder[1] + 54];
-    const a = ik(shoulder, hand, SEG.uarm, SEG.farm, side * (p.handBend === undefined ? 1 : p.handBend));
+    const own = side === -1 ? { hand: p.handL, foot: p.footL, knee: p.kneeL } : {};
+    const hand = own.hand ? own.hand : p.hand ? [c + side * (p.hand[0] - c), p.hand[1]] : [shoulder[0] + side * 4, shoulder[1] + 54];
+    let a;
+    if (p.arm && !own.hand) { // angles du bras droit ; la gauche est le miroir (0° = vers l'extérieur, 90° = vers le bas)
+      const el = [shoulder[0] + side * Math.cos(rad(p.arm[0])) * SEG.uarm, shoulder[1] + Math.sin(rad(p.arm[0])) * SEG.uarm];
+      a = { mid: el, end: [el[0] + side * Math.cos(rad(p.arm[1])) * SEG.farm, el[1] + Math.sin(rad(p.arm[1])) * SEG.farm] };
+    } else a = ik(shoulder, hand, SEG.uarm, SEG.farm, side * (p.handBend === undefined ? 1 : p.handBend));
     const hip = [c + side * HIP_HALF, hy];
-    const foot = p.foot ? [c + side * (p.foot[0] - c), p.foot[1]] : [hip[0] + side * 2, GROUND - 6];
+    const foot = own.foot ? own.foot : p.foot ? [c + side * (p.foot[0] - c), p.foot[1]] : [hip[0] + side * 2, GROUND - 6];
     let l = ik(hip, foot, SEG.thigh, SEG.shin, side * (p.footBend === undefined ? -1 : p.footBend));
-    if (p.knee) { // assis : cuisse vers le genou, tibia vertical
-      const kn = [c + side * (p.knee[0] - c), p.knee[1]];
+    if (own.knee || p.knee) { // assis : cuisse vers le genou, tibia vertical
+      const kn = own.knee ? own.knee : [c + side * (p.knee[0] - c), p.knee[1]];
       l = { mid: kn, end: [kn[0], kn[1] + SEG.shin] };
     }
     out[side === 1 ? 'R' : 'L'] = { shoulder, elbow: a.mid, wrist: a.end, hip, knee: l.mid, ankle: l.end };

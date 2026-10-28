@@ -28,6 +28,7 @@ export function movementFor(id) {
     category: cat.category || '',
     equip: cat.equip || '',
     scene: s.scene,
+    alts: s.alts || [],
     info: fam,
     equipTips: EQUIP_TIPS[cat.equip] || [],
   };

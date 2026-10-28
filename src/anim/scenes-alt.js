@@ -1,0 +1,179 @@
+import { G, line, pad, plates, pulley, rect, txt } from './kit';
+
+// Vues supplémentaires (de face ou de dos) pour les exercices dont le mouvement est masqué de profil :
+// bras qui s'ouvrent sur les côtés, bras tendus qui se ressemblent, largeur de prise, trajet des coudes…
+// Repère : bonhomme de face, centré en x = 160 ; la main / le pied DROIT est donné, le gauche est son miroir.
+const C = 160;
+const F = (hy, o = {}) => ({ c: C, hipY: hy, ...o });
+const bar = (at = 'wrist', o = {}) => ({ k: 'hbar', at, ...o });
+const floorRect = (w = 120) => rect(C - w / 2, G - 6, w, 6, '#334155', 2);
+const seat = (hy = 150, w = 60) => [pad([C - w / 2, hy + 8], [C + w / 2, hy + 8], 10), line([C, hy + 14], [C, G - 4], 4, '#334155'), floorRect(100)];
+
+// ---------------- Allongé : vue depuis les pieds (développés, écartés) ----------------
+const benchEnd = () => [pad([C - 22, 152], [C + 22, 152], 10), line([C - 14, 158], [C - 14, G], 3), line([C + 14, 158], [C + 14, G], 3), txt([C - 38, 190], 'vue depuis les pieds', 8, '#94a3b8')];
+const lyingBase = { noLegs: true, noHead: true, box: [50, 50, 220, 160] };
+
+export function lyingPressFront({ tool = 'barbell', grip = 34 }) {
+  const mk = (y, g) => F(149, { bend: 1, hand: [C + g, y], handBend: 1 });
+  return {
+    view: 'front', ...lyingBase, trace: 'wrist', loop: 'pingpong',
+    keys: [mk(122, grip), mk(86, grip - 2)],
+    equip: tool === 'smith' ? [...benchEnd(), line([C - 56, 20], [C - 56, G], 3), line([C + 56, 20], [C + 56, G], 3)] : benchEnd(),
+    follow: tool === 'db' ? [{ k: 'db', at: 'wrist', r: 9 }] : [bar('wrist', { ext: 14, r: 12 })],
+  };
+}
+
+export function lyingFlyFront() {
+  const mk = (x, y) => F(149, { bend: 1, hand: [C + x, y], handBend: 1 });
+  return { view: 'front', ...lyingBase, trace: 'wrist', loop: 'pingpong', keys: [mk(66, 138), mk(46, 106), mk(12, 88)], equip: benchEnd(), follow: [{ k: 'db', at: 'wrist', r: 9 }] };
+}
+
+// ---------------- Machines de poitrine (de face) ----------------
+export function pecDeckFront() {
+  const hy = 150;
+  const mk = x => F(hy, { hand: [C + x, 106], handBend: 1, knee: [C + 22, hy] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(70), mk(12)],
+    equip: [...seat(hy), pad([C - 18, 128], [C + 18, 128], 9, true), plates(40, 40, 18, 100, 3), plates(262, 40, 18, 100, 3)],
+    follow: [{ k: 'padAt', at: 'elbow', dx: -3, dy: -14, w: 8, h: 28 }, { k: 'handle', at: 'wrist' }],
+  };
+}
+
+export function chestMachineFront({ hammer = false }) {
+  const hy = 150;
+  const mk = (x, y) => F(hy, { hand: [C + x, y], handBend: 1, knee: [C + 22, hy] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(52, 112), mk(20, 104)],
+    equip: [...seat(hy), pad([C - 18, 120], [C + 18, 120], 9, true), txt([C - 56, -6], hammer ? 'bras indépendants (iso-latéral) : trajet convergent' : 'trajet guidé, mains qui se rapprochent', 8, '#94a3b8')],
+    follow: [{ k: 'handle', at: 'wrist' }],
+  };
+}
+
+export function cableFlyFront() {
+  const mk = (x, y) => F(112, { hand: [C + x, y], handBend: 1, foot: [C + 14, 194] });
+  const pol = [C + 96, 2];
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(72, 60), mk(8, 120)],
+    equip: [line([C - 96, 2], [C - 96, G], 4), line([C + 96, 2], [C + 96, G], 4), pulley([C - 96, 2], 6), pulley([C + 96, 2], 6), plates(36, 40, 16, 110, 3), plates(268, 40, 16, 110, 3), floorRect(240)],
+    follow: [{ k: 'cable', from: pol, at: 'wrist' }, { k: 'handle', at: 'wrist' }],
+  };
+}
+
+// ---------------- Tractions (de dos) ----------------
+export function pullUpBack({ grip = 36, assisted = false, hang = false }) {
+  const mk = (hy, lift = 0) => F(hy, { lift, hand: [C + grip, 8], handBend: 1, knee: [C + 8, hy + 34] });
+  const keys = hang ? [mk(110, 0), mk(106, 6)] : [mk(110), mk(75)];
+  return {
+    view: 'front', back: true, trace: 'shoulder', loop: 'pingpong', keys, hold: hang,
+    equip: [line([C - 56, 8], [C + 56, 8], 4), line([C - 56, 8], [C - 56, G], 4), line([C + 56, 8], [C + 56, G], 4), txt([C - 30, 196], assisted ? 'contrepoids : genoux sur le support' : 'vue de dos', 8, '#94a3b8')],
+    follow: [],
+  };
+}
+
+// ---------------- Tirages verticaux (de face) ----------------
+export function pulldownFront({ grip = 38 }) {
+  const hy = 150;
+  const mk = (x, y) => F(hy, { hand: [C + x, y], handBend: 1, knee: [C + 22, hy] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(grip, 46), mk(Math.max(12, grip - 6), 112)],
+    equip: [...seat(hy), pad([C - 30, hy - 6], [C + 30, hy - 6], 8, true), line([C - 40, -14], [C + 40, -14], 3), pulley([C, -14], 6)],
+    follow: [{ k: 'cable', from: [C + 6, -14], at: 'wrist' }, { k: 'handle', at: 'wrist' }],
+  };
+}
+
+// ---------------- Rowings (de dos / de face) ----------------
+export function rowBack({ tool = 'barbell' }) {
+  const mk = (x, y) => F(112, { bend: 1, hand: [C + x, y], handBend: -1, foot: [C + 16, 194] });
+  const keys = [mk(24, 158), mk(32, 116)];
+  if (tool === 'db') {
+    const mkd = (x, y) => F(112, { bend: 1, hand: [C + x, y], handL: [C - 44, 134], handBend: -1, foot: [C + 16, 194] });
+    return {
+      view: 'front', back: true, trace: 'wrist', loop: 'pingpong', keys: [mkd(24, 158), mkd(34, 118)],
+      equip: [pad([C - 76, 140], [C - 28, 140], 9), line([C - 68, 145], [C - 68, G], 3), line([C - 36, 145], [C - 36, G], 3)],
+      follow: [{ k: 'db', at: 'wrist', r: 9, side: 'R' }],
+    };
+  }
+  return { view: 'front', back: true, trace: 'wrist', loop: 'pingpong', keys, equip: [], follow: [bar('wrist', { ext: 12, r: tool === 'tbar' ? 8 : 12, plates: tool !== 'tbar' })] };
+}
+
+export function seatedRowFront({ hammer = false }) {
+  const hy = 150;
+  const mk = (x, y) => F(hy, { hand: [C + x, y], handBend: -1, knee: [C + 22, hy] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(12, 118), mk(28, 126)],
+    equip: [...seat(hy), pad([C - 24, 124], [C + 24, 124], 8, true), hammer ? txt([C - 56, -6], 'bras indépendants (iso-latéral)', 8, '#94a3b8') : txt([C - 40, -6], 'les coudes passent derrière le dos', 8, '#94a3b8')],
+    follow: [{ k: 'handle', at: 'wrist' }],
+  };
+}
+
+// ---------------- Développés épaules (de face) ----------------
+export function overheadFront({ tool = 'barbell' }) {
+  const seated = tool !== 'barbell' && tool !== 'smith';
+  const hy = seated ? 150 : 112;
+  const base = seated ? { knee: [C + 22, hy] } : { foot: [C + 14, 194] };
+  const sy = hy - 52 + 4;
+  const mk = (x, y) => F(hy, { hand: [C + x, y], handBend: 1, ...base });
+  const keys = tool === 'arnold'
+    ? [mk(8, sy + 10), mk(36, sy + 4), mk(24, sy - 52)]
+    : [mk(30, sy - 2), mk(22, sy - 54)];
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys,
+    equip: seated ? seat(hy) : tool === 'smith' ? [line([C - 50, -20], [C - 50, G], 3), line([C + 50, -20], [C + 50, G], 3)] : [floorRect(80)],
+    follow: tool === 'barbell' || tool === 'smith' ? [bar('wrist', { ext: 16, r: 11 })] : tool === 'db' || tool === 'arnold' ? [{ k: 'db', at: 'wrist', r: 9 }] : [{ k: 'handle', at: 'wrist' }],
+  };
+}
+
+export function facePullFront() {
+  const mk = (x, y) => F(112, { hand: [C + x, y], handBend: 1, foot: [C + 14, 194] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(14, 70), mk(26, 42)],
+    equip: [floorRect(80), txt([C - 48, -8], 'la corde vient vers le visage', 8, '#94a3b8')],
+    follow: [{ k: 'cable', from: [C + 2, 62], at: 'wrist', dash: '2 3' }, { k: 'handle', at: 'wrist' }],
+  };
+}
+
+export function uprightRowFront() {
+  const hy = 112;
+  const mk = arm => F(hy, { arm, foot: [C + 14, 194] });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk([95, 85]), mk([-22, 128])],
+    equip: [floorRect(80)], follow: [bar('wrist', { ext: 10, r: 8 })],
+  };
+}
+
+// ---------------- Squat (de face : genoux dans l'axe des pieds) ----------------
+export function squatFrontView() {
+  const mk = (hy, bend, fx) => F(hy, { bend, foot: [C + fx, 194], hand: [C + 36, hy - 52 * (1 - 0.75 * bend) + 6], handBend: 1 });
+  return {
+    view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(112, 0, 14), mk(152, 0.4, 28)],
+    equip: [floorRect(120), txt([C - 56, -8], 'genoux dans l’axe des pieds', 8, '#94a3b8')],
+    follow: [bar('shoulder', { dy: -5, ext: 22, r: 11 })],
+  };
+}
+
+// ---------------- Pompes et dips (de face) ----------------
+export function pushUpFront({ narrow = false }) {
+  const g = narrow ? 8 : 34;
+  const mk = hy => F(hy, { bend: 1, hand: [C + g, 196], handBend: -1 });
+  return {
+    view: 'front', noLegs: true, trace: 'shoulder', loop: 'pingpong', keys: [mk(151), mk(181)],
+    equip: [floorRect(160), txt([C - 56, 14], 'vue depuis la tête', 8, '#94a3b8')], follow: [],
+  };
+}
+
+export function dipsFront() {
+  const mk = hy => F(hy, { hand: [C + 31, 124], handBend: -1 });
+  return {
+    view: 'front', noLegs: true, trace: 'shoulder', loop: 'pingpong', keys: [mk(118), mk(148)],
+    equip: [pad([C - 42, 128], [C - 22, 128], 7), pad([C + 22, 128], [C + 42, 128], 7), line([C - 32, 132], [C - 32, G], 4), line([C + 32, 132], [C + 32, G], 4)], follow: [],
+  };
+}
+
+// ---------------- Abduction de hanche (machine multi-hanche, de face) ----------------
+export function multiHipFront() {
+  const mk = x => F(110, { hand: [C + 28, 122], handBend: 1, foot: [C + x, x > 20 ? 176 : 194], footL: [C - 14, 194] });
+  return {
+    view: 'front', trace: 'ankle', loop: 'pingpong', keys: [mk(14), mk(60)],
+    equip: [floorRect(160), pad([C - 40, 120], [C - 40, 160], 7, true)], follow: [],
+  };
+}

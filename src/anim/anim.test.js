@@ -51,6 +51,21 @@ describe('animations des exercices', () => {
     }
   });
 
+  it('les vues de face / de dos sont aussi calculables et nombreuses', () => {
+    let n = 0;
+    for (const s of ALL_SCENES) {
+      for (const a of s.alts) {
+        n++;
+        expect(a.scene.view, s.id + ' ' + a.key).toBe('front');
+        for (let i = 0; i <= 20; i++) {
+          const f = solveFront(poseAt(a.scene.keys, i / 20));
+          for (const p of [f.R.elbow, f.R.wrist, f.L.wrist, f.L.elbow, f.R.ankle, f.headC]) expect(Number.isFinite(p[0]) && Number.isFinite(p[1]), s.id + ' ' + a.key).toBe(true);
+        }
+      }
+    }
+    expect(n).toBeGreaterThan(40);
+  });
+
   it('les pieds / mains qui doivent toucher le sol ne le traversent pas (tolérance 6 px)', () => {
     for (const s of ALL_SCENES) {
       if (s.scene.view === 'front') continue;

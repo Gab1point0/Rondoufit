@@ -9,7 +9,8 @@ const params = new URLSearchParams(location.search);
 const q = (params.get('q') || '').toLowerCase();
 const from = Number(params.get('from') || 0);
 const n = Number(params.get('n') || 12);
-const list = ALL_SCENES.filter(s => !q || (s.id + ' ' + s.name).toLowerCase().includes(q)).slice(from, from + n);
+const flat = ALL_SCENES.flatMap(s => [s, ...(s.alts || []).map(a => ({ id: s.id + '#' + a.key, name: s.name + ' — ' + a.label, scene: a.scene }))]);
+const list = flat.filter(s => !q || (s.id + ' ' + s.name).toLowerCase().includes(q)).slice(from, from + n);
 
 function App() {
   return (

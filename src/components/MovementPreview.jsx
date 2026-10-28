@@ -26,6 +26,7 @@ export function MovementPreview() {
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [phase, setPhase] = useState(0);
+  const [viewKey, setViewKey] = useState('side');
   const last = useRef(0);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function MovementPreview() {
       setTarget(t);
       setId(animationIdFor(t));
       setPhase(0);
+      setViewKey('side');
       const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       setPlaying(!reduced);
     };
@@ -58,7 +60,8 @@ export function MovementPreview() {
 
   if (!target) return null;
   const close = () => setTarget(null);
-  const scene = mv && mv.scene;
+  const altView = mv && mv.alts.find(a => a.key === viewKey);
+  const scene = mv && (altView ? altView.scene : mv.scene);
   const u = scene ? phaseToU(phase, scene.loop) : 0;
   const info = mv && mv.info;
   const labels = info ? info.p : ['Effort', 'Retour'];
@@ -78,6 +81,16 @@ export function MovementPreview() {
 
         {mv ? (
           <>
+            {mv.alts.length > 0 && (
+              <div className="flex gap-1.5" role="group" aria-label="Angle de vue">
+                {[{ key: 'side', label: 'Vue de profil' }, ...mv.alts].map(v => (
+                  <button key={v.key} type="button" onClick={() => { setViewKey(v.key); setPhase(0); }} aria-pressed={viewKey === v.key}
+                    className={`flex-1 px-2 py-2 rounded-xl text-xs font-bold border ${viewKey === v.key ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="rounded-xl overflow-hidden border border-slate-800">
               <Figure scene={scene} pose={poseAt(scene.keys, u)} />
             </div>
@@ -116,7 +129,7 @@ export function MovementPreview() {
 
         <div className="pt-1">
           <label className="block text-[0.75rem] font-bold text-slate-400 mb-1" htmlFor="mv-select">Voir un autre exercice</label>
-          <select id="mv-select" value={id || ''} onChange={e => { setId(e.target.value || null); setPhase(0); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
+          <select id="mv-select" value={id || ''} onChange={e => { setId(e.target.value || null); setPhase(0); setViewKey('side'); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
             <option value="">Choisir…</option>
             {LIST.map(x => <option key={x.id} value={x.id}>{x.category} · {x.name}</option>)}
           </select>

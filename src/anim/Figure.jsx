@@ -59,8 +59,8 @@ function FrontFigure({ scene, pose, showTrace }) {
   const sides = [f.L, f.R];
   const pol = p => p.map(q => q.join(',')).join(' ');
   return (
-    <svg viewBox="0 -24 320 244" className="w-full h-auto select-none" role="img" aria-label={scene.title || 'Animation du mouvement'}>
-      <rect x="0" y="-24" width="320" height="244" fill="#0b1220" />
+    <svg viewBox={(scene.box || [0, -24, 320, 244]).join(" ")} className="w-full h-auto select-none" role="img" aria-label={scene.title || 'Animation du mouvement'}>
+      <rect x="-200" y="-200" width="800" height="800" fill="#0b1220" />
       <line x1="0" y1="200" x2="320" y2="200" stroke={C.ground} strokeWidth="3" />
       {(scene.equip || []).map((e, i) => <Fixed key={i} e={e} i={i} />)}
       {traces && traces.map((tr, k) => (
@@ -72,13 +72,16 @@ function FrontFigure({ scene, pose, showTrace }) {
         const ang = (Math.atan2(a[1] - b[1], a[0] - b[0]) * 180) / Math.PI;
         return <polygon key={'a' + k} points="0,0 -8,-4 -8,4" fill={C.trace} transform={`translate(${a[0]},${a[1]}) rotate(${ang})`} />;
       })}
-      {sides.map((s, k) => <Limb key={'l' + k} pts={[s.hip, s.knee, s.ankle, [s.ankle[0] + (k === 0 ? -7 : 7), s.ankle[1] + 3]]} w="7" c={C.body} />)}
+      {!scene.noLegs && sides.map((s, k) => <Limb key={'l' + k} pts={[s.hip, s.knee, s.ankle, [s.ankle[0] + (k === 0 ? -7 : 7), s.ankle[1] + 3]]} w="7" c={C.body} />)}
       <polygon points={pol([[f.c - SHOULDER_HALF, f.sy + 4], [f.c + SHOULDER_HALF, f.sy + 4], [f.c + HIP_HALF, f.hy], [f.c - HIP_HALF, f.hy]])} fill={C.body} stroke={C.body} strokeWidth="6" strokeLinejoin="round" />
       <line x1={f.c} y1={f.sy + 4} x2={f.c} y2={f.sy - 4} stroke={C.body} strokeWidth="8" />
       {sides.map((s, k) => <Limb key={'a' + k} pts={[s.shoulder, s.elbow, s.wrist]} w="6" c={C.body} />)}
-      <circle cx={f.headC[0]} cy={f.headC[1]} r="10" fill={C.head} />
+      {scene.back && <line x1={f.c} y1={f.sy + 6} x2={f.c} y2={f.hy - 2} stroke="#be185d" strokeWidth="2" strokeDasharray="2 3" />}
+      {!scene.noHead && <circle cx={f.headC[0]} cy={f.headC[1]} r="10" fill={scene.back ? '#be185d' : C.head} />}
       {sides.map((s, k) => <Pt key={'e' + k} p={s.elbow} r={2.4} fill="#831843" />)}
-      {(scene.follow || []).map((e, i) => sides.map((s, k) => {
+      {(scene.follow || []).filter(e => e.k === 'hbar').map((e, i) => { const y = Math.min(f.L[e.at || 'wrist'][1], f.R[e.at || 'wrist'][1]) + (e.dy || 0); const x1 = f.L[e.at || 'wrist'][0] - (e.ext || 16); const x2 = f.R[e.at || 'wrist'][0] + (e.ext || 16); return <g key={'hb' + i}><line x1={x1} y1={y} x2={x2} y2={y} stroke={C.plate} strokeWidth="3" />{e.plates !== false && [x1, x2].map((x, q) => <rect key={q} x={x - 3} y={y - (e.r || 12)} width="6" height={(e.r || 12) * 2} rx="2" fill={C.plate} stroke={C.plateIn} strokeWidth="1" />)}</g>; })}
+      {(scene.follow || []).filter(e => e.k !== 'hbar').map((e, i) => sides.map((s, k) => {
+        if (e.side === 'R' && k === 0) return null;
         const m = x => (k === 0 ? 2 * f.c - x : x); // la gauche est le miroir de la droite
         const ee = e.k === 'cable' ? { ...e, from: [m(e.from[0]), e.from[1]] } : e.k === 'lever' ? { ...e, pivot: [m(e.pivot[0]), e.pivot[1]] } : e;
         return <Follow key={i + '-' + k} e={ee} j={s} i={i} />;
@@ -98,8 +101,8 @@ export function Figure({ scene, pose, showTrace = true }) {
   const prev = tp ? tp[tp.length - 4] : null;
   const ang = tp ? Math.atan2(last[1] - prev[1], last[0] - prev[0]) : 0;
   return (
-    <svg viewBox="0 -24 320 244" className="w-full h-auto select-none" role="img" aria-label={scene.title || 'Animation du mouvement'}>
-      <rect x="0" y="-24" width="320" height="244" fill="#0b1220" />
+    <svg viewBox={(scene.box || [0, -24, 320, 244]).join(" ")} className="w-full h-auto select-none" role="img" aria-label={scene.title || 'Animation du mouvement'}>
+      <rect x="-200" y="-200" width="800" height="800" fill="#0b1220" />
       <line x1="0" y1="200" x2="320" y2="200" stroke={C.ground} strokeWidth="3" />
       {(scene.equip || []).map((e, i) => <Fixed key={i} e={e} i={i} />)}
       {/* membres du côté éloigné (plus sombres) */}

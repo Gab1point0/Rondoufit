@@ -170,6 +170,6 @@ export function pullover({ tool = 'db' }) {
   const c = { torso: 180, foot: [228, ANKLE_Y], footBend: -1, handBend: 1 };
   const over = P(hip, 180, { ...c, hand: pt(sh, 2, -52) });
   const back = P(hip, 180, { ...c, hand: [sh[0] - 56, sh[1] + 12] });
-  return { keys: [over, back], trace: 'wrist', loop: 'pingpong', equip: flatBench(90, 218), follow: [db('wrist', 10)] };
+  return { keys: [back, over], trace: 'wrist', loop: 'pingpong', equip: flatBench(90, 218), follow: [db('wrist', 10)] };
 }
 void stack;
