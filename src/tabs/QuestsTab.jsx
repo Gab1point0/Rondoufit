@@ -1,4 +1,5 @@
 import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
+import { openMovement } from '../lib/movement';
 import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons';
 import { formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
@@ -121,6 +122,9 @@ export function QuestsTab({
                         <h3 className="text-lg font-extrabold text-white mt-1">
                           {quest.name}
                         </h3>
+                        {quest.type === 'strength' && (
+                          <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1 px-2.5 py-1 rounded-lg bg-sky-900/50 hover:bg-sky-800/60 border border-sky-500/40 text-[0.75rem] font-bold text-sky-200">🎬 Mouvement</button>
+                        )}
                       </div>
                     </div>
 

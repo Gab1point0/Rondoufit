@@ -165,7 +165,7 @@ export function computeExerciseTarget(q, opts = {}) {
   }
 
   return {
-    questId: q.id, name: q.name, icon: q.icon, arena, kind, compound,
+    questId: q.id, catalogId: q.catalogId, name: q.name, icon: q.icon, arena, kind, compound,
     restSec: pr ? pr.restSec : compound ? 150 : 90, sets, targetReps: reps, goalReps: pr ? pr.hi : R,
     profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
     load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, suggested

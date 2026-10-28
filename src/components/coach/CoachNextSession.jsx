@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { openMovement } from '../../lib/movement';
 import { coachSwapOptions } from '../../coach/advice';
 import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
 import { PROFILES, coachProfileAt } from '../../coach/profiles';
@@ -163,6 +164,7 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
+                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-[0.75rem] font-bold text-sky-300 underline-offset-2">🎬 Voir le mouvement</button>
                   <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-[0.75rem] font-bold text-sky-300">
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>

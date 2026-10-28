@@ -1,5 +1,6 @@
 import { CardioInputToggles } from '../components/CardioInputToggles';
 import { ELASTIC_PRESETS } from '../data/presets';
+import { openMovement } from '../lib/movement';
 import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
 
@@ -47,6 +48,9 @@ export function LogSessionModal({
           );
         })()}
 
+        {logModalQuest.type === 'strength' && (
+          <button type="button" onClick={() => openMovement(logModalQuest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="w-full py-2 rounded-xl bg-sky-900/50 hover:bg-sky-800/60 border border-sky-500/40 text-sm font-bold text-sky-200">🎬 Mouvement</button>
+        )}
         {logModalQuest.type === 'strength' && !isTimedQuest(logModalQuest) && (
           <button type="button" onClick={applyCoachTarget} className="w-full py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-sm font-black">
             🧠 Remplir comme prévu par le coach

@@ -24,6 +24,7 @@ import { BottomNav, SubTabs, TabBar } from './components/TabBar';
 import { MoreSheet } from './modals/MoreSheet';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
+import { MovementPreview } from './components/MovementPreview';
 import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
 import { playGameSound } from './lib/sound';
 import { ToastBanner } from './components/ToastBanner';
@@ -329,6 +330,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
+      <MovementPreview />
       <UpdateBanner />
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}
