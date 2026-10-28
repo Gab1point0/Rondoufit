@@ -1,5 +1,5 @@
 import { SEG } from './skeleton';
-import { ANKLE_Y, G, P, cable, db, flatBench, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
+import { ANKLE_Y, G, P, horn, cable, db, flatBench, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
 
 const rad = d => (d * Math.PI) / 180;
 const hipFor = (sh, torso) => [sh[0] - SEG.torso * Math.cos(rad(torso)), sh[1] - SEG.torso * Math.sin(rad(torso))];
@@ -58,9 +58,10 @@ export function pulldown({ close = false, hammer = false, machine = false }) {
     pad([hip[0] + 6, hip[1] - 22], [hip[0] + 40, hip[1] - 22], 8), // cale-cuisses
     line([hip[0] + 4, hip[1] + 12], [hip[0] + 4, G - 4], 4, '#334155'),
     rect(hip[0] - 30, G - 6, 100, 6, '#334155', 2),
-    plates(90, -4, 18, 120, 4),
   ];
   const fol = [];
+  if (!hammer) eq.push(plates(90, -4, 18, 120, 4));
+  if (hammer) eq.push(...horn(hip[0] + 66, -6));
   if (machine || hammer) {
     eq.push(line([100, -12], [hip[0] + 60, -12], 3));
     fol.push(lever([hip[0] + 56, -6], 'wrist', hammer ? 8 : 6), handle('wrist'));
@@ -111,7 +112,9 @@ export function seatedRow({ machine = false, hammer = false }) {
   const eq = [pad([hip[0] - 18, hip[1] + 6], [hip[0] + 28, hip[1] + 6], 10), rect(hip[0] - 34, G - 6, 90, 6, '#334155', 2), line([hip[0], hip[1] + 12], [hip[0], G - 4], 4, '#334155'), rect(204, 168, 30, 32, '#334155', 3)];
   const fol = [];
   if (machine || hammer) {
-    eq.push(pad([hip[0] + 52, hip[1] - 52], [hip[0] + 52, hip[1] + 4], 10), plates(250, 60, 18, 110, 3), line([259, 60], [259, 30], 2, '#cbd5e1'));
+    eq.push(pad([hip[0] + 52, hip[1] - 52], [hip[0] + 52, hip[1] + 4], 10));
+    if (hammer) eq.push(...horn(hip[0] + 74, hip[1] + 2));
+    else eq.push(plates(250, 60, 18, 110, 3), line([259, 60], [259, 30], 2, '#cbd5e1'));
     fol.push(lever([hip[0] + 70, hip[1] - 6], 'wrist', hammer ? 8 : 5), handle('wrist'));
   } else {
     eq.push(plates(262, 60, 18, 110, 3), pulley([252, 176], 5));

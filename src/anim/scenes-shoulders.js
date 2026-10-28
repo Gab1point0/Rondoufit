@@ -1,4 +1,4 @@
-import { ANKLE_Y, G, P, cable, db, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
+import { ANKLE_Y, G, P, horn, cable, db, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
 
 const standPose = (o = {}) => ({ torso: -90, foot: [150, ANKLE_Y], footBend: -1, ...o });
 const HIP = [150, 111];
@@ -18,7 +18,7 @@ export function overheadPress({ tool = 'barbell' }) {
     const keys = [P(hip, -92, { ...c, hand: pt(sh, 16, -4) }), P(hip, -92, { ...c, hand: pt(sh, 8, -52) })];
     return {
       keys, trace: 'wrist', loop: 'pingpong',
-      equip: [...machineSeat(hip, 70), plates(90, 40, 18, 100, 4)],
+      equip: [...machineSeat(hip, 70), ...(tool === 'hammer' ? horn(hip[0] + 46, sh[1] - 4) : [plates(90, 40, 18, 100, 4)])],
       follow: [lever([hip[0] + 40, sh[1] - 4], 'wrist', tool === 'hammer' ? 8 : 5), handle('wrist')],
     };
   }

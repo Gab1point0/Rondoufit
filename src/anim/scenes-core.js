@@ -1,5 +1,5 @@
 import { plank } from './scenes-pull';
-import { ANKLE_Y, G, P, cable, handle, lever, line, pad, plates, pt, pulley, rect, shoulderOf } from './kit';
+import { ANKLE_Y, G, P, horn, txt, cable, handle, lever, line, pad, plates, pt, pulley, rect, shoulderOf } from './kit';
 
 const FLOOR_HIP = [190, 186];
 
@@ -78,7 +78,8 @@ export function cableCrunch() {
 }
 
 // ---------------- Machines abdominales ----------------
-export function abMachine({ oblique = false, total = false }) {
+// Crunch sur machine à pile (Selection / Select) : coussin sur la poitrine, mains aux poignées
+export function abMachine() {
   const hip = [168, 152];
   const mk = torso => P(hip, torso, { foot: [208, ANKLE_Y], footBend: -1, hand: pt(shoulderOf(hip, torso), 12, 16), handBend: 1 });
   return {
@@ -88,7 +89,47 @@ export function abMachine({ oblique = false, total = false }) {
       line([hip[0] + 4, hip[1] + 12], [hip[0] + 4, G - 4], 4, '#334155'), rect(hip[0] - 30, G - 6, 100, 6, '#334155', 2), plates(86, 40, 18, 100, 3),
     ],
     follow: [{ k: 'padAt', at: 'shoulder', dx: 6, dy: 2, w: 8, h: 26 }, lever([hip[0] + 40, hip[1] - 70], 'shoulder', 4)],
-    note: oblique ? 'oblique' : total ? 'total' : 'crunch',
+  };
+}
+
+// Hammer Strength « Abdominal / Oblique Crunch » (à plaques) : siège pivotant verrouillable à gauche / au centre / à droite,
+// longues poignées qui passent par-dessus les épaules, plaques sur des cornes (pas de pile à goupille).
+export function hsObliqueCrunch() {
+  const hip = [172, 154];
+  const mk = torso => P(hip, torso, { foot: [212, ANKLE_Y], footBend: -1, hand: pt(shoulderOf(hip, torso), 6, -4), handBend: 1 });
+  return {
+    keys: [mk(-97), mk(-52)], trace: 'shoulder', loop: 'pingpong',
+    equip: [
+      // siège pivotant : plateau rond sur un pied, avec ses trois verrouillages
+      pad([hip[0] - 18, hip[1] + 6], [hip[0] + 30, hip[1] + 6], 10),
+      line([hip[0] + 6, hip[1] + 12], [hip[0] + 6, G - 8], 5, '#334155'),
+      { k: 'circle', c: [hip[0] + 6, G - 8], r: 12, fill: '#1e293b', stroke: '#94a3b8', w: 2 },
+      rect(hip[0] - 40, G - 6, 120, 6, '#334155', 2),
+      txt([hip[0] - 34, G - 18], 'siège pivotant', 8, '#94a3b8'),
+      txt([hip[0] - 34, G - 28], 'G · centre · D', 8, '#38bdf8'),
+      pad([hip[0] + 34, hip[1] + 24], [hip[0] + 34, hip[1] + 44], 8, true),
+      ...horn(hip[0] - 96, hip[1] - 52),
+    ],
+    follow: [{ k: 'padAt', at: 'shoulder', dx: -2, dy: -8, w: 16, h: 8 }, lever([hip[0] - 60, hip[1] - 52], 'shoulder', 5), handle('wrist')],
+  };
+}
+
+// Technogym Selection « Total Abdominal » : siège ergonomique sans réglage, coussin postérieur sous le bassin, appui des jambes
+// (on pousse activement avec les jambes pour stabiliser le bassin), mouvement à double action, pile de plaques.
+export function tgTotalAbdominal() {
+  const hip = [166, 154];
+  const mk = (torso, lift) => P([hip[0], hip[1] - lift], torso, { foot: [214, ANKLE_Y - 6], footBend: -1, hand: pt(shoulderOf([hip[0], hip[1] - lift], torso), 10, 14), handBend: 1 });
+  return {
+    keys: [mk(-100, 0), mk(-54, 0)], trace: 'shoulder', loop: 'pingpong',
+    equip: [
+      pad([hip[0] - 16, hip[1] + 6], [hip[0] + 32, hip[1] + 6], 10),
+      pad([hip[0] - 20, hip[1] - 12], [hip[0] - 20, hip[1] + 6], 9, true), // coussin postérieur sous le bassin
+      line([hip[0] + 4, hip[1] + 12], [hip[0] + 4, G - 4], 4, '#334155'), rect(hip[0] - 34, G - 6, 120, 6, '#334155', 2),
+      pad([226, ANKLE_Y - 30], [226, ANKLE_Y + 2], 9), // appui des pieds
+      txt([234, ANKLE_Y - 36], 'pousse avec', 8, '#38bdf8'), txt([234, ANKLE_Y - 26], 'les jambes', 8, '#38bdf8'),
+      plates(80, 40, 18, 100, 3),
+    ],
+    follow: [{ k: 'padAt', at: 'shoulder', dx: 6, dy: 2, w: 8, h: 26 }, lever([hip[0] - 50, hip[1] - 66], 'shoulder', 4), { k: 'cable', from: [89, 40], at: 'shoulder', dash: '2 3' }],
   };
 }
 

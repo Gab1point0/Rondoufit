@@ -717,18 +717,36 @@ export const FAMILIES = {
     p: ['Enroule le buste', 'Reviens en contrôle'],
   },
   abMachineOblique: {
-    m: 'Obliques, abdominaux',
-    s: ['Règle le siège, dos au dossier, coussin contre l’épaule ou le bras.', 'Choisis la charge avec la goupille.'],
-    g: ['Enroule et tourne le buste en direction du côté travaillé (l’animation montre l’enroulement de profil).', 'Reviens lentement, fais le même nombre de répétitions de l’autre côté.'],
-    e: ['Tourner uniquement les épaules.', 'Charge trop lourde.'],
-    p: ['Enroule et tourne', 'Reviens en contrôle'],
+    m: 'Obliques et grand droit (selon le verrouillage du siège)',
+    s: [
+      'Machine à plaques libres Hammer Strength : charge les disques sur les cornes de chaque côté. Résistance de départ indiquée par le fabricant : environ 11 kg + 10 % du poids du corps, puis les disques s’ajoutent.',
+      'Le siège est pivotant : verrouille-le au centre pour des crunchs droits, ou à gauche / à droite pour cibler les obliques.',
+      'Passe les longues poignées par-dessus les épaules (elles sont fixes) : elles maintiennent le haut du corps pendant que le ventre travaille.',
+      'Bassin bien calé sur le siège, pieds posés sur les appuis.',
+    ],
+    g: [
+      'Enroule le buste vers l’avant en rapprochant les côtes du bassin : le mouvement part des abdominaux, pas des bras.',
+      'Siège verrouillé de côté, le crunch devient diagonal : fais le même nombre de répétitions des deux côtés.',
+      'Reviens lentement jusqu’au départ sans reposer les plaques.',
+    ],
+    e: ['Tirer avec les bras sur les poignées.', 'Forcer la rotation à la main : laisse le siège guider la trajectoire.', 'Charge trop lourde : la colonne ne doit pas se tordre de façon brusque.'],
+    p: ['Enroule le buste', 'Reviens en contrôle'],
+    safe: 'L’animation montre l’enroulement de profil ; l’orientation exacte du mouvement dépend du verrouillage du siège (gauche, centre ou droite).',
   },
   abMachineTotal: {
-    m: 'Abdominaux (grand droit, obliques)',
-    s: ['Règle le siège et le coussin de poitrine, choisis la charge.', 'Mains sur les poignées, dos contre le dossier.'],
-    g: ['Enroule le buste en rapprochant la poitrine du bassin (tu peux ajouter une légère rotation).', 'Reviens lentement.'],
-    e: ['Tirer avec les bras.', 'Se servir de l’élan.'],
+    m: 'Paroi abdominale complète (grand droit, obliques), fléchisseurs de hanche',
+    s: [
+      'Machine à pile Technogym Selection 900 : choisis la charge avec la goupille (pile standard de 95 kg).',
+      'Le siège est ergonomique et ne demande aucun réglage : installe-toi et cale le bassin sur le coussin postérieur de hanche.',
+      'Pose les pieds sur l’appui : tu pousses activement avec les jambes pour stabiliser le bassin et avoir une base solide.',
+    ],
+    g: [
+      'Enroule le buste vers l’avant en gardant la poussée des jambes : le mouvement est à « double action » (haut du corps et hanches).',
+      'Marque une courte pause en contractant tout le ventre, puis reviens lentement.',
+    ],
+    e: ['Tirer avec les bras.', 'Relâcher la poussée des jambes (le bassin se met à bouger).', 'Utiliser l’élan.'],
     p: ['Enroule le buste', 'Reviens en contrôle'],
+    safe: 'L’animation suit la description du fabricant (appui des jambes, coussin postérieur, double action) ; compare avec la fiche collée sur ta machine.',
   },
   plank: {
     m: 'Abdominaux, gainage profond, épaules, fessiers',
@@ -789,7 +807,7 @@ export const INFO_FAMILY = {
 // Conseils ajoutés selon le matériel (catalogue : champ « equip »)
 export const EQUIP_TIPS = {
   'Machine guidée': ['Machine : règle d’abord le siège et le dossier à ta taille, puis choisis la charge avec la goupille sur le bloc de plaques.', 'Les réglages sont souvent indiqués sur la machine (numéros) : note les tiens.'],
-  'Hammer Strength': ['Machine à plaques libres : ajoute les disques de chaque côté (autant des deux côtés) et bloque-les avec les colliers.', 'Règle le siège pour que l’axe de la machine soit aligné avec l’articulation travaillée.'],
+  'Hammer Strength': ['Machine à plaques libres (pas de pile à goupille) : charge les disques sur les cornes, autant de chaque côté, et bloque-les.', 'Bras indépendants (iso-latéral) sur la plupart des machines Hammer Strength : chaque côté travaille seul, tu peux faire un bras puis l’autre ou les deux ensemble.', 'La trajectoire est guidée par les bras de la machine (souvent convergente) : règle le siège pour que l’axe de rotation soit aligné avec l’articulation travaillée.'],
   'Machine à plaques': ['Machine à plaques : charge les disques de façon symétrique et vérifie les sécurités avant de commencer.'],
   Smith: ['Barre guidée : tourne les poignets pour décrocher et raccrocher la barre. Place-toi pour que la barre suive un trajet naturel.'],
   Poulie: ['Poulie : place la goupille sur la plaque voulue, règle la hauteur de la poulie, vérifie que le câble ne frotte pas.'],

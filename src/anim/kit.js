@@ -45,6 +45,15 @@ export function seat(x, y, backAngle = 90, backLen = 62, seatLen = 34) {
 /** Machine à plaques : bloc de plaques avec la plaque choisie en bleu. */
 export const plates = (x, y = 60, w = 20, h = 110, sel) => stack(x, y, w, h, sel, 8);
 
+/** Machine à plaques libres (Hammer Strength) : cornes avec disques à fixer sur le bras de la machine. */
+export const horn = (x, y) => [
+  line([x, y], [x + 34, y], 4, '#64748b'),
+  { k: 'circle', c: [x + 10, y], r: 12, fill: '#475569', stroke: '#94a3b8', w: 2 },
+  { k: 'circle', c: [x + 20, y], r: 10, fill: '#64748b', stroke: '#cbd5e1', w: 2 },
+  txt([x + 2, y + 24], 'plaques', 8, '#94a3b8'),
+];
+
+/** Machine à plaques libres (Hammer Strength) : cornes avec disques à fixer sur le bras de la machine. */
 /** Montants d'un rack (barre posée sur crochets). */
 export const rack = (x, top = 70, hookY = 90) => [line([x, top], [x, G], 4), line([x, hookY], [x + 12, hookY], 3, '#94a3b8')];
 

@@ -1,4 +1,4 @@
-import { ANKLE_Y, G, P, cable, db, flatBench, handle, inclineBench, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf, stack } from './kit';
+import { ANKLE_Y, G, P, horn, cable, db, flatBench, handle, inclineBench, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf, stack } from './kit';
 
 // ---------------- Développés couchés (barre, haltères, Smith) ----------------
 // ang : inclinaison du banc en degrés (0 plat, 30 incliné, -15 décliné)
@@ -47,9 +47,9 @@ export function machinePress({ hammer = false, incline = false }) {
     pad([hip[0] - 14, hip[1] + 4], backTop, 10),
     line([hip[0] + 4, hip[1] + 12], [hip[0] + 4, G - 4], 4, '#334155'),
     rect(hip[0] - 30, G - 6, 100, 6, '#334155', 2),
-    plates(90, 40, 18, 100, 4),
-    line([99, 40], [99, 24], 2, '#cbd5e1'), pulley([110, 24], 5), line([110, 24], [hip[0] - 14, 24], 1.6, '#cbd5e1'),
-    line([hip[0] - 14, 24], [hip[0] - 14, backTop[1] - 6], 1.6, '#cbd5e1'),
+    ...(hammer
+      ? horn(hip[0] - 84, sh[1] + 4)
+      : [plates(90, 40, 18, 100, 4), line([99, 40], [99, 24], 2, '#cbd5e1'), pulley([110, 24], 5), line([110, 24], [hip[0] - 14, 24], 1.6, '#cbd5e1'), line([hip[0] - 14, 24], [hip[0] - 14, backTop[1] - 6], 1.6, '#cbd5e1')]),
   ];
   const fol = [handle('wrist'), { k: 'lever', pivot: [hip[0] + (incline ? -4 : -10), sh[1] + 4], at: 'wrist', w: hammer ? 8 : 5 }];
   return { keys, trace: 'wrist', loop: 'pingpong', equip: eq, follow: fol };

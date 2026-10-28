@@ -1,7 +1,7 @@
 import { backExtension, barbellRow, dbRow, invertedRow, pullUp, pulldown, seatedRow, shrugs } from './scenes-pull';
 import { curl, kickback, overheadExtension, pushdown, skullCrusher, tricepsMachine, wristCurl } from './scenes-arms';
 import { externalRotation, facePull, frontRaise, lateralRaise, overheadPress, rearFly, uprightRow } from './scenes-shoulders';
-import { abMachine, abWheel, cableCrunch, captainChair, crunch, hangingRaise, hollowHold, plankHold } from './scenes-core';
+import { abMachine, hsObliqueCrunch, tgTotalAbdominal, abWheel, cableCrunch, captainChair, crunch, hangingRaise, hollowHold, plankHold } from './scenes-core';
 import { bulgarianSquat, burpee, calfRaise, deadlift, gluteBridge, gluteKickback, goodMorning, hipMachine, hipThrust, legCurl, legExtension, legPress, lunge, mountainClimber, multiHip, squat, stepUp, wallBall, wallSit } from './scenes-legs';
 import { benchPress, dips, fly, machinePress, pullover, pushUp } from './scenes-push';
 
@@ -123,9 +123,9 @@ add('fp_toes_to_bar', 'Toes to bar', hangingRaise({ mode: 'toes' }));
 add('fp_captain_knee', 'Chaise romaine', captainChair());
 add('ab_wheel', 'Roue abdominale', abWheel());
 add('cable_crunch', 'Crunch poulie', cableCrunch());
-add('fp_ab_machine', 'Crunch machine', abMachine({}));
-add('hs_oblique_crunch', 'Oblique crunch Hammer', abMachine({ oblique: true }));
-add('tg_total_abdominal', 'Total abdominal', abMachine({ total: true }));
+add('fp_ab_machine', 'Crunch machine', abMachine());
+add('hs_oblique_crunch', 'Oblique crunch Hammer', hsObliqueCrunch());
+add('tg_total_abdominal', 'Total abdominal', tgTotalAbdominal());
 add('fp_plank', 'Planche', plankHold({}));
 add('fp_side_plank', 'Planche latérale', plankHold({ side: true }));
 add('fp_hollow_hold', 'Hollow hold', hollowHold());
