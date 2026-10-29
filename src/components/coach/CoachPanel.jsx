@@ -284,8 +284,11 @@ export function CoachPanel({
       {/* OBJECTIFS */}
       <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
 
+      {/* ÉQUILIBRE : grande silhouette et explications, toujours visibles */}
+      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
+
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
-      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, équilibre, poids, ${sportInfo(coach.sport).label}, sources`}>
+      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
         {/* PROFIL DE TRAVAIL */}
         <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
 
@@ -313,9 +316,6 @@ export function CoachPanel({
           upcomingVolley={upcomingVolley}
           updateCoach={updateCoach}
         />
-
-        {/* ÉQUILIBRE */}
-        <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
 
         {/* POIDS & SANTÉ */}
         <CoachWeightHealth
