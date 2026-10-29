@@ -104,3 +104,18 @@ describe('bilan du coach en mode optimisé', () => {
     expect(byTest(h, 'muscle-map')).toBeNull();
   }, TIMEOUT);
 });
+
+describe('mini silhouette en haut de page', () => {
+  it('présente à côté de la barre d’EXP en mode optimisé, absente en mode simplifié', async () => {
+    const opt = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
+    open.push(opt);
+    await advance(opt, 400);
+    expect(byTest(opt, 'muscle-map-mini')).toBeTruthy();
+    expect(byTest(opt, 'muscle-map')).toBeNull();
+    const sim = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }) } });
+    open.push(sim);
+    await advance(sim, 400);
+    expect(byTest(sim, 'muscle-map-mini')).toBeNull();
+    expect(opt.errors).toEqual([]);
+  }, TIMEOUT);
+});

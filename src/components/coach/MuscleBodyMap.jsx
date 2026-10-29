@@ -24,7 +24,7 @@ const BACK = {
   Mollets: [[153, 162, 6, 16], [177, 162, 6, 16]],
 };
 
-export function MuscleBodyMap({ rows }) {
+export function MuscleBodyMap({ rows, mini = false }) {
   const byArena = {};
   rows.forEach(r => { byArena[r.arena] = r; });
   const colorOf = a => {
@@ -39,24 +39,24 @@ export function MuscleBodyMap({ rows }) {
     ))
   );
   return (
-    <div className="flex flex-col items-center gap-1.5" data-testid="muscle-map">
-      <svg viewBox="0 0 220 190" className="w-full max-w-xs" role="img" aria-label="Silhouette des muscles travaillés, vue de face et de dos">
+    <div className="flex flex-col items-center gap-1.5" data-testid={mini ? 'muscle-map-mini' : 'muscle-map'}>
+      <svg viewBox={mini ? '0 0 220 170' : '0 0 220 190'} className={mini ? 'w-[68px] sm:w-[110px] h-auto' : 'w-full max-w-xs'} role="img" aria-label="Silhouette des muscles travaillés, vue de face et de dos">
         <circle cx="55" cy="16" r="11" fill="#475569" />
         <circle cx="165" cy="16" r="11" fill="#475569" />
         <rect x="46" y="28" width="18" height="8" rx="3" fill="#475569" />
         <rect x="156" y="28" width="18" height="8" rx="3" fill="#475569" />
         {draw(FRONT)}
         {draw(BACK)}
-        <text x="55" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Face</text>
-        <text x="165" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Dos</text>
+        {!mini && <text x="55" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Face</text>}
+        {!mini && <text x="165" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Dos</text>}
       </svg>
-      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[0.7rem] text-slate-400">
+      {!mini && <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[0.7rem] text-slate-400">
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.good }} />dans la cible</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.mid }} />un peu juste</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.low }} />insuffisant</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.high }} />au-delà</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.none }} />pas travaillé</span>
-      </div>
+      </div>}
     </div>
   );
 }

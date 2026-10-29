@@ -1,4 +1,9 @@
+import { useMemo } from 'react';
 import { Flame } from '../../icons';
+import { MuscleBodyMap } from '../coach/MuscleBodyMap';
+import { coachBalance } from '../../coach/advice';
+import { getTodayISODate } from '../../lib/dates';
+import { isOptimized } from '../../data/muscles';
 import { RANK_FRAMES, activeCosmetics } from '../../data/rewards';
 import { RPG_RANKS } from '../../data/gamification';
 import { JigglypuffAvatar } from '../JigglypuffAvatar';
@@ -13,6 +18,8 @@ export function HeaderProfile({
 }) {
   const { theme, accessory, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
   const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
+  const optimized = gameState.muscleMode === 'optimized' && isOptimized();
+  const balanceRows = useMemo(() => (optimized ? coachBalance(gameState, getTodayISODate()).rows : null), [optimized, gameState.quests]);
   const rankIndex = Math.max(0, RPG_RANKS.findIndex(r => r.title === levelInfo.rank.title));
   return (
     <div className="space-y-2.5">
@@ -67,6 +74,7 @@ export function HeaderProfile({
             </div>
           </div>
 
+          <div className="flex items-end gap-3">
           <div className="w-full max-w-md">
             <div className="flex justify-between text-[0.75rem] sm:text-xs font-semibold text-slate-400 mb-1">
               <span>Jauge EXP ({gameState.xp} EXP)</span>
@@ -75,6 +83,12 @@ export function HeaderProfile({
             <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
               <div className={`h-full rounded-full bg-gradient-to-r ${theme.bar} transition-all duration-500`} style={{ width: `${levelInfo.progressPct}%` }} />
             </div>
+          </div>
+          {balanceRows && (
+            <button type="button" onClick={() => setActiveTab('coach')} title="Muscles à travailler : touche pour voir le détail dans le Coach" aria-label="Muscles à travailler" className="shrink-0 -mb-1">
+              <MuscleBodyMap rows={balanceRows} mini />
+            </button>
+          )}
           </div>
         </div>
       </div>
