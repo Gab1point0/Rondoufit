@@ -69,7 +69,7 @@ const PRELUDE = `
 export async function launch({ storage: storage0 = {}, fetchImpl, empty = false } = {}) {
   const { __classic, ...rest } = storage0;
   let storage = rest;
-  const START_URL = __classic ? 'https://gab1point0.github.io/Road2Fit/' : 'https://gab1point0.github.io/Road2Fit/?rondoudou';
+  const START_URL = __classic ? 'https://road2fit.github.io/' : 'https://road2fit.github.io/?rondoudou';
   // sans précision, l'application de test démarre avec les données de démonstration (l'application réelle démarre vide)
   if (!empty && !('rondoudou_save_v1' in storage) && !('rondoufit:account' in storage)) storage = { ...storage, rondoudou_save_v1: JSON.stringify(DEMO_STATE) };
   const code = await buildApp();
