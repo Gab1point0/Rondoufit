@@ -6,7 +6,7 @@ import { advance, clickEl, clickText, launch, pageText, setInput } from './harne
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const NEUTRAL = { 'rondoufit:style': 'neutral' };
+const NEUTRAL = { __classic: '1' }; // lien public : version classique
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const ob = h => h.doc.querySelector('[data-testid="onboarding"]');
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
@@ -101,7 +101,7 @@ describe('édition neutre pour les amis', () => {
     await advance(h, 300);
     const gear = [...h.doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Réglages et données');
     await clickEl(h, gear);
-    expect(byTest(h, 'toggle-style').textContent).toContain('Rondoudou');
+    expect(byTest(h, 'toggle-style')).toBeNull(); // aucun moyen de passer en Rondoudou depuis les options
     await clickEl(h, byTest(h, 'open-onboarding'));
     expect(ob(h)).toBeTruthy();
     expect(h.errors).toEqual([]);
@@ -139,5 +139,26 @@ describe('édition neutre pour les amis', () => {
     expect(byTest(h, 'sport-sources').textContent).toContain('Andersson');
     expect(byTest(h, 'sport-sources').querySelector('a[href^="https://"]')).toBeTruthy();
     expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('le lien normal est en version classique ; seul le lien privé ?rondoudou ouvre Rondoudou, sans aucune option pour y passer', async () => {
+    const classique = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ onboarded: true, xp: 0, quests: [], weightHistory: [] }) } });
+    open.push(classique);
+    await advance(classique, 300);
+    expect(classique.doc.documentElement.dataset.style).toBe('neutral');
+    expect(classique.doc.title).toBe('Road2Fit');
+    expect(pageText(classique)).not.toMatch(/Rondoudou|Grosdoudou/);
+    const gear = [...classique.doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Réglages et données');
+    await clickEl(classique, gear);
+    expect(pageText(classique)).not.toMatch(/Apparence|Rondoudou/);
+    // mémoire : même après être passé par le lien privé, le lien normal reste classique (aucune trace gardée)
+    const prive = await launch({ empty: true });
+    open.push(prive);
+    await advance(prive, 300);
+    expect(prive.doc.documentElement.dataset.style).toBe('fun');
+    expect(prive.doc.title).toBe('From Grosdoudou to Rondoudou');
+    expect(prive.w.localStorage.getItem('rondoufit:style')).toBeNull();
+    expect(prive.errors).toEqual([]);
+    expect(classique.errors).toEqual([]);
   }, TIMEOUT);
 });

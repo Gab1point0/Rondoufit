@@ -17,11 +17,11 @@ describe('sport régulier adapté', () => {
     }
   });
 
-  it('l’édition de Gabin garde le volley par défaut ; un sport non précisé donne « sport »', () => {
-    expect(sportInfo(undefined).id).toBe('volley');
+  it('version classique (lien public) : aucun sport par défaut ; l’édition privée de Gabin garde le volley ; un sport non précisé donne « sport »', () => {
+    expect(sportInfo(undefined).id).toBe('autre'); // (ici : version classique, comme le lien public)
     expect(sportInfo('').label).toBe('sport');
     expect(sportInfo('inconnu').label).toBe('sport');
-    expect(getCoachSettings({ coach: {} }).sport).toBe('volley');
+    expect(getCoachSettings({ coach: {} }).sport).toBe('');
   });
 
   it('le jour d’un match de football, le coach parle de football (mêmes contraintes que le volley)', () => {

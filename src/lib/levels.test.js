@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { RPG_RANKS } from '../data/gamification';
 import { MAX_LEVEL, levelFromXp, xpForLevel } from './levels';
 
 describe('courbe de niveaux', () => {
@@ -27,7 +28,7 @@ describe('courbe de niveaux', () => {
 
   it('donne un rang et l’EXP restante avant le prochain rang', () => {
     const a = levelFromXp(0);
-    expect(a.rank.title).toBe('Toudoudou Novice');
+    expect(a.rank.title).toBe(RPG_RANKS[0].title);
     expect(a.nextRank.minLevel).toBeGreaterThan(1);
     expect(a.xpToNextRank).toBe(xpForLevel(a.nextRank.minLevel));
   });

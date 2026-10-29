@@ -65,13 +65,17 @@ const PRELUDE = `
  * Démarre l'application. `storage` : contenu initial du localStorage. `fetchImpl` : faux réseau.
  * Les erreurs de la page sont collectées dans `h.errors`.
  */
-export async function launch({ storage = {}, fetchImpl, empty = false } = {}) {
+// Par défaut l'appli de test s'ouvre sur le lien PRIVÉ (?rondoudou = édition Rondoudou, comme avant). `__classic` dans `storage` = lien public (version classique Road2Fit).
+export async function launch({ storage: storage0 = {}, fetchImpl, empty = false } = {}) {
+  const { __classic, ...rest } = storage0;
+  let storage = rest;
+  const START_URL = __classic ? 'https://gab1point0.github.io/Road2Fit/' : 'https://gab1point0.github.io/Road2Fit/?rondoudou';
   // sans précision, l'application de test démarre avec les données de démonstration (l'application réelle démarre vide)
   if (!empty && !('rondoudou_save_v1' in storage) && !('rondoufit:account' in storage)) storage = { ...storage, rondoudou_save_v1: JSON.stringify(DEMO_STATE) };
   const code = await buildApp();
   const errors = [];
   const dom = new JSDOM('<!doctype html><html lang="fr"><body><div id="root"></div></body></html>', {
-    url: 'https://gab1point0.github.io/Road2Fit/', runScripts: 'outside-only', pretendToBeVisual: true,
+    url: START_URL, runScripts: 'outside-only', pretendToBeVisual: true,
   });
   const w = dom.window;
   Object.defineProperty(w, 'indexedDB', { value: new IDBFactory(), configurable: true });

@@ -5,7 +5,7 @@ import { SUPABASE_URL, advance, clickEl, fakeSupabase, launch, pageText, setInpu
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const STORAGE = { 'rondoufit:style': 'neutral', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }) };
+const STORAGE = { __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }) };
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
 const next = async h => clickEl(h, byTest(h, 'ob-next'));
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));

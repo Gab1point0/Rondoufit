@@ -3,7 +3,7 @@
   "short_name": "RondouFit",
   "description": "Suivi de musculation façon RPG : quêtes, coach, journal de séances et souvenirs photo.",
   "lang": "fr",
-  "start_url": "./",
+  "start_url": "./?rondoudou",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
