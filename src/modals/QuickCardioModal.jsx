@@ -17,8 +17,8 @@ export function QuickCardioModal({
   setQuickCardioRpe, quickCardioInput, setQuickCardioInput, quickResolved, quickActivity,
 }) {
   const [search, setSearch] = useState('');
-  const hasDistance = quickActivity.unit === 'km';
   const hasElevation = cardioHasElevation(quickActivity.cardioMode);
+  const hasDistance = quickActivity.unit === 'km' || hasElevation;
   const speedMode = hasDistance && quickCardioInput.inputMode === 'speed';
   const percentMode = hasElevation && quickCardioInput.slopeMode === 'percent';
   const tokens = normSearch(search).split(/\s+/).filter(Boolean);

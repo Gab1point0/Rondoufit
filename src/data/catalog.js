@@ -166,7 +166,7 @@ const mkCardio = (id, name, unit, mode, start, goal, dur, icon) => ({
 
 const NEW_CARDIO = [
   mkCardio('fp_bike', 'Vélo Stationnaire / Biking', 'min', 'bike', 20, 60, 30, '🚴'),
-  mkCardio('fp_assault_bike', 'Assault Bike', 'min', 'bike', 10, 30, 15, '🌬️'),
+  mkCardio('fp_assault_bike', 'Assault Bike', 'min', 'assault_bike', 10, 30, 15, '🌬️'),
   mkCardio('fp_elliptical', 'Vélo Elliptique (Cross-Trainer)', 'min', 'elliptical', 20, 45, 30, '🌀'),
   mkCardio('fp_rower', 'Rameur', 'km', 'rower', 2, 6, 20, '🚣'),
   mkCardio('fp_stairs', 'Stairmaster / Escalier', 'min', 'stairs', 10, 30, 15, '🪜'),

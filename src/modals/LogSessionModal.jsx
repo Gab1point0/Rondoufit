@@ -400,7 +400,7 @@ export function LogSessionModal({
             </>
           ) : (
             <div className="bg-slate-950 border border-emerald-500/30 rounded-xl p-4 space-y-3">
-              <CardioInputToggles ci={logCardioInput} setCi={setLogCardioInput} showSpeed={logModalQuest.unit === 'km'} showSlope={cardioHasElevation(logModalQuest.cardioMode)} distanceKm={cardioFigures(logModalQuest).distanceKm} elevationM={cardioFigures(logModalQuest).elevationM} />
+              <CardioInputToggles ci={logCardioInput} setCi={setLogCardioInput} showSpeed={logModalQuest.unit === 'km' || cardioHasElevation(logModalQuest.cardioMode)} showSlope={cardioHasElevation(logModalQuest.cardioMode)} distanceKm={cardioFigures(logModalQuest).distanceKm} elevationM={cardioFigures(logModalQuest).elevationM} />
               <div className="grid grid-cols-3 gap-3">
                 {!(logModalQuest.unit === 'km' && logCardioInput.inputMode === 'speed') && (
                 <div>

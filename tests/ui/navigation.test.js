@@ -41,6 +41,9 @@ describe('navigation', () => {
     const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
     await clickEl(h, fab);
     for (const t of ['+ Activité annexe', '+ Objectif / Exercice', 'Dicter ma séance', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
+    // ordre du menu : Objectif / Exercice d'abord, Activité annexe ensuite
+    const ordre = [...h.doc.querySelectorAll('button')].map(b => b.textContent.trim());
+    expect(ordre.findIndex(x => x.includes('+ Objectif / Exercice'))).toBeLessThan(ordre.findIndex(x => x.includes('+ Activité annexe')));
     expect(pageText(h)).not.toContain('Repos entre séries');
     await clickText(h, 'Minuteur de repos');
     expect(pageText(h)).toContain('Repos entre séries');

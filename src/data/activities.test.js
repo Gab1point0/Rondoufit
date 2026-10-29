@@ -31,9 +31,9 @@ describe('activités annexes', () => {
     }
   });
 
-  it('le dénivelé n’existe que pour la course, la marche et le vélo en extérieur', () => {
+  it('le dénivelé n’existe que pour la course, la marche, le vélo, le roller, le ski de fond et les raquettes en extérieur', () => {
     const avec = EXERCISE_CATALOG.filter(c => c.type === 'cardio' && cardioHasElevation(c.cardioMode)).map(c => c.id).sort();
-    expect(avec).toEqual(['brisk_walk', 'fp_city_bike', 'fp_ebike', 'fp_hiking', 'fp_mtb', 'fp_nordic', 'fp_orienteering', 'fp_road_bike', 'fp_trail', 'fp_treadmill', 'incline_walk', 'running_endurance', 'running_interval'].sort());
+    expect(avec).toEqual(['brisk_walk', 'fp_city_bike', 'fp_ebike', 'fp_hiking', 'fp_mtb', 'fp_nordic', 'fp_orienteering', 'fp_road_bike', 'fp_roller', 'fp_scooter', 'fp_ski_xc', 'fp_snowshoe', 'fp_trail', 'fp_treadmill', 'incline_walk', 'running_endurance', 'running_interval'].sort());
     for (const id of ['fp_football', 'fp_swim', 'fp_bike', 'fp_spinning', 'fp_recumbent', 'fp_rower', 'volleyball', 'fp_climbing']) {
       const c = EXERCISE_CATALOG.find(x => x.id === id);
       expect(cardioHasElevation(c.cardioMode), id).toBe(false);
@@ -43,12 +43,12 @@ describe('activités annexes', () => {
   it('calories : MET de l’activité, ajusté par le ressenti ; dénivelé pour course, marche et vélo en extérieur', () => {
     const foot = by('fp_football');
     const k7 = calculateCardioCalories({ cardioMode: foot.mode, durationMin: 60, rpe: 7, userWeightKg: 80 });
-    expect(k7).toBe(Math.round((foot.met + 0.5 - 1) * 80)); // 7,0 MET + 0,5 − repos
+    expect(k7).toBe(Math.round((foot.met * 1.07 - 1) * 80)); // 7,0 MET × 1,07 (RPE 7) − repos
     const k9 = calculateCardioCalories({ cardioMode: foot.mode, durationMin: 60, rpe: 9, userWeightKg: 80 });
     expect(k9).toBeGreaterThan(k7);
     const velo0 = calculateCardioCalories({ cardioMode: 'fp_road_bike', distanceKm: 30, durationMin: 60, elevationM: 0, userWeightKg: 80 });
     const velo500 = calculateCardioCalories({ cardioMode: 'fp_road_bike', distanceKm: 30, durationMin: 60, elevationM: 500, userWeightKg: 80 });
-    expect(velo500).toBeGreaterThan(velo0 + 250); // 500 m de montée = environ 400 kcal de plus
+    expect(velo500).toBeGreaterThan(velo0 + 250);
     const ebike0 = calculateCardioCalories({ cardioMode: 'fp_ebike', distanceKm: 20, durationMin: 60, elevationM: 0, userWeightKg: 80 });
     const ebike500 = calculateCardioCalories({ cardioMode: 'fp_ebike', distanceKm: 20, durationMin: 60, elevationM: 500, userWeightKg: 80 });
     expect(ebike500 - ebike0).toBeLessThan(velo500 - velo0); // l’assistance électrique réduit l’effort de montée

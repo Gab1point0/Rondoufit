@@ -23,8 +23,8 @@ export function useQuickCardio({ gameState, setGameState, setSelectedDate, setSe
   const [quickCardioInput, setQuickCardioInputRaw] = useState(DEFAULT_CARDIO_INPUT);
   const setQuickCardioInput = p => setQuickCardioInputRaw(prev => ({ ...prev, ...p }));
   const activity = EXERCISE_CATALOG.find(c => c.id === quickCardioCatalogId) || EXERCISE_CATALOG.find(c => c.id === 'running_endurance');
-  const hasDistance = activity.unit === 'km';
   const hasElevation = cardioHasElevation(activity.cardioMode);
+  const hasDistance = activity.unit === 'km' || hasElevation; // la marche inclinée (en minutes) a besoin d'une distance pour la pente
   const quickResolved = resolveCardioInputs({
     ...quickCardioInput,
     inputMode: hasDistance ? quickCardioInput.inputMode : 'distance',

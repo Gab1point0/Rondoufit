@@ -71,6 +71,21 @@ describe('activité annexe', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
+  it('marche inclinée (tapis, en minutes) : la distance et la pente restent saisissables et les calories sont réalistes', async () => {
+    const h = await launch({ empty: true });
+    open.push(h);
+    await clickText(h, '+ Activité annexe');
+    await choisir(h, 'incline_walk');
+    const t = modal(h).textContent;
+    expect(t).toContain('Distance (km)');
+    expect(t).toContain('Pente en %');
+    const kcal = Number(/Dépense estimée\D*(\d+) kcal/.exec(t)[1]);
+    expect(kcal).toBeGreaterThan(80); // 20 min de marche inclinée : bien plus que le plancher d'avant
+    await choisir(h, 'fp_roller');
+    expect(modal(h).textContent).toContain('Dénivelé D+ (m)');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
   it('la recherche filtre la liste d’activités', async () => {
     const h = await launch({ empty: true });
     open.push(h);
