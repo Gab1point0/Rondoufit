@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { ARENA_GROUPS } from '../data/arenas';
 import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
@@ -5,13 +6,14 @@ import { Target, X } from '../icons';
 import { timedAdvice } from '../lib/quests';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formSuggestion, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
+  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
   setFormGoalSets, setFormGoalValue, setFormStartAssistanceKg, setFormStartValue, setFormTimed,
   setFormUnit, setQuestModalOpen,
 }) {
+  const [swapOpen, setSwapOpen] = useState(false);
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
               <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
@@ -33,6 +35,22 @@ export function QuestFormModal({
                 </div>
 
                 <form onSubmit={handleSaveQuestForm} className="space-y-4">
+                  {editingQuestId && (
+                    <div className="space-y-2">
+                      <button type="button" onClick={() => setSwapOpen(o => !o)} aria-expanded={swapOpen} className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-sm font-bold text-indigo-100">
+                        <span>🔄 Changer d’exercice (garde tout l’historique)</span>
+                        <span>{swapOpen ? '▾' : '▸'}</span>
+                      </button>
+                      {formSwapNote && <p className="text-[0.75rem] text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">✅ {formSwapNote}</p>}
+                      {swapOpen && (
+                        <div className="space-y-1.5">
+                          <p className="text-[0.75rem] text-slate-400">Seuls les exercices de même type et de même unité sont proposés (charge en kg avec charge en kg, etc.). Ta charge actuelle, ton objectif et tes séances ne changent pas.</p>
+                          <ExercisePicker value={formCatalogId} onSelect={handleReplaceExercise} accept={isSwapCompatible} allowCustom={false} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {!editingQuestId && (
                     <div>
                       <label className="block text-xs font-bold text-slate-300 mb-1.5">

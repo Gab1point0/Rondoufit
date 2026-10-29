@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
 
 // Sélecteur d'exercice avec barre de recherche
-export function ExercisePicker({ value, onSelect }) {
+export function ExercisePicker({ value, onSelect, accept, allowCustom = true }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const FILTERS = [['all', 'Tous'], ['Dos', '🦅 Dos'], ['Pectoraux', '🛡️ Pecs'], ['Jambes', '🦵 Jambes'], ['Épaules & Bras', '💪 Épaules/Bras'], ['Abdominaux', '🍫 Abdos'], ['cardio', '🏃 Cardio']];
@@ -10,6 +10,7 @@ export function ExercisePicker({ value, onSelect }) {
   const tokens = normSearch(query).split(/\s+/).filter(Boolean);
   const results = EXERCISE_CATALOG
     .filter(c => {
+      if (accept && !accept(c)) return false;
       const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : c.category === filter && c.type !== 'cardio');
       if (!inFilter) return false;
       const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''} ${c.brands || ''}`);
@@ -59,13 +60,13 @@ export function ExercisePicker({ value, onSelect }) {
             <span className="shrink-0 text-[0.7rem] font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
           </button>
         ))}
-        {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat. Créez un exercice personnalisé ci-dessous.</p>}
-        <button type="button" onClick={() => onSelect('custom_bodyweight')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
+        {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}
+        {allowCustom && <button type="button" onClick={() => onSelect('custom_bodyweight')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
           ✨ Autre exercice au poids du corps personnalisé…
-        </button>
-        <button type="button" onClick={() => onSelect('custom_strength')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
+        </button>}
+        {allowCustom && <button type="button" onClick={() => onSelect('custom_strength')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
           ✨ Autre exercice avec charge (kg) personnalisé…
-        </button>
+        </button>}
       </div>
     </div>
   );

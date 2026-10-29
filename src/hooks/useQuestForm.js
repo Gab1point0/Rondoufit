@@ -89,6 +89,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormGoalReps(Number(quest.goalReps) || Number(quest.goalValue) || 6);
     setFormStartAssistanceKg(Number(quest.startAssistanceKg) || 0);
     setFormGoalAssistanceKg(Number(quest.goalAssistanceKg) || 0);
+    setFormSwapNote('');
     setQuestModalOpen(true);
   };
 
@@ -156,6 +157,22 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormSuggestion(s.note);
   };
 
+  // « Changer d'exercice » depuis Ajuster : seule l'identité change (nom, icône, arène, fiche de mouvement, machine) ;
+  // l'historique, la charge actuelle, l'objectif, les séries / répétitions et l'aide restent tels quels.
+  // Seuls les exercices de même type et de même unité (kg / répétitions / durée) sont proposés.
+  const [formSwapNote, setFormSwapNote] = useState('');
+  const isSwapCompatible = c => c.type === formType && c.unit === formUnit && isTimedCatalog(c) === formTimed;
+  const handleReplaceExercise = catId => {
+    const found = EXERCISE_CATALOG.find(item => item.id === catId);
+    if (!found || !isSwapCompatible(found)) return;
+    setFormCatalogId(catId);
+    setFormCustomName(found.name);
+    setFormCategory(normalizeArenaGroup(found.category, found.type));
+    setFormIcon(found.icon);
+    setFormCardioMode(found.cardioMode || formCardioMode);
+    setFormSwapNote(`Exercice remplacé par « ${found.name} ». Tout l’historique, la charge et l’objectif sont conservés : enregistre pour valider.`);
+  };
+
   const handleSaveQuestForm = e => {
     e.preventDefault();
     const cleanName = formCustomName.trim() || 'Nouvel Exercice';
@@ -175,6 +192,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
           if (q.id !== editingQuestId) return q;
           return {
             ...q,
+            catalogId: formCatalogId && formCatalogId !== 'custom' ? formCatalogId : q.catalogId,
             name: cleanName,
             category: formCategory,
             type: formType,
@@ -279,5 +297,5 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion };
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon };
 }
