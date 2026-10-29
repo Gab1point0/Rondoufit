@@ -97,3 +97,25 @@ describe('conseils écrits', () => {
     expect(animationIdFor({ catalogId: 'fp_rdl', name: 'autre' })).toBe('fp_rdl');
   });
 });
+
+describe('précision des animations (validateur automatique)', () => {
+  const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  it('les mains et les pieds posés sur une cible (barre, poignée, plateau, sol) l’atteignent réellement (6 px)', () => {
+    const bad = [];
+    for (const s of ALL_SCENES) {
+      const views = [{ name: s.id, scene: s.scene }, ...s.alts.map(a => ({ name: `${s.id}#${a.key}`, scene: a.scene }))];
+      for (const v of views) {
+        let mh = 0;
+        let mf = 0;
+        for (let i = 0; i <= 10; i++) {
+          const pose = poseAt(v.scene.keys, i / 10);
+          const j = v.scene.view === 'front' ? solveFront(pose).R : solvePose(pose);
+          if (pose.hand) mh = Math.max(mh, d(j.wrist, pose.hand));
+          if (pose.foot) mf = Math.max(mf, d(j.ankle, pose.foot));
+        }
+        if (mh > 6 || mf > 6) bad.push(`${v.name} main=${mh.toFixed(0)} pied=${mf.toFixed(0)}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+});

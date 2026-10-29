@@ -54,7 +54,7 @@ export function declineMachine() {
   const sh = shoulderOf(hip, torso);
   const c = { torso, foot: [214, ANKLE_Y], footBend: -1, handBend: 1 };
   return {
-    keys: [P(hip, torso, { ...c, hand: pt(sh, 15, 14) }), P(hip, torso, { ...c, hand: pt(sh, 52, 34) })], trace: 'wrist', loop: 'pingpong',
+    keys: [P(hip, torso, { ...c, hand: pt(sh, 15, 14) }), P(hip, torso, { ...c, hand: pt(sh, 46, 26) })], trace: 'wrist', loop: 'pingpong',
     equip: [...seatSide(hip, 62), ...horn(hip[0] - 86, sh[1] + 14)],
     follow: [lever([hip[0] - 14, sh[1] + 16], 'wrist', 8), handle('wrist')],
   };
@@ -104,9 +104,9 @@ export function beltSquat() {
 
 // ---------------- Soulevé de terre machine (leviers à plaques) ----------------
 export function deadliftMachine() {
-  const top = P([150, 112], -90, { foot: [150, ANKLE_Y], footBend: -1, hand: [160, 116], handBend: 1 });
+  const top = P([150, 112], -90, { foot: [150, ANKLE_Y], footBend: -1, handRel: [8, 54], handBend: 1 });
   const sh = shoulderOf([124, 160], -48);
-  const bottom = P([124, 160], -48, { foot: [150, ANKLE_Y], footBend: -1, hand: [sh[0] + 6, 168], handBend: 1 });
+  const bottom = P([124, 160], -48, { foot: [150, ANKLE_Y], footBend: -1, handRel: [4, 52], handBend: 1 });
   return {
     keys: [bottom, top], trace: 'wrist', loop: 'pingpong',
     equip: [rect(96, G - 8, 110, 8, '#334155', 3), ...horn(30, 168)],
@@ -141,9 +141,9 @@ void db;
 
 // Bûcheron : vue de face (diagonale du haut à droite vers le bas à gauche, le buste suit)
 export function woodchopFront() {
-  const mk = (x, y, tw) => ({ c: C, hipY: 112, twist: tw, foot: [C + 14, 194], hand: [C + x, y], handL: [C + x - 12, y + 8], handBend: 1 });
+  const mk = (x, y, tw, xl, yl) => ({ c: C, hipY: 112, twist: tw, foot: [C + 14, 194], hand: [C + x, y], handL: [C + xl, yl], handBend: 1 });
   return {
-    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(54, 36, 30), mk(-26, 126, -30)],
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(46, 36, 30, 34, 48), mk(4, 116, -30, -4, 118)],
     equip: [rect(C - 40, G - 6, 80, 6, '#334155', 2), line([C + 96, -14], [C + 96, G], 4), pulley([C + 96, -14], 6)],
     follow: [{ k: 'handle', at: 'wrist', side: 'R' }, { k: 'cable', from: [C + 96, -14], at: 'wrist', side: 'R', dash: '3 3' }],
   };

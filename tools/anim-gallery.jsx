@@ -14,7 +14,7 @@ const list = flat.filter(s => !q || (s.id + ' ' + s.name).toLowerCase().includes
 
 function App() {
   return (
-    <div style={{ padding: 8 }} className="grid grid-cols-2 xl:grid-cols-3 gap-2 text-slate-200">
+    <div style={{ padding: 8 }} className={`grid gap-2 text-slate-200 ${params.get("cols") === "1" ? "grid-cols-1 max-w-3xl mx-auto" : "grid-cols-2 xl:grid-cols-3"}`}>
       {list.map(s => (
         <div key={s.id} className="border border-slate-700 rounded p-1">
           <p className="text-[11px] font-bold">{s.id} · {s.name}</p>

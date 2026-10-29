@@ -36,7 +36,8 @@ export function solvePose(p) {
   const shoulder = add(add(hip, dir(p.torso, SEG.torso)), [0, -(p.lift || 0)]);
   const headC = add(shoulder, dir(p.torso + (p.neck || 0), SEG.head + 6));
   let elbow; let wrist;
-  if (p.hand) ({ mid: elbow, end: wrist } = ik(shoulder, p.hand, SEG.uarm, SEG.farm, p.handBend === undefined ? 1 : p.handBend));
+  const handTarget = p.hand || (p.handRel ? [shoulder[0] + p.handRel[0], shoulder[1] + p.handRel[1]] : null); // handRel : main à une position fixe PAR RAPPORT à l'épaule (bras pendants)
+  if (handTarget) ({ mid: elbow, end: wrist } = ik(shoulder, handTarget, SEG.uarm, SEG.farm, p.handBend === undefined ? 1 : p.handBend));
   else { elbow = add(shoulder, dir(p.arm[0], SEG.uarm)); wrist = add(elbow, dir(p.arm[1], SEG.farm)); }
   let knee; let ankle;
   if (p.foot) ({ mid: knee, end: ankle } = ik(hip, p.foot, SEG.thigh, SEG.shin, p.footBend === undefined ? -1 : p.footBend));
@@ -51,12 +52,26 @@ export function solvePose(p) {
   return { hip, shoulder, headC, elbow, wrist, knee, ankle, toe, fist, farElbow, farWrist, farKnee, farAnkle };
 }
 
+/** Deux poses qui décrivent un membre différemment (cible / angles) : on convertit les angles en cible pour interpoler proprement. */
+function unify(a, b) {
+  if (!a.hip || !b.hip) return [a, b];
+  let A = a;
+  let B = b;
+  for (const [target, angles, joint] of [['hand', 'arm', 'wrist'], ['foot', 'leg', 'ankle']]) {
+    const has = p => p[target] || (target === 'hand' && p.handRel);
+    if (has(A) && !has(B) && B[angles]) B = { ...B, [target]: solvePose(B)[joint] };
+    if (has(B) && !has(A) && A[angles]) A = { ...A, [target]: solvePose(A)[joint] };
+  }
+  return [A, B];
+}
+
 const NUM_KEYS = ['torso', 'neck', 'toe', 'handBend', 'footBend', 'lift', 'c', 'hipY', 'flex', 'bend', 'twist'];
 const lerp = (a, b, t) => a + (b - a) * t;
 const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
 /** Interpolation entre deux poses (mêmes types de champs : hand/arm, foot/leg). */
-export function lerpPose(a, b, t) {
+export function lerpPose(a0, b0, t) {
+  const [a, b] = unify(a0, b0);
   const out = a.hip ? { hip: lerpPt(a.hip, b.hip, t) } : {};
   for (const k of NUM_KEYS) {
     if (a[k] !== undefined || b[k] !== undefined) {
@@ -65,9 +80,10 @@ export function lerpPose(a, b, t) {
       out[k] = lerp(va, vb, t);
     }
   }
-  for (const k of ['hand', 'foot', 'arm', 'leg', 'farHand', 'farFoot', 'knee', 'handL', 'footL', 'kneeL']) {
+  for (const k of ['hand', 'handRel', 'foot', 'arm', 'leg', 'farHand', 'farFoot', 'knee', 'handL', 'footL', 'kneeL']) {
     const va = a[k] || b[k];
-    const vb = b[k] || a[k];
+    let vb = b[k] || a[k];
+    if (va && (k === 'arm' || k === 'leg')) vb = vb.map((x, i) => x + 360 * Math.round((va[i] - x) / 360)); // angles : chemin le plus court (évite le tour complet autour de ±180°)
     if (va) out[k] = lerpPt(va, vb, t);
   }
   // un membre décrit par cible (hand) dans une pose et par angles (arm) dans l'autre n'est pas supporté : rester cohérent

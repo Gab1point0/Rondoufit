@@ -143,9 +143,10 @@ export function uprightRowFront() {
 
 // ---------------- Squat (de face : genoux dans l'axe des pieds) ----------------
 export function squatFrontView() {
-  const mk = (hy, bend, fx) => F(hy, { bend, foot: [C + fx, 194], hand: [C + 36, hy - 52 * (1 - 0.75 * bend) + 6], handBend: 1 });
+  // le genou reste au-dessus du pied (tibia vertical) : en bas, cuisses presque horizontales vues de face
+  const mk = (hy, bend, kx, ky) => F(hy, { bend, knee: [C + kx, ky], hand: [C + 36, hy - 52 * (1 - 0.75 * bend) + 6], handBend: 1 });
   return {
-    view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(112, 0, 14), mk(152, 0.4, 28)],
+    view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(112, 0, 13, 152), mk(152, 0.4, 27, 154)],
     equip: [floorRect(120), txt([C - 56, -8], 'genoux dans l’axe des pieds', 8, '#94a3b8')],
     follow: [bar('shoulder', { dy: -5, ext: 22, r: 11 })],
   };
@@ -171,7 +172,7 @@ export function dipsFront() {
 
 // ---------------- Abduction de hanche (machine multi-hanche, de face) ----------------
 export function multiHipFront() {
-  const mk = x => F(110, { hand: [C + 28, 122], handBend: 1, foot: [C + x, x > 20 ? 176 : 194], footL: [C - 14, 194] });
+  const mk = x => F(110, { hand: [C + 26, 112], handBend: 1, foot: [C + x, x > 20 ? 176 : 194], footL: [C - 14, 194] });
   return {
     view: 'front', trace: 'ankle', loop: 'pingpong', keys: [mk(14), mk(60)],
     equip: [floorRect(160), pad([C - 40, 120], [C - 40, 160], 7, true)], follow: [],

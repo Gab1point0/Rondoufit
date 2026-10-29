@@ -1,4 +1,4 @@
-import { plank } from './scenes-pull';
+import { plank, shoulderXFor } from './scenes-pull';
 import { ANKLE_Y, G, P, horn, txt, cable, handle, lever, line, pad, plates, pt, pulley, rect, shoulderOf } from './kit';
 
 const FLOOR_HIP = [190, 186];
@@ -34,9 +34,8 @@ export function hangingRaise({ mode = 'legs' }) {
   const barY = 8;
   const hx = 152;
   const top = [hx - 4, barY + 54];
-  const mk = (leg, torso) => {
-    return P([top[0] + 9, top[1] + 51], torso, { hand: [hx, barY], handBend: -1, leg, toe: 40 });
-  };
+  // l'épaule reste sous la barre (bras tendus) : la hanche se déduit du buste
+  const mk = (leg, torso) => P([top[0] - 52 * Math.cos((torso * Math.PI) / 180), top[1] - 52 * Math.sin((torso * Math.PI) / 180)], torso, { hand: [hx, barY], handBend: -1, leg, toe: 40 });
   const eq = [line([hx - 40, barY], [hx + 40, barY], 4), line([hx - 40, barY], [hx - 40, G], 4), line([hx + 40, barY], [hx + 40, G], 4)];
   const hang = mk([96, 96], -100);
   const keys = mode === 'knees' ? [hang, mk([20, 100], -100)] : mode === 'toes' ? [hang, mk([-62, -62], -118)] : [hang, mk([-4, -4], -104)];
@@ -56,9 +55,14 @@ export function captainChair() {
 
 // ---------------- Roue abdominale ----------------
 export function abWheel() {
-  const mk = (hip, torso, th, handX) => P(hip, torso, { leg: [th, 180], toe: -10, hand: [handX, 188], handBend: 1 });
+  // l'épaule est posée au-dessus de la roue (bras tendus ou presque) ; la hanche et les cuisses se déduisent du buste (genoux au sol)
+  const mk = (sh, torso, wheelX) => {
+    const hip = [sh[0] - 52 * Math.cos((torso * Math.PI) / 180), sh[1] - 52 * Math.sin((torso * Math.PI) / 180)];
+    const th = 180 - (Math.asin(Math.max(-1, Math.min(1, (192 - hip[1]) / 42))) * 180) / Math.PI;
+    return P(hip, torso, { leg: [th, 180], toe: -10, hand: [wheelX, 188], handBend: 1 });
+  };
   return {
-    keys: [mk([116, 150], -28, 90, 166), mk([130, 170], -6, 146, 232)], trace: 'wrist', loop: 'pingpong',
+    keys: [mk([166, 136], -28, 168), mk([232, 164], -6, 236)], trace: 'wrist', loop: 'pingpong',
     equip: [rect(60, G - 4, 220, 4, '#334155', 1)], follow: [{ k: 'db', at: 'wrist', r: 8 }],
   };
 }
@@ -138,11 +142,11 @@ export function plankHold({ side = false }) {
   const forearmY = 192;
   const shY = forearmY - 26;
   const ankle = [72, 190];
-  const mk = dy => plank(ankle, [200, shY + dy], { arm: [90, 5], toe: 75 });
+  const mk = dy => plank(ankle, [shoulderXFor(ankle, shY + dy), shY + dy], { arm: [90, 5], toe: 75 });
   const keys = [mk(0), mk(2)];
   if (side) {
     // de profil : appui sur un avant-bras, l'autre bras tendu vers le haut
-    const m2 = dy => plank(ankle, [200, shY + dy], { arm: [90, 5], toe: 75, farHand: [204, shY - 56] });
+    const m2 = dy => plank(ankle, [shoulderXFor(ankle, shY + dy), shY + dy], { arm: [90, 5], toe: 75, farHand: [shoulderXFor(ankle, shY + dy) + 4, shY - 56] });
     return { keys: [m2(0), m2(2)], trace: false, loop: 'pingpong', equip: [], follow: [], hold: true };
   }
   return { keys, trace: false, loop: 'pingpong', equip: [], follow: [], hold: true };

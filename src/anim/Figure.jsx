@@ -36,7 +36,7 @@ function Follow({ e, j, i }) {
   const p0 = j[e.at || 'wrist'] || j.wrist;
   const p = e.k === 'padAt' ? p0 : [p0[0] + (e.dx || 0), p0[1] + (e.dy || 0)];
   switch (e.k) {
-    case 'plate': return <g key={i}><circle cx={p[0]} cy={p[1]} r={e.r || 13} fill={C.plate} stroke={C.plateIn} strokeWidth="2" /><circle cx={p[0]} cy={p[1]} r="3.2" fill="#1e293b" /></g>;
+    case 'plate': return <g key={i} opacity="0.88"><circle cx={p[0]} cy={p[1]} r={e.r || 13} fill={C.plate} stroke={C.plateIn} strokeWidth="2" /><circle cx={p[0]} cy={p[1]} r="3.2" fill="#1e293b" /></g>;
     case 'db': return <g key={i}><circle cx={p[0]} cy={p[1]} r={e.r || 7} fill={C.plate} stroke={C.plateIn} strokeWidth="1.5" /><circle cx={p[0]} cy={p[1]} r="2" fill="#1e293b" /></g>;
     case 'ball': return <circle key={i} cx={p[0]} cy={p[1]} r={e.r || 10} fill="#f59e0b" stroke="#fde68a" strokeWidth="2" />;
     case 'handle': return <circle key={i} cx={p[0]} cy={p[1]} r="3.5" fill={C.plateIn} />;

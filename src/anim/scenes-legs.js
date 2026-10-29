@@ -1,4 +1,4 @@
-import { plank } from './scenes-pull';
+import { plank, shoulderXFor } from './scenes-pull';
 import { ANKLE_Y, G, P, ball, cable, db, flatBench, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
 import { SEG } from './skeleton';
 
@@ -41,9 +41,9 @@ export function squat({ tool = 'barbell' }) {
 }
 
 export function bulgarianSquat() {
-  const mk = hip => P(hip, -90, { foot: [182, ANKLE_Y], footBend: -1, arm: [90, 90], farFoot: [64, 142] });
+  const mk = hip => P(hip, -90, { foot: [176, ANKLE_Y], footBend: -1, arm: [90, 90], farFoot: [64, 142] });
   return {
-    keys: [mk([152, 109]), mk([138, 150])], trace: 'hip', loop: 'pingpong',
+    keys: [mk([152, 114]), mk([138, 150])], trace: 'hip', loop: 'pingpong',
     equip: [pad([40, 148], [80, 148], 9), line([48, 153], [48, G], 3), line([72, 153], [72, G], 3)], follow: [db('wrist', 8)],
   };
 }
@@ -55,9 +55,9 @@ export function wallSit() {
 
 // ---------------- Fentes et step-up ----------------
 export function lunge({ barbell = false }) {
-  const mk = hipY => P([150, hipY], -90, { foot: [190, ANKLE_Y], footBend: -1, farFoot: [108, 190], arm: barbell ? [118, -70] : [90, 90] });
+  const mk = hipY => P([150, hipY], -90, { foot: [186, ANKLE_Y], footBend: -1, farFoot: [112, 190], arm: barbell ? [118, -70] : [90, 90] });
   return {
-    keys: [mk(112), mk(156)], trace: 'hip', loop: 'pingpong', equip: [],
+    keys: [mk(118), mk(156)], trace: 'hip', loop: 'pingpong', equip: [],
     follow: barbell ? [{ k: 'plate', at: 'shoulder', r: 11, dx: -3, dy: -4 }] : [db('wrist', 8)],
   };
 }
@@ -76,7 +76,7 @@ export function legPress({ kind = 'horizontal', calf = false }) {
     const hip = [120, 156];
     const torso = -135;
     const mkP = foot => P(hip, torso, { foot, footBend: -1, hand: pt(shoulderOf(hip, torso), 6, 8), handBend: 1, toe: calf ? 60 : -45 });
-    const keys = calf ? [mkP([188, 90]), mkP([192, 83])] : [mkP([148, 124]), mkP([190, 80])];
+    const keys = calf ? [mkP([162, 100]), mkP([165, 96])] : [mkP([140, 130]), mkP([172, 92])];
     return {
       keys, trace: 'ankle', loop: 'pingpong',
       equip: [line([98, 176], [236, 40], 5, '#475569'), pad([hip[0] - 22, hip[1] + 4], [shoulderOf(hip, torso)[0] - 20, shoulderOf(hip, torso)[1] - 2], 10), rect(80, G - 6, 180, 6, '#334155', 2)],
@@ -86,7 +86,7 @@ export function legPress({ kind = 'horizontal', calf = false }) {
   const hip = [104, 152];
   const torso = -116;
   const mkP = foot => P(hip, torso, { foot, footBend: -1, hand: pt(shoulderOf(hip, torso), 4, 12), handBend: 1, toe: calf ? 60 : 0 });
-  const keys = calf ? [mkP([186, 128]), mkP([190, 124])] : [mkP([158, 118]), mkP([186, 118])];
+  const keys = calf ? [mkP([178, 130]), mkP([181, 126])] : [mkP([158, 118]), mkP([182, 118])];
   return {
     keys, trace: 'ankle', loop: 'pingpong',
     equip: [pad([hip[0] - 20, hip[1] + 6], [hip[0] + 24, hip[1] + 6], 10), pad([hip[0] - 20, hip[1] + 6], [hip[0] - 50, hip[1] - 34], 10), line([hip[0], hip[1] + 12], [hip[0], G - 4], 4, '#334155'), rect(70, G - 6, 190, 6, '#334155', 2), plates(250, 60, 18, 110, 4)],
@@ -161,21 +161,21 @@ export function calfRaise({ machine = false, seated = false }) {
 }
 
 // ---------------- Charnière de hanche (soulevés) ----------------
+// Soulevés : les bras restent pendants sous l'épaule (handRel), le dos reste plat ; disques de 45 cm (rayon ≈ 20 px) posés au sol
 export function deadlift({ kind = 'conventional' }) {
-  const top = P([150, 112], -90, { foot: FOOT, footBend: -1, hand: [153, 114], handBend: 1 });
+  const foot = kind === 'sumo' ? [156, ANKLE_Y] : FOOT;
+  const top = P([150, 112], -90, { foot, footBend: -1, handRel: [3, 54], handBend: 1 });
   const cfg = {
-    conventional: { hip: [121, 160], torso: -45, bar: 176 },
-    sumo: { hip: [142, 154], torso: -62, bar: 176 },
-    trap: { hip: [128, 150], torso: -58, bar: 156 },
+    conventional: { hip: [118, 157], torso: -38, r: 19 },
+    sumo: { hip: [140, 164], torso: -58, r: 19 },
+    trap: { hip: [128, 150], torso: -56, r: 15 },
   }[kind];
   if (kind === 'rdl') {
-    const sh = shoulderOf([112, 120], -22);
-    const down = P([112, 120], -22, { foot: FOOT, footBend: -1, hand: pt(sh, 2, 53), handBend: 1 });
-    return { keys: [top, down], trace: 'wrist', loop: 'pingpong', equip: [], follow: [plate('wrist', 11)], reverse: true };
+    const down = P([110, 120], -22, { foot: FOOT, footBend: -1, handRel: [3, 54], handBend: 1 });
+    return { keys: [top, down], trace: 'wrist', loop: 'pingpong', equip: [], follow: [plate('wrist', 17)] };
   }
-  const sh = shoulderOf(cfg.hip, cfg.torso);
-  const bottom = P(cfg.hip, cfg.torso, { foot: FOOT, footBend: -1, hand: [sh[0] + 2, cfg.bar], handBend: 1 });
-  return { keys: [bottom, top], trace: 'wrist', loop: 'pingpong', equip: [], follow: [plate('wrist', 12)] };
+  const bottom = P(cfg.hip, cfg.torso, { foot, footBend: -1, handRel: [3, 54], handBend: 1 });
+  return { keys: [bottom, top], trace: 'wrist', loop: 'pingpong', equip: [], follow: [plate('wrist', cfg.r)] };
 }
 
 export function goodMorning() {
@@ -241,17 +241,20 @@ export function wallBall() {
 
 export function burpee() {
   const ankle = [70, 190];
-  const plankUp = plank(ankle, [197, 141], { hand: [197, 196], handBend: 1 });
-  const plankDown = plank(ankle, [204, 171], { hand: [205, 196], handBend: 1 });
+  const handX = shoulderXFor(ankle, 142);
+  const plankUp = plank(ankle, [handX, 142], { hand: [handX, 196], handBend: 1 });
+  const plankDown = plank(ankle, [shoulderXFor(ankle, 172), 172], { hand: [handX, 196], handBend: 1 });
   const stand = P([150, 112], -90, { foot: FOOT, footBend: -1, arm: [90, 90] });
-  const squat = P([122, 150], -40, { foot: [158, ANKLE_Y], footBend: -1, hand: [172, 194], handBend: 1 });
+  const squat = P([124, 150], -20, { foot: [158, ANKLE_Y], footBend: -1, hand: [166, 188], handBend: 1 });
+  const reach = P([132, 138], -45, { foot: [154, ANKLE_Y], footBend: -1, hand: [166, 156], handBend: 1 });
   const jump = P([150, 90], -90, { foot: [150, 166], footBend: -1, arm: [-80, -85] });
-  return { keys: [stand, squat, plankUp, plankDown, plankUp, squat, jump], trace: 'hip', loop: 'cycle', equip: [], follow: [] };
+  return { keys: [stand, reach, squat, plankUp, plankDown, plankUp, squat, jump], trace: 'hip', loop: 'cycle', equip: [], follow: [] };
 }
 
 export function mountainClimber() {
   const ankle = [70, 190];
-  const base = plank(ankle, [197, 141], { hand: [197, 196], handBend: 1 });
+  const handX = shoulderXFor(ankle, 142);
+  const base = plank(ankle, [handX, 142], { hand: [handX, 196], handBend: 1 });
   const a = { ...base, foot: [66, 188], footBend: -1, farFoot: [150, 168], leg: undefined };
   const b = { ...base, foot: [150, 168], footBend: -1, farFoot: [66, 188], leg: undefined };
   return { keys: [a, b], trace: 'ankle', loop: 'pingpong', equip: [], follow: [] };

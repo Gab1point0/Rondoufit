@@ -1,4 +1,4 @@
-import { SEG } from './skeleton';
+import { SEG, ik } from './skeleton';
 import { ANKLE_Y, G, P, horn, cable, db, flatBench, handle, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf } from './kit';
 
 const rad = d => (d * Math.PI) / 180;
@@ -6,16 +6,14 @@ const hipFor = (sh, torso) => [sh[0] - SEG.torso * Math.cos(rad(torso)), sh[1] -
 
 /** Corps tendu entre une cheville et une épaule (pompes, rowing inversé, planche…) : renvoie hanche + angles. */
 export function plank(ankle, shoulder, o = {}) {
-  const dx = shoulder[0] - ankle[0];
-  const dy = shoulder[1] - ankle[1];
-  const d = Math.hypot(dx, dy) || 1;
-  const ux = dx / d;
-  const uy = dy / d;
-  const hip = [ankle[0] + ux * 84, ankle[1] + uy * 84];
-  const t = (Math.atan2(uy, ux) * 180) / Math.PI;
-  const back = (Math.atan2(-uy, -ux) * 180) / Math.PI;
+  const { mid: hip, end } = ik(ankle, shoulder, 84, 52, -1); // hanche au-dessus de la ligne si le corps est un peu « trop court »
+  const t = (Math.atan2(end[1] - hip[1], end[0] - hip[0]) * 180) / Math.PI;
+  const back = (Math.atan2(ankle[1] - hip[1], ankle[0] - hip[0]) * 180) / Math.PI;
   return P(hip, t, { leg: [back, back], toe: 75, ...o });
 }
+
+/** Abscisse de l'épaule pour que le corps (cheville → épaule) mesure `chord` à la hauteur donnée. */
+export const shoulderXFor = (ankle, shoulderY, chord = 134) => ankle[0] + Math.sqrt(Math.max(0, chord * chord - (shoulderY - ankle[1]) ** 2));
 
 // ---------------- Tractions (pronation / supination / assistée / suspension) ----------------
 export function pullUp({ grip = 'pro', assisted = false, hang = false }) {
@@ -24,7 +22,7 @@ export function pullUp({ grip = 'pro', assisted = false, hang = false }) {
   const mk = (shY, bend) => {
     const sh = [hx - 4, shY];
     const hip = hipFor(sh, -100);
-    return P(hip, -100, { hand: [hx, barY], handBend: bend, leg: [98, 138], toe: 60 });
+    return P(hip, -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60 });
   };
   const bend = grip === 'sup' ? 1 : -1;
   const hangPose = mk(barY + 54, bend);
@@ -36,8 +34,8 @@ export function pullUp({ grip = 'pro', assisted = false, hang = false }) {
     fol.push({ k: 'padAt', at: 'knee', dx: 2, dy: 8, w: 24, h: 6 }, { k: 'cable', from: [245, 40], at: 'knee' });
   }
   if (hang) {
-    const slight = P(hangPose.hip, -100, { hand: [hx, barY], handBend: bend, leg: [98, 138], toe: 60, lift: 0 });
-    const active = P([hangPose.hip[0], hangPose.hip[1] - 4], -100, { hand: [hx, barY], handBend: bend, leg: [98, 138], toe: 60, lift: 4 });
+    const slight = P(hangPose.hip, -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60, lift: 0 });
+    const active = P([hangPose.hip[0], hangPose.hip[1] - 4], -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60, lift: 4 });
     return { keys: [slight, active], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: fol, hold: true };
   }
   return { keys: [hangPose, topPose], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: fol };
@@ -126,10 +124,11 @@ export function seatedRow({ machine = false, hammer = false }) {
 export function invertedRow() {
   const barY = 110;
   const ankle = [78, 190];
-  const mk = shY => plank(ankle, [200, shY], { hand: [200, barY], handBend: 1 });
+  const barX = shoulderXFor(ankle, 160) - 2;
+  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [barX, barY], handBend: 1 });
   return {
-    keys: [mk(166), mk(128)], trace: 'shoulder', loop: 'pingpong',
-    equip: [line([180, barY], [220, barY], 4), line([180, barY], [180, G], 4), line([220, barY], [220, G], 4), line([172, barY - 40], [172, G], 3, '#475569')],
+    keys: [mk(160), mk(128)], trace: 'shoulder', loop: 'pingpong',
+    equip: [line([barX - 20, barY], [barX + 20, barY], 4), line([barX - 20, barY], [barX - 20, G], 4), line([barX + 20, barY], [barX + 20, G], 4)],
     follow: [],
   };
 }

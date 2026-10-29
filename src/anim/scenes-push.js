@@ -1,3 +1,4 @@
+import { plank, shoulderXFor } from './scenes-pull';
 import { ANKLE_Y, G, P, horn, cable, db, flatBench, handle, inclineBench, lever, line, pad, plate, plates, pt, pulley, rect, shoulderOf, stack } from './kit';
 
 // ---------------- Développés couchés (barre, haltères, Smith) ----------------
@@ -58,30 +59,18 @@ export function machinePress({ hammer = false, incline = false }) {
 // ---------------- Pompes et variantes ----------------
 export function pushUp({ feetUp = 0, narrow = false }) {
   const ankle = [70, 190 - feetUp];
-  const shoulderUp = [197, 141];
-  const mk = (rise, handY) => {
-    // droite ankle → épaule : angle du corps
-    const len = 136;
-    const a = Math.asin(rise / len);
-    const d = (Math.PI - a); // direction hanche → cheville
-    const hip = [ankle[0] - 84 * Math.cos(d), ankle[1] - 84 * Math.sin(d)];
-    const t = (-a * 180) / Math.PI;
-    return P(hip, t, { leg: [(d * 180) / Math.PI, (d * 180) / Math.PI], toe: 75, hand: [shoulderUp[0] + (rise < 30 ? 8 : 0), handY], handBend: 1 });
-  };
-  const riseUp = 196 - 54 - ankle[1] < 0 ? ankle[1] - (196 - 54) : 0;
-  const up = mk(Math.max(20, ankle[1] - 142), 196);
-  const down = mk(Math.max(8, ankle[1] - 172), 196);
+  const handX = shoulderXFor(ankle, 142);
+  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [handX, 196], handBend: 1 });
   const eq = [];
-  if (feetUp) eq.push(rect(46, 190 - feetUp + 4, 50, feetUp + 6 - 0, '#475569', 3));
-  void riseUp;
-  return { keys: [up, down], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: [], narrow };
+  if (feetUp) eq.push(rect(46, 190 - feetUp + 4, 50, feetUp + 6, '#475569', 3));
+  return { keys: [mk(142), mk(172)], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: [], narrow };
 }
 
 // ---------------- Dips ----------------
 export function dips({ benchDips = false, machine = false }) {
   if (benchDips) {
     // mains sur un banc derrière soi, jambes tendues devant
-    const mk = (shY, hipY) => P([122, hipY], -90, { foot: [196, ANKLE_Y], footBend: -1, hand: [108, 126], handBend: 1 });
+    const mk = (shY, hipY) => P([122, hipY], -90, { foot: [164, ANKLE_Y], footBend: -1, hand: [108, 126], handBend: 1 });
     return {
       keys: [mk(72, 124), mk(98, 150)], trace: 'shoulder', loop: 'pingpong',
       equip: [pad([84, 130], [126, 130], 9), line([92, 135], [92, G], 3), line([118, 135], [118, G], 3)], follow: [],
