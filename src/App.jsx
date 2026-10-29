@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CoachPanel } from './components/coach/CoachPanel';
 import { GuidedSession } from './components/GuidedSession';
 import { PhotoCalendar } from './components/photos/PhotoCalendar';
@@ -24,7 +24,7 @@ import { BottomNav, SubTabs, TabBar } from './components/TabBar';
 import { MoreSheet } from './modals/MoreSheet';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
-import { MovementPreview } from './components/MovementPreview';
+import { MovementHost } from './components/MovementHost';
 import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
 import { playGameSound } from './lib/sound';
 import { ToastBanner } from './components/ToastBanner';
@@ -75,6 +75,18 @@ export function App() {
   );
 
   const { toast, triggerToast, dismissToast } = useToast();
+
+  // « 🚩 Cette animation est fausse » (fenêtre Voir le mouvement) : on garde la liste dans la sauvegarde pour la corriger ensuite
+  useEffect(() => {
+    const h = e => {
+      const d = e.detail || {};
+      const at = new Date().toISOString();
+      setGameState(prev => ({ ...prev, animFlags: [...(prev.animFlags || []), { id: 'af_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), animId: d.animId || '', view: d.view || 'side', name: d.name || '', at }] }));
+      triggerToast('🚩 Noté, merci ! L’animation sera revérifiée.');
+    };
+    window.addEventListener('rondoufit-animflag', h);
+    return () => window.removeEventListener('rondoufit-animflag', h);
+  }, [setGameState, triggerToast]);
 
   const {
     paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats,
@@ -330,7 +342,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
-      <MovementPreview />
+      <MovementHost />
       <UpdateBanner />
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}

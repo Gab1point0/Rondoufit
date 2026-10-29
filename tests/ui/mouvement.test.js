@@ -101,4 +101,17 @@ describe('voir le mouvement', () => {
     expect(dialog(h).querySelector('[data-testid="mistake-text"]')).toBeNull();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
+
+  it('« Cette animation est fausse » enregistre un signalement dans la sauvegarde', async () => {
+    const h = await start();
+    h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'squat' } }));
+    await advance(h, 300);
+    await clickText(h, 'Cette animation est fausse');
+    expect(dialog(h).querySelector('[data-testid="flag-done"]')).toBeTruthy();
+    await advance(h, 3000);
+    const flags = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).animFlags;
+    expect(flags).toHaveLength(1);
+    expect(flags[0]).toMatchObject({ animId: 'squat', view: 'side' });
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
 });

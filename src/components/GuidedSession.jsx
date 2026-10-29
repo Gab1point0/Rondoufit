@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 
+const MiniMovement = lazy(() => import('./MiniMovement'));
+const MINI_KEY = 'rondoufit:miniAnim';
+const miniOn = () => { try { return localStorage.getItem(MINI_KEY) !== 'off'; } catch (e) { return true; } };
 // Séance guidée : exercice par exercice, avec repos automatique
 export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const [now, setNow] = useState(Date.now());
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [mini, setMini] = useState(miniOn);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
@@ -124,6 +128,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               <div>
                 <h2 className="text-xl font-black text-white">{it.icon} {it.name}</h2>
                 <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-[0.75rem] font-bold text-sky-200">🎬 Mouvement</button>
+                <button type="button" onClick={() => { const v = !mini; setMini(v); try { localStorage.setItem(MINI_KEY, v ? 'on' : 'off'); } catch (e) { /* rien */ } }} aria-pressed={mini} className="mb-1 ml-1.5 px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-[0.75rem] font-bold text-slate-300">{mini ? 'Masquer l’aperçu' : 'Aperçu animé'}</button>
+                {mini && <div className="w-44 mb-1"><Suspense fallback={null}><MiniMovement catalogId={(g.items[g.idx] || {}).catalogId} name={it.name} /></Suspense></div>}
                 <p className="text-xs text-slate-400">{it.arena} · repos {Math.floor(it.restSec / 60)} min{it.restSec % 60 ? ` ${it.restSec % 60}` : ''}</p>
               </div>
               {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[0.7rem] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}

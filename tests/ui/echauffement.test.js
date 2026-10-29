@@ -49,4 +49,17 @@ describe('échauffement avant les séries de travail', () => {
     expect(pageText(h)).not.toContain('undefined');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
+
+  it('la séance guidée montre une petite animation du mouvement, masquable', async () => {
+    const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
+    open.push(h);
+    await clickText(h, '🧠 Coach');
+    const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
+    await clickText(h, lancer.textContent.trim().slice(0, 30));
+    await advance(h, 300);
+    expect(h.doc.querySelector('[data-testid="mini-movement"]')).toBeTruthy();
+    await clickText(h, 'Masquer l’aperçu');
+    expect(h.doc.querySelector('[data-testid="mini-movement"]')).toBeNull();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
 });

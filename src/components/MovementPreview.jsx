@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Figure } from '../anim/Figure';
+import { flagAnimation } from '../lib/movement';
 import { animatedList, animationIdFor, movementFor } from '../anim/resolve';
 import { TEMPO, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
 
@@ -25,7 +26,7 @@ function Bullets({ title, items, tone = 'text-slate-300', active = -1 }) {
 
 // Fenêtre « Voir le mouvement » : animation du geste, trajet à respecter, installation / machine, erreurs à éviter.
 // S'ouvre par l'événement `rondoufit-movement` (lib/movement.js).
-export function MovementPreview() {
+export function MovementPreview({ initial = null }) {
   const [target, setTarget] = useState(null);
   const [id, setId] = useState(null);
   const [playing, setPlaying] = useState(true);
@@ -33,23 +34,27 @@ export function MovementPreview() {
   const [phase, setPhase] = useState(0);
   const [viewKey, setViewKey] = useState('side');
   const [reps, setReps] = useState(0);
+  const [reduced, setReduced] = useState(false);
+  const [flagged, setFlagged] = useState({});
   const [mistake, setMistake] = useState(null);
   const last = useRef(0);
   const mistakeRef = useRef(null);
   mistakeRef.current = mistake;
 
   useEffect(() => {
-    const h = e => {
-      const t = e.detail || {};
+    const open = t => {
       setTarget(t);
       setId(animationIdFor(t));
       setPhase(0);
       setViewKey('side');
       setReps(0);
       setMistake(null);
-      const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      setPlaying(!reduced);
+      const red = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setReduced(red);
+      setPlaying(!red);
     };
+    const h = e => open(e.detail || {});
+    if (initial) open(initial);
     window.addEventListener('rondoufit-movement', h);
     return () => window.removeEventListener('rondoufit-movement', h);
   }, []);
@@ -128,6 +133,16 @@ export function MovementPreview() {
               {reps > 0 && <span className="absolute top-1.5 left-2 text-[0.75rem] font-black text-slate-300 bg-slate-950/70 rounded-md px-1.5 py-0.5" data-testid="rep-count">Rép. {reps}</span>}
               {breath && <span className="absolute top-1.5 right-2 text-[0.75rem] font-black text-sky-200 bg-slate-950/70 rounded-md px-1.5 py-0.5" data-testid="breath">{breath}</span>}
             </div>
+            {reduced && (
+              <div className="grid grid-cols-3 gap-1" data-testid="still-strip">
+                {[['Départ', 0], ['Milieu', 0.5], ['Fin', 1]].map(([t, v]) => (
+                  <div key={t} className="rounded-lg overflow-hidden border border-slate-800">
+                    <Figure scene={scene} pose={poseAt(scene.keys, v)} showTrace={false} muscleText={info ? info.m : ''} />
+                    <p className="text-center text-[0.7rem] font-bold text-slate-400 py-0.5">{t}</p>
+                  </div>
+                ))}
+              </div>
+            )}
             <p className="text-center text-sm font-black text-amber-300" aria-live="polite">{phaseLabel}</p>
             {errInfo && <p className="text-xs text-rose-200 bg-rose-950/40 border border-rose-500/40 rounded-lg p-2" data-testid="mistake-text">❌ {errInfo.text}</p>}
             {canMistake && (
@@ -147,6 +162,11 @@ export function MovementPreview() {
                 onChange={e => { setPlaying(false); setPhase(phaseOfU(Number(e.target.value) / 100, scene.loop)); }}
                 className="flex-1 accent-sky-400"
               />
+            </div>
+            <div className="flex justify-end">
+              {flagged[id + viewKey]
+                ? <span className="text-[0.75rem] font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
+                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: viewKey, name: mv.name }); setFlagged(f => ({ ...f, [id + viewKey]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-[0.75rem] font-bold text-slate-300">🚩 Cette animation est fausse</button>}
             </div>
             <p className="text-[0.75rem] text-slate-500">Pointillés jaunes : trajet à respecter (le cercle est le départ, la flèche le sens de l’effort). Le fantôme pâle montre où tu vas ; les zones rouges sont les muscles qui travaillent. Fais glisser la barre pour voir chaque position.</p>
 

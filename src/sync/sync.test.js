@@ -84,6 +84,13 @@ describe('mergeStates (fusion à trois voies)', () => {
     expect(m.quests[0].history.map(e => e.id)).toEqual(['e1', 'e3', 'e2']); // ordre chronologique
   });
 
+  it('réunit les animations signalées comme fausses sur les deux appareils', () => {
+    const f = id => ({ id, animId: 'squat', view: 'side', name: 'Squat', at: '2026-10-29T10:00:00Z' });
+    const b = { ...base, animFlags: [f('af1')] };
+    const m = mergeStates(b, { ...b, animFlags: [f('af1'), f('af2')] }, { ...b, animFlags: [f('af1'), f('af3')] });
+    expect(m.animFlags.map(x => x.id).sort()).toEqual(['af1', 'af2', 'af3']);
+  });
+
   it('prend simplement le côté qui a changé', () => {
     const remote = { ...base, xp: 140 };
     expect(mergeStates(base, base, remote)).toEqual(remote);

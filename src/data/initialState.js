@@ -15,6 +15,7 @@ export const INITIAL_STATE = {
   xpDaily: { date: '', earned: 0 },             // EXP gagnée aujourd'hui (plafond du jour)
   rankTrials: [],                               // niveaux des rangs dont l'épreuve est réussie
   cosmetics: { theme: 'rose', accessory: 'none', title: '' },
+  animFlags: [],                                // animations signalées comme fausses : { id, animId, view, name, at }
   maxRecords: {},                               // records réels saisis dans l'onglet « Mes maxima » (clé = id de l'exercice)
   unlockedAchievements: [],
   claimedChallenges: [],
