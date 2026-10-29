@@ -67,7 +67,7 @@ const PRELUDE = `
  */
 export async function launch({ storage = {}, fetchImpl, empty = false } = {}) {
   // sans précision, l'application de test démarre avec les données de démonstration (l'application réelle démarre vide)
-  if (!empty && !('rondoudou_save_v1' in storage) && !('rondoufit:github' in storage)) storage = { ...storage, rondoudou_save_v1: JSON.stringify(DEMO_STATE) };
+  if (!empty && !('rondoudou_save_v1' in storage) && !('rondoufit:account' in storage)) storage = { ...storage, rondoudou_save_v1: JSON.stringify(DEMO_STATE) };
   const code = await buildApp();
   const errors = [];
   const dom = new JSDOM('<!doctype html><html lang="fr"><body><div id="root"></div></body></html>', {
@@ -175,54 +175,6 @@ export async function monkey(h, seed, steps) {
   return done;
 }
 
-// ── Faux GitHub (API « Contents ») : plusieurs fichiers, dossiers, suppression ───────────────────
-const MAIN = 'rondoufit-data.json';
-export function fakeGithub(initial) {
-  const files = new Map(); // chemin -> { content, sha }
-  const srv = { files, n: 0, puts: [], gets: 0, photoPuts: [], photoDeletes: [], offline: false };
-  const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
-  const put = (path, content) => files.set(path, { content, sha: 'sha' + ++srv.n });
-  // le fichier de données principal, accessible directement
-  Object.defineProperty(srv, 'file', {
-    get: () => files.get(MAIN) || null,
-    set: v => (v ? files.set(MAIN, v) : files.delete(MAIN)),
-  });
-  if (initial) srv.file = { content: JSON.stringify(initial), sha: 'sha0' };
-  srv.fetch = async (url, opts = {}) => {
-    url = String(url);
-    if (srv.offline) throw new TypeError('Failed to fetch');
-    const m = url.match(/^https:\/\/api\.github\.com\/repos\/([^/]+)\/([^/?]+)(?:\/contents\/([^?]+))?/);
-    if (!m) return res(404, { message: 'Not Found' });
-    if (!m[3]) return res(200, { name: m[2] });
-    const path = decodeURIComponent(m[3]);
-    const method = opts.method || 'GET';
-    if (method === 'GET') {
-      if (path === MAIN) srv.gets++;
-      if (files.has(path)) {
-        const f = files.get(path);
-        return res(200, { type: 'file', content: Buffer.from(f.content, 'utf8').toString('base64'), encoding: 'base64', sha: f.sha });
-      }
-      const dir = [...files.entries()].filter(([p]) => p.startsWith(path + '/'));
-      if (dir.length) return res(200, dir.map(([p, f]) => ({ type: 'file', name: p.slice(path.length + 1), sha: f.sha })));
-      return res(404, { message: 'Not Found' });
-    }
-    const body = JSON.parse(opts.body);
-    const current = files.get(path);
-    if ((current ? current.sha : null) !== (body.sha || null)) return res(409, { message: 'sha does not match' });
-    if (method === 'DELETE') {
-      files.delete(path);
-      srv.photoDeletes.push(path);
-      return res(200, {});
-    }
-    const content = Buffer.from(body.content, 'base64').toString('utf8');
-    put(path, content);
-    if (path === MAIN) srv.puts.push(JSON.parse(content));
-    else srv.photoPuts.push(path);
-    return res(200, { content: { sha: files.get(path).sha } });
-  };
-  return srv;
-}
-
 /**
  * Faux Supabase : comptes (inscription avec code d'invitation, connexion, renouvellement, déconnexion) et table `saves`
  * avec la règle « chacun ne voit que sa ligne » (le jeton désigne l'utilisateur) et la version optimiste (PATCH ... version=eq.N).
@@ -232,7 +184,7 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
   const users = new Map(); // email -> { id, password }
   const tokens = new Map(); // access_token -> user id
   const saves = new Map(); // user id -> { data, version }
-  const srv = { users, saves, photos: new Map(), calls: [], offline: false, expireAll: false, n: 0 };
+  const srv = { users, saves, photos: new Map(), history: new Map(), calls: [], offline: false, expireAll: false, n: 0 };
   const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
   const session = (email, id) => {
     const access_token = `at_${id}_${++srv.n}`;
@@ -288,10 +240,21 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
         const row = own ? saves.get(uid) : null;
         const want = Number((u.searchParams.get('version') || '').replace('eq.', ''));
         if (!row || row.version !== want) return res(200, []);
+        const hist = srv.history.get(uid) || [];
+        hist.unshift({ id: ++srv.n, version: row.version, data: row.data, saved_at: new Date().toISOString() }); // déclencheur : copie de l'ancienne version
+        srv.history.set(uid, hist.slice(0, 21));
         saves.set(uid, { data: body.data, version: body.version });
         return res(200, [{ version: body.version }]);
       }
       if (method === 'DELETE') { if (own) saves.delete(uid); return res(204, null); }
+    }
+    if (u.pathname === '/rest/v1/saves_history' && method === 'GET') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      if (u.searchParams.get('user_id') !== `eq.${uid}`) return res(200, []);
+      const want = (u.searchParams.get('id') || '').replace('eq.', '');
+      const rows = (srv.history.get(uid) || []).filter(r => !want || String(r.id) === want);
+      return res(200, rows.map(r => ({ id: r.id, version: r.version, saved_at: r.saved_at, data: r.data })));
     }
     if (u.pathname === '/rest/v1/photos') {
       const uid = tokens.get(bearer);

@@ -2,18 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STORAGE_KEY } from '../config';
 import { loadLocalState } from '../data/state';
 import * as store from '../sync/storage';
-import { useGithubSync } from './useGithubSync';
+import { useCloudSync } from './useCloudSync';
 
 /**
  * L'état de l'application (progression, quêtes, poids…), enregistré sur l'appareil à chaque modification
- * et synchronisé avec le fichier GitHub (useGithubSync).
+ * et synchronisé avec le compte de l'application (useCloudSync).
  */
 export function useGameState() {
   const [gameState, setRawState] = useState(loadLocalState);
   const stateRef = useRef(gameState);
   stateRef.current = gameState;
   const version = useRef(0);        // augmente à chaque modification faite par l'utilisateur
-  const fromRemote = useRef(false); // l'état vient d'être reçu de GitHub : ce n'est pas une modification locale
+  const fromRemote = useRef(false); // l'état vient d'être reçu de la sauvegarde en ligne : ce n'est pas une modification locale
   const mounted = useRef(false);
 
   const applyRemote = useCallback(state => {
@@ -23,7 +23,7 @@ export function useGameState() {
     setRawState(state);
   }, []);
 
-  const sync = useGithubSync({ stateRef, version, applyRemote });
+  const sync = useCloudSync({ stateRef, version, applyRemote });
   const { scheduleSync } = sync;
 
   // Toute modification de l'utilisateur est notée « à envoyer » tout de suite, avant même l'affichage suivant.
@@ -46,7 +46,7 @@ export function useGameState() {
     setRawState(update);
   }, []);
 
-  // Enregistrement sur l'appareil à chaque changement, puis envoi différé vers GitHub.
+  // Enregistrement sur l'appareil à chaque changement, puis envoi différé vers le compte.
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));

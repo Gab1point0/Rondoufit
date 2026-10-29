@@ -62,3 +62,37 @@ create policy photos_select_own on public.photos for select to authenticated usi
 create policy photos_insert_own on public.photos for insert to authenticated with check (auth.uid() = user_id);
 create policy photos_update_own on public.photos for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy photos_delete_own on public.photos for delete to authenticated using (auth.uid() = user_id);
+
+-- 5) Protection des sauvegardes + historique (appliqué le 29/10/2026) -------------------------------------
+create table if not exists public.saves_history (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  version integer not null,
+  data jsonb not null,
+  saved_at timestamptz not null default now()
+);
+create index if not exists saves_history_user_date on public.saves_history (user_id, saved_at desc);
+alter table public.saves_history enable row level security;
+grant select on public.saves_history to authenticated;
+drop policy if exists history_select_own on public.saves_history;
+create policy history_select_own on public.saves_history for select to authenticated using (auth.uid() = user_id);
+
+create or replace function public.keep_save_history() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.saves_history h where h.user_id = old.user_id and h.saved_at > now() - interval '8 hours') then
+    insert into public.saves_history (user_id, version, data) values (old.user_id, old.version, old.data);
+    delete from public.saves_history h
+      where h.user_id = old.user_id
+        and h.id not in (select s.id from public.saves_history s where s.user_id = old.user_id order by s.saved_at desc limit 21);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists saves_history_trg on public.saves;
+create trigger saves_history_trg before update on public.saves for each row execute function public.keep_save_history();
+
+-- Plus personne (même connecté) ne peut supprimer la sauvegarde principale ni l'historique depuis l'application
+drop policy if exists saves_delete_own on public.saves;
+revoke delete on public.saves from authenticated;
+revoke delete on public.saves_history from authenticated;

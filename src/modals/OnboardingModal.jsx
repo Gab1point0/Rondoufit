@@ -3,7 +3,6 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { getTodayISODate } from '../lib/dates';
 import { GOALS, STARTER_EXERCISES, applyOnboarding } from '../lib/onboarding';
 import { stripAccents } from '../lib/text';
-import { EMPTY_CONFIG } from '../sync/storage';
 import { SPORTS, sportInfo } from '../data/sports';
 import { AccountForm } from '../components/AccountForm';
 
@@ -15,11 +14,6 @@ const chip = on => `px-3 py-2 rounded-xl border text-sm font-bold ${on ? 'bg-sky
 const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Jeu'], [5, 'Ven'], [6, 'Sam'], [0, 'Dim']];
 const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
 
-const LINKS = {
-  signup: 'https://github.com/signup',
-  repo: 'https://github.com/new?name=muscu-donnees&visibility=private&description=Sauvegarde%20de%20mon%20appli%20muscu',
-  token: 'https://github.com/settings/personal-access-tokens/new?name=Muscu&description=Sauvegarde%20de%20mon%20appli%20muscu&contents=write&expires_in=none',
-};
 const STEPS = ['Bienvenue', 'Toi', 'Objectif', 'Organisation', 'Exercices connus', 'Sport régulier', 'Sauvegarde', 'Terminé'];
 
 function Toggle({ on, onClick, children, testid }) {
@@ -27,15 +21,12 @@ function Toggle({ on, onClick, children, testid }) {
 }
 
 export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
-  const useAccount = sync.accountEnabled;
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
     gymDays: [], sport: '', sportDays: [], exercises: {},
   });
   const [search, setSearch] = useState('');
-  const [gh, setGh] = useState({ owner: '', token: '' });
-  const [showToken, setShowToken] = useState(false);
   const patch = p => setA(x => ({ ...x, ...p }));
   const toggleDay = (key, d) => patch({ [key]: a[key].includes(d) ? a[key].filter(x => x !== d) : [...a[key], d] });
   const setEx = (id, p) => patch({ exercises: { ...a.exercises, [id]: { ...(a.exercises[id] || {}), ...p } } });
@@ -57,11 +48,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   };
   const skip = () => { setGameState(prev => ({ ...prev, onboarded: true })); onDone(); };
 
-  const connect = () => {
-    sync.setConfig({ ...EMPTY_CONFIG, owner: gh.owner.trim(), repo: 'muscu-donnees', token: gh.token.trim() });
-  };
-  const syncOk = sync.configured && sync.status === 'synced';
-  const statusText = !sync.configured ? '' : sync.status === 'synced' ? '✅ Sauvegarde automatique activée.' : sync.status === 'error' ? `❌ ${sync.error || 'Connexion impossible.'}` : '⏳ Connexion en cours…';
 
   const needSession = Number(a.sessionsPerWeek) >= 1;
   const canNext = step === 1 ? Number(a.weightKg) > 0 : step === 3 ? needSession : true;
@@ -174,38 +160,12 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         )}
 
         {step === 6 && (
-          useAccount ? (
-            <section className="space-y-3" data-testid="ob-backup">
-              <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
-              <p className="text-sm text-slate-300">Crée un compte (e-mail + mot de passe) : tes données sont alors <strong>sauvegardées automatiquement</strong> dans ton espace personnel, et tu les retrouves en te reconnectant sur n’importe quel téléphone.</p>
-              <AccountForm sync={sync} />
-              <p className="text-[0.75rem] text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
-            </section>
-          ) : (
           <section className="space-y-3" data-testid="ob-backup">
-            <h2 className="text-xl font-black text-white">Sauvegarde automatique ☁️</h2>
-            <p className="text-sm text-slate-300">Pour ne jamais perdre tes données (téléphone changé, navigateur vidé), elles sont copiées <strong>automatiquement</strong> dans un espace <strong>privé à toi</strong> sur GitHub (gratuit). À faire une seule fois, ~5 minutes. Ensuite tout est automatique.</p>
-            <ol className="list-decimal pl-5 space-y-2.5 text-sm text-slate-300">
-              <li>Crée un compte GitHub gratuit (si tu n’en as pas) : <a href={LINKS.signup} target="_blank" rel="noreferrer" className="text-sky-300 underline">github.com/signup</a>. Retiens ton <em>nom d’utilisateur</em>.</li>
-              <li>Crée ton espace privé : <a href={LINKS.repo} target="_blank" rel="noreferrer" className="text-sky-300 underline">ouvrir la page (déjà remplie)</a>. Coche <strong>« Add a README file »</strong>, laisse <strong>Private</strong>, puis « Create repository ».</li>
-              <li>Crée ta clé d’accès : <a href={LINKS.token} target="_blank" rel="noreferrer" className="text-sky-300 underline">ouvrir la page</a>. Choisis <strong>« Only select repositories »</strong> → <strong>muscu-donnees</strong> ; vérifie <strong>Contents : Read and write</strong> ; « Generate token », puis copie la clé (elle commence par <code>github_pat_</code>).</li>
-              <li>Colle-les ici :</li>
-            </ol>
-            <div className="grid gap-2">
-              <div><label className={label} htmlFor="ob-gh">Nom d’utilisateur GitHub</label><input id="ob-gh" value={gh.owner} onChange={e => setGh(g => ({ ...g, owner: e.target.value }))} autoCapitalize="none" autoCorrect="off" className={field} placeholder="mon-pseudo" data-testid="gh-owner" /></div>
-              <div>
-                <label className={label} htmlFor="ob-tok">Clé d’accès (reste uniquement sur ce téléphone)</label>
-                <div className="flex gap-2">
-                  <input id="ob-tok" type={showToken ? 'text' : 'password'} value={gh.token} onChange={e => setGh(g => ({ ...g, token: e.target.value }))} autoCapitalize="none" autoCorrect="off" autoComplete="off" className={field} placeholder="github_pat_…" data-testid="gh-token" />
-                  <button type="button" onClick={() => setShowToken(s => !s)} className="px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold shrink-0">{showToken ? 'Masquer' : 'Afficher'}</button>
-                </div>
-              </div>
-              <button type="button" onClick={connect} disabled={!gh.owner.trim() || !gh.token.trim()} data-testid="gh-connect" className="px-4 py-2.5 rounded-xl bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-black">Activer la sauvegarde automatique</button>
-              {statusText && <p className={`text-sm font-bold ${syncOk ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="gh-status">{statusText}</p>}
-            </div>
-            <p className="text-[0.75rem] text-slate-500">Tu peux aussi le faire plus tard (⚙️ → Sauvegarde), mais sans cette étape tes données ne sont que sur ce téléphone. Ta clé ne sert qu’à ce dépôt et n’est jamais envoyée ailleurs.</p>
+            <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
+            <p className="text-sm text-slate-300">Crée un compte (e-mail + mot de passe) : tes données sont alors <strong>sauvegardées automatiquement</strong> dans ton espace personnel, et tu les retrouves en te reconnectant sur n’importe quel téléphone.</p>
+            <AccountForm sync={sync} />
+            <p className="text-[0.75rem] text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
           </section>
-          )
         )}
 
         {step === 7 && (

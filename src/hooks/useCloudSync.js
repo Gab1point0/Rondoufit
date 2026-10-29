@@ -5,25 +5,22 @@ import { normalizeState } from '../data/state';
 import { saveSafetyCopy } from '../lib/safetyCopy';
 import { PhotoDB } from '../lib/photos';
 import { syncOnce } from '../sync/engine';
-import * as github from '../sync/github';
-import * as supabase from '../sync/supabase';
 import { syncPhotos } from '../sync/photoSync';
 import * as store from '../sync/storage';
+import * as supabase from '../sync/supabase';
 
 const DEBOUNCE_MS = 2000;      // attente après une modification avant d'envoyer
 const POLL_MS = 60000;         // vérification régulière (reprise des modifications d'un autre appareil, nouvel essai après erreur)
 const FOCUS_MIN_MS = 30000;    // au retour sur l'app, on resynchronise si la dernière synchro date de plus de 30 s
 
 /**
- * Synchronisation avec le fichier GitHub (voir sync/engine.js).
- * Statuts : 'off' (non configurée) · 'loading' (première lecture) · 'saving' · 'synced' · 'error'.
+ * Sauvegarde automatique dans le compte de l'application (Supabase) : données (sync/engine.js) et photos (sync/photoSync.js).
+ * Statuts : 'off' (pas connecté) · 'loading' (première lecture) · 'saving' · 'synced' · 'error'.
  */
-export function useGithubSync({ stateRef, version, applyRemote }) {
-  const [config, setConfigState] = useState(store.readConfig);
+export function useCloudSync({ stateRef, version, applyRemote }) {
   const [account, setAccountState] = useState(store.readAccount);
-  // Deux façons de sauvegarder : un compte de l'application (amis) ou un dépôt GitHub (avancé, Gabin). Le compte passe en premier.
   const accountOn = supabaseReady(SUPABASE) && !!(account && account.session && account.session.user && account.session.user.id);
-  const engineCfg = accountOn ? { kind: 'account', ...SUPABASE, userId: account.session.user.id } : store.isConfigured(config) ? config : null;
+  const engineCfg = accountOn ? { kind: 'account', ...SUPABASE, userId: account.session.user.id } : null;
   const configured = !!engineCfg;
   const [status, setStatus] = useState(configured ? 'loading' : 'off');
   const [error, setError] = useState(null);
@@ -31,17 +28,17 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
 
   const cfgRef = useRef(engineCfg);
   cfgRef.current = engineCfg;
-  const isLoaded = useRef(!configured);   // false tant que la première lecture de GitHub n'est pas terminée
+  const isLoaded = useRef(!configured);   // false tant que la première lecture de la sauvegarde n'est pas terminée
   const running = useRef(null);
   const timer = useRef(null);
   const lastSyncRef = useRef(0);
 
+  // Ancienne sauvegarde GitHub : abandonnée. On efface la clé d'accès gardée sur cet appareil (elle ne sert plus à rien).
+  useEffect(() => { if (accountOn) store.purgeLegacyGithub(); }, [accountOn]);
+
   const ports = useMemo(
     () => ({
-      api: {
-        getFile: c => (c.kind === 'account' ? supabase : github).getFile(c),
-        putFile: (c, ...rest) => (c.kind === 'account' ? supabase : github).putFile(c, ...rest),
-      },
+      api: supabase,
       getLocal: () => stateRef.current,
       isPristine: () => store.getLocalTs() === 0, // jamais modifié sur cet appareil = données de départ
       normalize: normalizeState,
@@ -61,28 +58,23 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     [stateRef, version, applyRemote]
   );
 
-  // `quiet` : vérification régulière en arrière-plan, la pastille ne clignote pas si rien n'est à envoyer.
-  // Photos souvenirs : une par fichier dans le dépôt (voir sync/photoSync.js).
+  // Photos souvenirs : une ligne par photo (voir sync/photoSync.js).
   const photoPorts = useMemo(
     () => ({
-      api: {
-        listDir: (c, d) => (c.kind === 'account' ? supabase.photos : github).listDir(c, d),
-        getFile: c => (c.kind === 'account' ? supabase.photos : github).getFile(c),
-        putFile: (c, ...r) => (c.kind === 'account' ? supabase.photos : github).putFile(c, ...r),
-        deleteFile: (c, ...r) => (c.kind === 'account' ? supabase.photos : github).deleteFile(c, ...r),
-      },
+      api: supabase.photos,
       local: {
         index: () => PhotoDB.index(),
         get: id => PhotoDB.get(id),
         put: p => PhotoDB.put(p, { remote: true }),
         del: id => PhotoDB.del(id, { remote: true }),
       },
-      getMeta: () => (cfgRef.current && cfgRef.current.kind === 'account' ? store.readPhotoMetaAccount() : store.readPhotoMeta()),
-      setMeta: m => (cfgRef.current && cfgRef.current.kind === 'account' ? store.writePhotoMetaAccount(m) : store.writePhotoMeta(m)),
+      getMeta: store.readPhotoMetaAccount,
+      setMeta: store.writePhotoMetaAccount,
     }),
     []
   );
 
+  // `quiet` : vérification régulière en arrière-plan, la pastille ne clignote pas si rien n'est à envoyer.
   const syncNow = useCallback(opts => {
     const cfg = cfgRef.current;
     if (!cfg) return Promise.resolve(false);
@@ -92,7 +84,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     const p = (async () => {
       try {
         await syncOnce(cfg, ports);
-        await syncPhotos(cfg, photoPorts); // photos : même destination que les données (compte ou GitHub)
+        await syncPhotos(cfg, photoPorts);
         lastSyncRef.current = Date.now();
         setLastSync(lastSyncRef.current);
         setError(null);
@@ -121,29 +113,6 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
       }, delay);
     },
     [syncNow]
-  );
-
-  const setConfig = useCallback(
-    next => {
-      const prev = store.readConfig();
-      const sameFile = ['owner', 'repo', 'path', 'branch'].every(k => prev[k] === next[k]);
-      if (!sameFile) {
-        store.writeSynced(null); // l'ancienne référence ne vaut que pour l'ancien fichier
-        store.writePhotoMeta(null);
-      }
-      store.writeConfig(next);
-      if (!(cfgRef.current && cfgRef.current.kind === 'account')) cfgRef.current = store.isConfigured(next) ? next : null;
-      setConfigState(next);
-      setError(null);
-      if (store.isConfigured(next)) {
-        setStatus('loading');
-        scheduleSync(50);
-      } else {
-        setStatus('off');
-        isLoaded.current = true;
-      }
-    },
-    [scheduleSync]
   );
 
   // ---- Compte de l'application ----
@@ -188,12 +157,25 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     const acc = store.readAccount();
     await supabase.signOut(SUPABASE, acc && acc.session);
     store.writeAccount(null); // les données restent sur cet appareil ; `lastUser` empêche de les mélanger avec un autre compte
-    cfgRef.current = store.isConfigured(config) ? config : null;
+    cfgRef.current = null;
     setAccountState(null);
-    setStatus(cfgRef.current ? 'loading' : 'off');
+    setStatus('off');
     isLoaded.current = true;
-    if (cfgRef.current) scheduleSync(50);
-  }, [config, scheduleSync]);
+  }, []);
+
+  // Versions précédentes (historique automatique côté serveur) : liste, puis restauration d'une version.
+  const listVersions = useCallback(() => supabase.listHistory(SUPABASE), []);
+  const restoreVersion = useCallback(async id => {
+    const data = await supabase.getHistory(SUPABASE, id);
+    if (!data || !Array.isArray(data.quests)) throw new Error('Cette version est illisible : rien n’a été changé.');
+    saveSafetyCopy(stateRef.current, 'avant la restauration d’une version précédente');
+    version.current++;
+    store.markDirty();
+    store.setLocalTs(Date.now());
+    const { _savedAt, ...rest } = data;
+    applyRemote(normalizeState(rest));
+    scheduleSync(50);
+  }, [applyRemote, scheduleSync, stateRef, version]);
 
   // Démarrage, retour sur l'app, retour du réseau, vérification régulière.
   useEffect(() => {
@@ -220,5 +202,5 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
 
   const user = accountOn ? account.session.user : null;
   const needsLogin = !!(account && account.expired && !accountOn);
-  return { config, configured, status, error, lastSync, setConfig, syncNow, scheduleSync, isLoaded, accountEnabled: supabaseReady(SUPABASE), user, needsLogin, signUp, signIn, signOut };
+  return { configured, status, error, lastSync, syncNow, scheduleSync, isLoaded, accountEnabled: supabaseReady(SUPABASE), user, needsLogin, signUp, signIn, signOut, listVersions, restoreVersion };
 }

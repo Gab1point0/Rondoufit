@@ -1,12 +1,12 @@
 // Édition « amis » (neutre) : interface sobre sans Rondoudou, assistant d'accueil, sauvegarde automatique guidée.
 import { afterEach, describe, expect, it } from 'vitest';
 import { DEMO_STATE } from './demo';
-import { advance, clickEl, clickText, fakeGithub, launch, pageText, setInput } from './harness';
+import { advance, clickEl, clickText, launch, pageText, setInput } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const NEUTRAL = { 'rondoufit:style': 'neutral', 'rondoufit:supabase': JSON.stringify({ disabled: true }) }; // ces tests couvrent la sauvegarde GitHub guidée (voir compte.test.js pour les comptes)
+const NEUTRAL = { 'rondoufit:style': 'neutral' };
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const ob = h => h.doc.querySelector('[data-testid="onboarding"]');
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
@@ -80,23 +80,17 @@ describe('édition neutre pour les amis', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('la sauvegarde GitHub guidée enregistre le compte, le dépôt privé et la clé, puis synchronise', async () => {
-    const srv = fakeGithub(null);
-    const h = await launch({ empty: true, storage: NEUTRAL, fetchImpl: srv.fetch });
+  it('l’étape sauvegarde propose de créer un compte (aucune trace de GitHub)', async () => {
+    const h = await launch({ empty: true, storage: NEUTRAL });
     open.push(h);
     await advance(h, 300);
     await next(h);
     await fill(h, 'ob-w', '70');
     for (let i = 0; i < 5; i++) await next(h);
-    expect(byTest(h, 'ob-backup').textContent).toContain('muscu-donnees');
-    expect(byTest(h, 'ob-backup').querySelector('a[href*="visibility=private"]')).toBeTruthy();
-    await setInput(h, byTest(h, 'gh-owner'), 'lea-fit');
-    await setInput(h, byTest(h, 'gh-token'), 'github_pat_test123');
-    await clickEl(h, byTest(h, 'gh-connect'));
-    await advance(h, 3000);
-    const cfg = JSON.parse(h.w.localStorage.getItem('rondoufit:github'));
-    expect(cfg).toMatchObject({ owner: 'lea-fit', repo: 'muscu-donnees', token: 'github_pat_test123' });
-    expect(h.w.localStorage.getItem('rondoudou_save_v1') || '').not.toContain('github_pat'); // la clé ne va jamais dans les données
+    const t = byTest(h, 'ob-backup').textContent;
+    expect(t).toContain('Ton compte');
+    expect(t).toMatch(/Créer un compte/);
+    expect(pageText(h)).not.toMatch(/github/i);
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

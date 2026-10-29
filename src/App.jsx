@@ -19,7 +19,6 @@ import { QuestFormModal } from './modals/QuestFormModal';
 import { QuestsTab } from './tabs/QuestsTab';
 import { QuickCardioModal } from './modals/QuickCardioModal';
 import { ResetModal } from './modals/ResetModal';
-import { SyncModal } from './modals/SyncModal';
 import { BottomNav, SubTabs, TabBar } from './components/TabBar';
 import { MoreSheet } from './modals/MoreSheet';
 import { QuickAddMenu } from './components/QuickAddMenu';
@@ -57,7 +56,6 @@ import { readRecoveryToken } from './components/AccountForm';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
-  const [syncOpen, setSyncOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [recovery, setRecovery] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -83,8 +81,7 @@ export function App() {
 
   const { toast, triggerToast, dismissToast } = useToast();
   const [obOpen, setObOpen] = useState(false);
-  // Sauvegarde : compte de l'application (amis, si le service est réglé) ou dépôt GitHub (avancé)
-  const openSync = () => (sync.accountEnabled && (NEUTRAL || sync.user) ? setAccountOpen(true) : setSyncOpen(true));
+  const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
   // lien « mot de passe oublié » reçu par e-mail : l'adresse contient un jeton temporaire
   useEffect(() => {
     const t = readRecoveryToken();
@@ -198,7 +195,6 @@ export function App() {
         onOpenSync={openSync}
         onOpenTrial={() => setTrialOpen(true)}
         onRetrySync={sync.syncNow}
-        accountOn={!!sync.user}
         setActiveTab={goToTab}
         streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
@@ -314,10 +310,6 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         <ResetModal handleResetAll={handleResetAll} setConfirmResetOpen={setConfirmResetOpen} />
       )}
 
-      {/* MODALE 6 : RÉGLAGES DE LA SAUVEGARDE GITHUB */}
-      {syncOpen && (
-        <SyncModal sync={sync} onClose={() => setSyncOpen(false)} triggerToast={triggerToast} />
-      )}
 
       {/* MODALE 7 : RÉCOMPENSES DE NIVEAU */}
       {rewardsOpen && (
@@ -341,9 +333,6 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onClose={() => setMoreOpen(false)}
           onExport={handleExportJSON}
           onGoTab={goToTab}
-          onOpenAccount={() => setAccountOpen(true)}
-          accountEnabled={sync.accountEnabled}
-          hasAccount={!!sync.user}
           onOpenOnboarding={() => setObOpen(true)}
           onOpenSync={openSync}
           onReset={() => setConfirmResetOpen(true)}
@@ -362,7 +351,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
-      {accountOpen && <AccountModal sync={sync} recovery={recovery} onClose={() => { setAccountOpen(false); setRecovery(null); }} onUseGithub={() => { setAccountOpen(false); setSyncOpen(true); }} />}
+      {accountOpen && <AccountModal sync={sync} recovery={recovery} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />

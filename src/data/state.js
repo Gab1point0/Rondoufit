@@ -1,7 +1,7 @@
 import { STORAGE_KEY } from '../config';
 import { INITIAL_STATE } from './initialState';
 
-/** Complète une sauvegarde (locale, GitHub, fichier importé…) avec les valeurs par défaut des nouveaux champs. */
+/** Complète une sauvegarde (locale, sauvegarde en ligne, fichier importé…) avec les valeurs par défaut des nouveaux champs. */
 export function normalizeState(parsed) {
   return {
     ...INITIAL_STATE,

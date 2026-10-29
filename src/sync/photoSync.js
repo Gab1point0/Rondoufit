@@ -1,12 +1,12 @@
-// Synchronisation des photos souvenirs : un fichier `photos/<id>.json` par photo dans le dépôt de données.
+// Synchronisation des photos souvenirs : un fichier `photos/<id>.json` par photo dans le compte de données.
 // Aucune dépendance à React ni au navigateur : tout passe par `ports` (voir les tests).
 //
-// Pour chaque photo, on compare trois choses : cet appareil, GitHub, et l'état de la dernière synchronisation (`meta`).
+// Pour chaque photo, on compare trois choses : cet appareil, le serveur, et l'état de la dernière synchronisation (`meta`).
 //  - nouvelle ici ou là-bas → copiée de l'autre côté ;
 //  - modifiée d'un seul côté → copiée ; des deux côtés → la plus récente gagne ;
 //  - supprimée d'un côté (elle était connue à la dernière synchro) → supprimée aussi de l'autre.
 // Sécurités : un appareil neuf (sans photo ni mémoire de synchro) ne supprime jamais rien ;
-// si les photos de l'appareil ont disparu d'un coup (navigateur vidé), on les retélécharge au lieu de les supprimer sur GitHub.
+// si les photos de l'appareil ont disparu d'un coup (navigateur vidé), on les retélécharge au lieu de les supprimer sur le serveur.
 
 const DIR = 'photos';
 
@@ -14,7 +14,7 @@ const fileOf = id => `${DIR}/${id}.json`;
 const idOf = name => (name.endsWith('.json') ? name.slice(0, -5) : null);
 
 /**
- * @param cfg   réglages GitHub { owner, repo, path, branch, token }
+ * @param cfg   réglages le serveur { owner, repo, path, branch, token }
  * @param ports {
  *   api:   { listDir(cfg, dir), getFile(cfg), putFile(cfg, content, sha, message), deleteFile(cfg, sha, message) },
  *   local: { index() -> { id: updatedAt }, get(id) -> photo, put(photo), del(id) }   (put/del ne déclenchent pas d'envoi),
@@ -76,13 +76,13 @@ export async function syncPhotos(cfg, ports) {
       if (!got) { await upload(id, remoteSha); continue; }
       const remoteAt = got.photo.updatedAt || got.photo.createdAt || 0;
       const localAt = localIdx[id];
-      if (m && localAt <= m.at) await adopt(id, got); // modifiée sur GitHub seulement
+      if (m && localAt <= m.at) await adopt(id, got); // modifiée sur le serveur seulement
       else if (remoteAt > localAt) await adopt(id, got); // modifiée des deux côtés (ou historique inconnu) : la plus récente gagne
       else if (!m && remoteAt === localAt) { meta[id] = { sha: got.sha, at: localAt }; save(); } // même photo des deux côtés
       else await upload(id, remoteSha);
     } else if (inLocal) {
       if (m) {
-        await ports.local.del(id); // supprimée sur GitHub depuis la dernière synchro
+        await ports.local.del(id); // supprimée sur le serveur depuis la dernière synchro
         delete meta[id];
         save();
         stats.removedLocal++;

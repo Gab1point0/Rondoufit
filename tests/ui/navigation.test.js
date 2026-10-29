@@ -27,7 +27,7 @@ describe('navigation', () => {
     const h = await start();
     await clickEl(h, bas(h, 'Plus'));
     const feuille = h.doc.querySelector('.fixed.inset-0');
-    for (const t of ['Souvenirs', 'Bilan', 'Trophées', 'Sons :', 'Sauvegarde GitHub', 'Exporter mes données', 'Importer une sauvegarde', 'Réinitialiser l’aventure']) {
+    for (const t of ['Souvenirs', 'Bilan', 'Trophées', 'Sons :', 'Mon compte et ma sauvegarde', 'Exporter mes données', 'Importer une sauvegarde', 'Réinitialiser l’aventure']) {
       expect(feuille.textContent, t).toContain(t);
     }
     await clickEl(h, [...feuille.querySelectorAll('button')].find(b => b.textContent.includes('Bilan')));

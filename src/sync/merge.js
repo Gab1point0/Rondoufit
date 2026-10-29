@@ -1,4 +1,4 @@
-// Fusion à trois voies de deux versions de la sauvegarde (cet appareil / GitHub) à partir de leur ancêtre commun.
+// Fusion à trois voies de deux versions de la sauvegarde (cet appareil / sauvegarde en ligne) à partir de leur ancêtre commun.
 // Objectif : ne jamais perdre de séance saisie sur un appareil quand un autre appareil a aussi modifié les données.
 //
 //  - si un seul côté a changé par rapport à l'ancêtre, on prend ce côté ;
@@ -140,7 +140,7 @@ function merge3(base, local, remote, ctx, key, parent) {
 /**
  * @param base   état commun lors de la dernière synchronisation (ou null si inconnu)
  * @param local  état de cet appareil
- * @param remote état lu sur GitHub
+ * @param remote état lu en ligne
  * @param preferLocal en cas de désaccord sur une valeur simple, garder la version de cet appareil (la plus récente)
  */
 export function mergeStates(base, local, remote, { preferLocal = false } = {}) {

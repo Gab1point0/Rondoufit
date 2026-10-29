@@ -9,7 +9,7 @@ const chip = 'px-2 py-0.5 rounded-full text-[0.75rem] sm:text-xs font-bold borde
 
 export function HeaderProfile({
   currentStreak, gameState, levelInfo, lifetimeStats, onOpenMore, onOpenRewards, onOpenSync, onOpenTrial,
-  onRetrySync, accountOn = false, setActiveTab, streakBonusPct, syncStatus, trialRank,
+  onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank,
 }) {
   const { theme, accessory, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
   const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
@@ -102,7 +102,7 @@ export function HeaderProfile({
         <button
           type="button"
           onClick={onOpenSync}
-          title="Réglages de la sauvegarde GitHub"
+          title="Mon compte et ma sauvegarde"
           className={`${chip} ${
             syncStatus === 'synced'
               ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
@@ -114,15 +114,15 @@ export function HeaderProfile({
           }`}
         >
           {syncStatus === 'synced' ? (
-            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{(NEUTRAL || accountOn ? '☁️ Sauvegardé en ligne' : '☁️ Sauvegardé sur GitHub')}</span></>
+            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{'☁️ Sauvegardé en ligne'}</span></>
           ) : syncStatus === 'saving' ? (
             '⏳ Synchronisation…'
           ) : syncStatus === 'loading' ? (
             '☁️ Chargement…'
           ) : syncStatus === 'off' ? (
-            <><span className="sm:hidden">⚠️ Pas de sauvegarde</span><span className="hidden sm:inline">{pick('⚠️ Sauvegarde GitHub non réglée : données sur cet appareil seulement', '⚠️ Pas de sauvegarde en ligne : données sur ce téléphone seulement')}</span></>
+            <><span className="sm:hidden">⚠️ Pas de sauvegarde</span><span className="hidden sm:inline">⚠️ Pas de sauvegarde en ligne : connecte-toi (données sur cet appareil seulement)</span></>
           ) : (
-            <><span className="sm:hidden">{pick('⚠️ GitHub injoignable', '⚠️ Sauvegarde injoignable')}</span><span className="hidden sm:inline">{pick('⚠️ GitHub injoignable : données gardées sur cet appareil', '⚠️ Sauvegarde injoignable : données gardées sur ce téléphone')}</span></>
+            <><span className="sm:hidden">⚠️ Sauvegarde injoignable</span><span className="hidden sm:inline">⚠️ Sauvegarde injoignable : données gardées sur cet appareil</span></>
           )}
         </button>
         {syncStatus === 'error' && (

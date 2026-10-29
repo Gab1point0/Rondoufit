@@ -1,8 +1,8 @@
 import { AccountForm } from '../components/AccountForm';
 import { X } from '../icons';
 
-// Fenêtre « Mon compte » : créer un compte, se connecter, se déconnecter (sauvegarde automatique, sans GitHub).
-export function AccountModal({ sync, recovery, onClose, onUseGithub }) {
+// Fenêtre « Mon compte » : créer un compte, se connecter, se déconnecter (sauvegarde automatique).
+export function AccountModal({ sync, recovery, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto" role="dialog" aria-label="Mon compte">
       <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
@@ -13,7 +13,7 @@ export function AccountModal({ sync, recovery, onClose, onUseGithub }) {
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white shrink-0"><X className="w-4 h-4" /></button>
         </div>
-        <AccountForm sync={sync} recovery={recovery} onDone={onClose} onUseGithub={onUseGithub} />
+        <AccountForm sync={sync} recovery={recovery} onDone={onClose} />
       </div>
     </div>
   );

@@ -1,28 +1,15 @@
-import { pick } from '../edition';
-// Réglages et marqueurs de synchronisation, gardés dans le navigateur de chaque appareil.
-// (Le jeton GitHub ne quitte jamais l'appareil et n'est jamais écrit dans le fichier de sauvegarde.)
+// Marqueurs de synchronisation et session du compte, gardés dans le navigateur de chaque appareil.
+// (Le mot de passe n'est jamais enregistré ; la session est un jeton temporaire.)
 
 const KEYS = {
-  config: 'rondoufit:github',
-  synced: 'rondoufit:sync',       // { sha, base } : version de GitHub vue en dernier + état commun à ce moment-là
-  photoMeta: 'rondoufit:photoSync', // { id: { sha, at } } : état des photos à la dernière synchro
+  synced: 'rondoufit:sync',       // { sha, base } : version de la sauvegarde en ligne vue en dernier + état commun à ce moment-là
   dirty: 'rondoufit:dirty',       // '1' tant que des modifications de cet appareil n'ont pas été envoyées
   localTs: 'rondoudou_local_ts',  // date (ms) de la dernière modification faite sur cet appareil
   photoMetaAcc: 'rondoufit:photoSyncAccount', // état des photos à la dernière synchro avec le compte
   account: 'rondoufit:account',   // compte de l'application : { session, expired? } (jamais le mot de passe)
   lastUser: 'rondoufit:lastUser', // dernier compte connecté sur cet appareil (pour ne jamais mélanger deux personnes)
-  carnet: 'carnet-eps:github',    // réglages de l'appli Carnet EPS (même appareil), pour les reprendre en un clic
 };
-
-export const EMPTY_CONFIG = {
-  owner: pick('Gab1point0', ''),
-  repo: pick('rondoufit-donnees', 'muscu-donnees'),
-  path: 'rondoufit-data.json',
-  branch: 'main',
-  token: '',
-};
-
-export const isConfigured = c => !!(c && c.owner && c.repo && c.path && c.branch && c.token);
+const LEGACY_GITHUB = ['rondoufit:github', 'rondoufit:photoSync']; // ancienne sauvegarde GitHub (abandonnée)
 
 function read(key) {
   try {
@@ -40,27 +27,6 @@ function write(key, value) {
   }
 }
 
-export function readConfig() {
-  try {
-    const raw = read(KEYS.config);
-    if (raw) return { ...EMPTY_CONFIG, ...JSON.parse(raw) };
-  } catch {
-    /* ignore */
-  }
-  return { ...EMPTY_CONFIG };
-}
-export const writeConfig = c => write(KEYS.config, JSON.stringify(c));
-
-/** Réglages saisis dans Carnet EPS sur cet appareil (compte + jeton), s'il y en a. */
-export function readCarnetConfig() {
-  try {
-    const c = JSON.parse(read(KEYS.carnet) || 'null');
-    return c && c.owner && c.token ? { owner: c.owner, token: c.token, repo: c.repo || '' } : null;
-  } catch {
-    return null;
-  }
-}
-
 export function readSynced() {
   try {
     const s = JSON.parse(read(KEYS.synced) || 'null');
@@ -70,15 +36,6 @@ export function readSynced() {
   }
 }
 export const writeSynced = s => write(KEYS.synced, s ? JSON.stringify(s) : null);
-
-export function readPhotoMeta() {
-  try {
-    return JSON.parse(read(KEYS.photoMeta) || 'null');
-  } catch {
-    return null;
-  }
-}
-export const writePhotoMeta = m => write(KEYS.photoMeta, m ? JSON.stringify(m) : null);
 
 export function readPhotoMetaAccount() {
   try {
@@ -109,3 +66,8 @@ export const writeAccount = a => write(KEYS.account, a ? JSON.stringify(a) : nul
 export const isAccountConnected = () => { const a = readAccount(); return !!(a && a.session && a.session.user && a.session.user.id); };
 export const readLastUser = () => read(KEYS.lastUser);
 export const writeLastUser = id => write(KEYS.lastUser, id || null);
+
+/** Efface la clé GitHub (et la mémoire des photos GitHub) qui traînent encore sur cet appareil : plus aucun usage. */
+export function purgeLegacyGithub() {
+  for (const k of LEGACY_GITHUB) write(k, null);
+}

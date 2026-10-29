@@ -1,17 +1,17 @@
-// Moteur de synchronisation : lit le fichier GitHub, le fusionne avec les données de cet appareil, puis l'écrit.
+// Moteur de synchronisation : lit la sauvegarde en ligne, la fusionne avec les données de cet appareil, puis l'écrit.
 // Aucune dépendance à React ni au navigateur : tout passe par `ports` (voir les tests).
 //
 // Règles de sécurité héritées de l'ancienne sauvegarde Google Sheets :
-//  - on n'écrase jamais GitHub si on n'a pas pu le lire (fichier illisible ou invalide → on s'arrête) ;
+//  - on n'écrase jamais la sauvegarde en ligne si on n'a pas pu la lire (illisible ou invalide → on s'arrête) ;
 //  - un appareil neuf (données de départ jamais modifiées) ne peut pas écraser une sauvegarde existante ;
 //  - rien n'est perdu quand deux appareils ont modifié les données : elles sont fusionnées (voir merge.js).
-import { GithubError } from './github';
+import { SyncError } from './errors';
 import { deepEqual, mergeStates } from './merge';
 
 const MAX_TRIES = 5;
 
 /**
- * @param cfg   { owner, repo, path, branch, token }
+ * @param cfg   réglages du compte (voir sync/supabase.js)
  * @param ports {
  *   api:        { getFile(cfg) -> {content, sha}, putFile(cfg, content, sha, message) -> sha },
  *   getLocal(): état de cet appareil,
@@ -65,7 +65,7 @@ export async function syncOnce(cfg, ports) {
       next = local;
       action = 'pushed';
     } else if (!dirty) {
-      // Rien de neuf ici, du neuf sur GitHub : on le reprend.
+      // Rien de neuf ici, du neuf en ligne : on le reprend.
       if (ports.version() !== version) continue;
       if (!deepEqual(local, remoteState)) ports.applyRemote(remoteState, remoteTs);
       ports.setSynced({ sha: remote.sha, base: remoteState });
@@ -78,7 +78,7 @@ export async function syncOnce(cfg, ports) {
     // L'utilisateur a modifié ses données pendant l'aller-retour réseau : on recommence avec l'état à jour.
     if (ports.version() !== version) continue;
 
-    // Après fusion, il n'y a parfois rien de plus à envoyer : GitHub contient déjà exactement ce résultat.
+    // Après fusion, il n'y a parfois rien de plus à envoyer : la sauvegarde en ligne contient déjà exactement ce résultat.
     if (remoteState && deepEqual(next, remoteState)) {
       if (!deepEqual(local, next)) ports.applyRemote(next, remoteTs);
       ports.setSynced({ sha: remote.sha, base: next });
@@ -99,7 +99,7 @@ export async function syncOnce(cfg, ports) {
     try {
       sha = await ports.api.putFile(cfg, content, remote.sha, 'RondouFit : sauvegarde automatique');
     } catch (err) {
-      if (err instanceof GithubError && (err.status === 409 || err.status === 422) && attempt < MAX_TRIES - 1) continue;
+      if (err instanceof SyncError && (err.status === 409 || err.status === 422) && attempt < MAX_TRIES - 1) continue;
       throw err;
     }
     ports.setSynced({ sha, base: next });

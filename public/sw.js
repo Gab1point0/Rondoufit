@@ -1,7 +1,7 @@
 /* Service worker de RondouFit : fonctionnement hors ligne.
    - pages : réseau d'abord (3 s max), puis copie en cache ;
    - fichiers de l'application (hachés par Vite) : cache d'abord ;
-   - API GitHub (sauvegarde) et tout ce qui vient d'un autre site : jamais mis en cache. */
+   - Service de sauvegarde en ligne (Supabase) et tout ce qui vient d'un autre site : jamais mis en cache. */
 const CACHE = 'rondoufit-v1';
 
 self.addEventListener('install', () => self.skipWaiting());

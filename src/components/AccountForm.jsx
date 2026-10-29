@@ -8,9 +8,9 @@ const btn = 'px-4 py-2.5 rounded-xl text-sm font-black disabled:bg-slate-800 dis
 
 /**
  * Compte de l'application : créer un compte, se connecter, mot de passe oublié, se déconnecter.
- * `sync` = retour de useGithubSync (signUp, signIn, signOut, user, status…). `recovery` = jeton temporaire issu du lien « mot de passe oublié ».
+ * `sync` = retour de useCloudSync (signUp, signIn, signOut, user, status…). `recovery` = jeton temporaire issu du lien « mot de passe oublié ».
  */
-export function AccountForm({ sync, recovery = null, onDone, onUseGithub }) {
+export function AccountForm({ sync, recovery = null, onDone }) {
   const [mode, setMode] = useState(recovery ? 'reset-new' : 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +36,7 @@ export function AccountForm({ sync, recovery = null, onDone, onUseGithub }) {
           {onDone && <button type="button" onClick={onDone} className={`${btn} bg-sky-600 text-white`}>OK</button>}
         </div>
         {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`}>{msg.text}</p>}
+        <Versions sync={sync} />
       </div>
     );
   }
@@ -92,7 +93,6 @@ export function AccountForm({ sync, recovery = null, onDone, onUseGithub }) {
       {!signup && <button type="button" onClick={() => { setMode('forgot'); setMsg(null); }} className="text-[0.75rem] font-bold text-sky-300 underline">Mot de passe oublié ?</button>}
       {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`} data-testid="acc-msg">{msg.text}</p>}
       {sync.needsLogin && <p className="text-sm font-bold text-amber-300">Ta session a expiré : reconnecte-toi.</p>}
-      {onUseGithub && <p className="text-[0.75rem] text-slate-500">Utilisateur avancé ? <button type="button" onClick={onUseGithub} className="underline text-slate-400">Sauvegarder plutôt dans mon propre dépôt GitHub</button>.</p>}
     </form>
   );
 }
@@ -104,4 +104,38 @@ export function readRecoveryToken() {
     if (h.get('type') === 'recovery' && h.get('access_token')) return h.get('access_token');
   } catch { /* rien */ }
   return null;
+}
+
+const fmt = iso => new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+
+/** Versions précédentes de la sauvegarde (copies automatiques du serveur, protégées contre la suppression). */
+function Versions({ sync }) {
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const load = async () => {
+    setBusy(true);
+    setMsg(null);
+    try { setList(await sync.listVersions()); } catch (e) { setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); }
+  };
+  return (
+    <div className="border-t border-slate-800 pt-3 space-y-2" data-testid="versions">
+      <button type="button" onClick={() => { const o = !open; setOpen(o); if (o && !list) load(); }} className="text-[0.75rem] font-bold text-sky-300 underline" data-testid="versions-toggle">{open ? 'Masquer les versions précédentes' : 'Versions précédentes de ma sauvegarde'}</button>
+      {open && (
+        <div className="space-y-1.5">
+          <p className="text-[0.75rem] text-slate-500">Le serveur garde automatiquement une copie de ta sauvegarde (une toutes les 8 h environ, les 21 dernières) et personne ne peut les supprimer depuis l’appli. Utile si des données ont été effacées par erreur : restaurer une version remplace tes données actuelles (une copie de sécurité est gardée sur cet appareil).</p>
+          {busy && <p className="text-xs text-slate-400">Chargement…</p>}
+          {list && list.length === 0 && <p className="text-xs text-slate-400">Aucune version précédente pour l’instant (la première apparaît après ta prochaine modification).</p>}
+          {(list || []).map(v => (
+            <div key={v.id} className="flex items-center justify-between gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs">
+              <span className="text-slate-200">{fmt(v.saved_at)}</span>
+              <button type="button" disabled={busy} onClick={async () => { if (!window.confirm('Remplacer tes données actuelles par cette version ?')) return; setBusy(true); try { await sync.restoreVersion(v.id); setMsg({ ok: true, text: 'Version restaurée. Elle est maintenant sauvegardée.' }); } catch (e) { setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); } }} className="px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-white font-bold disabled:opacity-50" data-testid={`restore-${v.id}`}>Restaurer</button>
+            </div>
+          ))}
+          {msg && <p className={`text-xs font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`}>{msg.text}</p>}
+        </div>
+      )}
+    </div>
+  );
 }

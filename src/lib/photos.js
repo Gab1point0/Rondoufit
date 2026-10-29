@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // ===== Souvenirs photo (stockés dans IndexedDB, hors sauvegarde principale) =====
 // Chaque photo : { id, date, label, note, img (JPEG en base64), createdAt, updatedAt }.
-// Elles sont synchronisées avec GitHub par sync/photoSync.js. Un petit index { id: updatedAt } est gardé dans
+// Elles sont sauvegardées dans le compte par sync/photoSync.js. Un petit index { id: updatedAt } est gardé dans
 // localStorage pour que la synchro n'ait pas à relire toutes les images.
 const INDEX_KEY = 'rondoufit:photoIdx';
 const readIdx = () => { try { return JSON.parse(localStorage.getItem(INDEX_KEY) || 'null'); } catch (e) { return null; } };
@@ -49,7 +49,7 @@ export const PhotoDB = {
       });
     } catch (e) { return this._mem.slice(); }
   },
-  // remote = true : photo reçue de GitHub (on garde sa date de modification et on ne la renvoie pas)
+  // remote = true : photo reçue de la sauvegarde en ligne (on garde sa date de modification et on ne la renvoie pas)
   async put(photo, { remote = false } = {}) {
     const p = remote ? photo : { ...photo, updatedAt: Date.now() };
     const idx = (await this.index()) || {};

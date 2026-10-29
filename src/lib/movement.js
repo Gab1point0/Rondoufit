@@ -5,7 +5,7 @@ export function openMovement(q) {
   } catch (e) { /* rien */ }
 }
 
-/** Signale qu'une animation est fausse (App.jsx l'enregistre dans gameState.animFlags, synchronisé avec GitHub). */
+/** Signale qu'une animation est fausse (App.jsx l'enregistre dans gameState.animFlags, sauvegardé avec le compte). */
 export function flagAnimation({ animId, view, name }) {
   try {
     window.dispatchEvent(new CustomEvent('rondoufit-animflag', { detail: { animId, view, name } }));

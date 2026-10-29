@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { syncPhotos } from './photoSync';
 
-// ── Faux dépôt GitHub (dossier photos/) ─────────────────────────────────────────────────────────
+// ── Faux serveur de photos ─────────────────────────────────────────────────────────
 function fakeRepo() {
   const files = new Map();
   let n = 0;
@@ -112,7 +112,7 @@ describe('synchronisation des photos', () => {
     expect(neuf.photos.size).toBe(1);
   });
 
-  it('photos de l’appareil disparues d’un coup (navigateur vidé) : on les retélécharge, GitHub n’est pas touché', async () => {
+  it('photos de l’appareil disparues d’un coup (navigateur vidé) : on les retélécharge, le serveur n’est pas touché', async () => {
     const repo = fakeRepo();
     const tel = device(repo); tel.add('ph_1'); tel.add('ph_2'); await tel.sync();
     tel.photos.clear(); // stockage vidé, mais la mémoire de synchro a survécu

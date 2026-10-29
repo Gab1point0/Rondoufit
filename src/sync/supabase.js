@@ -3,8 +3,8 @@
 //  - sauvegarde : une ligne par personne dans la table `saves` (user_id, data jsonb, version), protégée côté serveur par une règle
 //    « chacun ne voit et ne modifie que SA ligne » (Row Level Security, voir docs/supabase.sql).
 // La clé « anon » publique est faite pour être visible dans l'appli ; la clé secrète (service_role) n'est JAMAIS utilisée ici.
-// Même interface que sync/github.js (getFile / putFile avec un numéro de version à la place du sha) : le moteur de fusion est le même.
-import { GithubError } from './github';
+// Interface attendue par sync/engine.js : getFile / putFile avec un numéro de version (« sha »).
+import { SyncError } from './errors';
 import * as store from './storage';
 
 export class AccountError extends Error {
@@ -114,9 +114,9 @@ export async function freshSession(cfg) {
   }
 }
 
-// ---- Sauvegarde : même interface que sync/github.js ----
+// ---- Sauvegarde (une ligne par personne) ----
 
-const asConflict = () => new GithubError('Conflit : la sauvegarde a été modifiée ailleurs.', 409);
+const asConflict = () => new SyncError('Conflit : la sauvegarde a été modifiée ailleurs.', 409);
 
 /** Lit la sauvegarde du compte. `content` et `sha` valent null s'il n'y en a pas encore ; `sha` = numéro de version. */
 export async function getFile(cfg) {
@@ -150,10 +150,18 @@ export async function putFile(cfg, content, sha) {
   return String(rows[0].version);
 }
 
-/** Efface la sauvegarde en ligne du compte (le compte lui-même reste). */
-export async function deleteCloudSave(cfg) {
+/** Versions précédentes gardées automatiquement par le serveur (une copie au plus toutes les 8 h, les 21 dernières) : [{ id, version, saved_at }]. */
+export async function listHistory(cfg) {
   const s = await freshSession(cfg);
-  await call(cfg, 'DELETE', '/rest/v1/saves', { token: s.access_token, query: `?user_id=eq.${encodeURIComponent(s.user.id)}` });
+  const rows = await call(cfg, 'GET', '/rest/v1/saves_history', { token: s.access_token, query: `?select=id,version,saved_at&user_id=eq.${encodeURIComponent(s.user.id)}&order=saved_at.desc&limit=30` });
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** Contenu d'une version précédente. */
+export async function getHistory(cfg, id) {
+  const s = await freshSession(cfg);
+  const rows = await call(cfg, 'GET', '/rest/v1/saves_history', { token: s.access_token, query: `?select=data&user_id=eq.${encodeURIComponent(s.user.id)}&id=eq.${encodeURIComponent(id)}` });
+  return Array.isArray(rows) && rows[0] ? rows[0].data : null;
 }
 
 // ---- Photos souvenirs : table `photos` (user_id, id, data jsonb, version), mêmes règles « chacun les siennes » ----

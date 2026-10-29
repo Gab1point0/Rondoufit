@@ -4,7 +4,7 @@ export const STORAGE_KEY = "rondoudou_save_v1";
 
 // Comptes dans l'application (édition « amis ») : projet Supabase. L'adresse et la clé « anon » (publique) viennent du tableau de bord
 // Supabase → Project Settings → API. Ne JAMAIS mettre ici la clé secrète « service_role ».
-// Tant que ces deux valeurs sont vides, l'assistant d'accueil propose la sauvegarde GitHub guidée à la place.
+// Sans ces valeurs (ou avec rondoufit:supabase = {"disabled":true}), l'appli reste utilisable mais sans sauvegarde en ligne.
 const SUPABASE_DEFAULT = { url: 'https://vvsmienmspftdzqykhnt.supabase.co', anonKey: 'sb_publishable_D0cEBEyEtCTA6Ys1xsQKoA_-uN-BEEN' }; // clé « publishable » : publique par conception
 function readSupabase() {
   // Réglage de test sur l'appareil (clé rondoufit:supabase) : permet d'essayer un autre projet sans republier l'appli.
