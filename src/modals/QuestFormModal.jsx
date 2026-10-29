@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ExercisePicker, unitLabel } from '../components/ExercisePicker';
+import { SignedKgInput } from '../components/SignedKgInput';
 import { ARENA_GROUPS } from '../data/arenas';
 import { FINE_GROUPS, coarseOf, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
@@ -8,7 +9,7 @@ import { timedAdvice } from '../lib/quests';
 import { pick } from '../edition';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, swapOther, setSwapOther, openCreateQuestModal, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
+  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, swapOther, setSwapOther, openCreateQuestModal, measure, changeMeasure, canChangeMeasure, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
@@ -122,6 +123,26 @@ export function QuestFormModal({
                       )}
                     </div>
                   </div>
+
+                  {formType === 'strength' && (
+                    <div className="space-y-1.5" data-testid="measure-block">
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-300">📏 Comment se mesure l’exercice ?</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'body', title: '💪 Poids du corps', desc: 'avec aide ou sans' },
+                          { id: 'kg', title: '🏋️ Charge en kg', desc: 'barre, haltères, machine' },
+                          { id: 'timed', title: '⏱ Durée', desc: 'gainage, planche…' },
+                        ].map(m => (
+                          <button key={m.id} type="button" disabled={!canChangeMeasure && measure !== m.id} data-testid={`measure-${m.id}`} onClick={() => changeMeasure(m.id)}
+                            className={`p-2 rounded-xl border text-left transition ${measure === m.id ? 'bg-indigo-600 border-indigo-400 text-white shadow' : 'bg-slate-950 border-slate-800 text-slate-300'} ${!canChangeMeasure && measure !== m.id ? 'opacity-40' : 'hover:border-slate-600'}`}>
+                            <div className="text-xs font-black">{m.title}</div>
+                            <div className="text-[0.7rem] opacity-80 mt-0.5">{m.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                      {!canChangeMeasure && <p className="text-[0.7rem] text-slate-500">Cet exercice a déjà des séances enregistrées : sa mesure ne peut plus changer. Pour une autre mesure, ajoute-le comme nouvel exercice.</p>}
+                    </div>
+                  )}
 
                   {formType === 'strength' && (
                     <div className="bg-pink-950/20 border border-pink-500/30 rounded-2xl p-4 space-y-3">
@@ -253,12 +274,8 @@ export function QuestFormModal({
                     </div>
                   )}
 
-                  {formType === 'strength' && formUnit === 'reps' && formGoalMode !== 'weight_only' && (
+                  {formType === 'strength' && formUnit === 'reps' && formTimed && formGoalMode !== 'weight_only' && (
                     <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-4 space-y-3">
-                      <label className="flex items-center gap-2 text-xs font-bold text-cyan-200 cursor-pointer">
-                        <input type="checkbox" checked={formTimed} onChange={e => setFormTimed(e.target.checked)} className="w-4 h-4" />
-                        ⏱ Exercice chronométré (gainage, planche, chaise murale…) : la valeur est en secondes
-                      </label>
                       {formTimed && (() => {
                         const adv = timedAdvice(formCustomName);
                         return (
@@ -295,31 +312,22 @@ export function QuestFormModal({
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[0.75rem] font-bold text-violet-300 mb-1">
-                            🪢 Aide Élastique Départ (kg)
+                            🪢 Charge de départ (kg)
                           </label>
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            value={formStartAssistanceKg}
-                            onChange={e => setFormStartAssistanceKg(e.target.value)}
-                            className="w-full bg-slate-900 border border-violet-500/30 rounded-xl py-2 text-center font-bold text-violet-200"
-                          />
+                          <SignedKgInput testId="signed-start" assist={formStartAssistanceKg} onAssist={setFormStartAssistanceKg}
+                            className="w-full bg-slate-900 border border-violet-500/30 rounded-xl py-2 text-center font-bold text-violet-200" />
                         </div>
                         <div>
                           <label className="block text-[0.75rem] font-bold text-emerald-300 mb-1">
-                            🦅 Aide Cible Objectif (0 = Strict)
+                            🦅 Charge objectif (kg)
                           </label>
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            value={formGoalAssistanceKg}
-                            onChange={e => setFormGoalAssistanceKg(e.target.value)}
-                            className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl py-2 text-center font-bold text-emerald-300"
-                          />
+                          <SignedKgInput testId="signed-goal" assist={formGoalAssistanceKg} onAssist={setFormGoalAssistanceKg}
+                            className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl py-2 text-center font-bold text-emerald-300" />
                         </div>
                       </div>
+                      <p className="text-[0.7rem] text-slate-400" data-testid="signed-hint">
+                        <b>−10</b> = 10 kg d’aide élastique · <b>0</b> = poids du corps seul. Plus le nombre se rapproche de 0, plus tu es autonome. Pour ajouter du poids (lest), choisis « Charge en kg ».
+                      </p>
                     </div>
                   )}
 

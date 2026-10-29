@@ -3,7 +3,7 @@ import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
-import { isTimedCatalog, isTimedQuest } from '../lib/quests';
+import { isStartEntry, isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useState } from 'react';
 import { computeXp } from '../lib/xp';
@@ -171,6 +171,27 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
   // Seuls les exercices de même type et de même unité (kg / répétitions / durée) sont proposés.
   const [formSwapNote, setFormSwapNote] = useState('');
   const isSwapCompatible = c => c.type === formType && c.unit === formUnit && isTimedCatalog(c) === formTimed;
+  // Mesure de l'exercice, en un seul choix : « body » (poids du corps, avec aide élastique = charge négative), « kg » (charge) ou « timed » (durée).
+  // Elle se règle à la création, ou tant que l'exercice n'a aucune séance enregistrée (sinon l'historique ne suivrait plus).
+  const measure = formType !== 'strength' ? null : formTimed ? 'timed' : formUnit === 'kg' ? 'kg' : 'body';
+  const editedQuest = editingQuestId ? (gameState.quests || []).find(q => q.id === editingQuestId) : null;
+  const canChangeMeasure = !editedQuest || !(editedQuest.history || []).some(h => !isStartEntry(h));
+  const changeMeasure = m => {
+    if (m === measure || !canChangeMeasure) return;
+    setFormTimed(m === 'timed');
+    setFormUnit(m === 'kg' ? 'kg' : 'reps');
+    if (formGoalMode === 'weight_only' && m !== 'kg') setFormGoalMode('sets_reps');
+    const set = (start, goal, reps) => {
+      setFormStartValue(start);
+      setFormCurrentValue(start);
+      setFormGoalValue(goal);
+      setFormGoalReps(reps);
+    };
+    if (m === 'kg') { set(20, 40, 8); setFormStartAssistanceKg(0); setFormGoalAssistanceKg(0); }
+    else if (m === 'timed') { set(20, 30, 30); setFormStartAssistanceKg(0); setFormGoalAssistanceKg(0); }
+    else { set(10, 15, 15); setFormStartAssistanceKg(0); setFormGoalAssistanceKg(0); }
+  };
+
   // Exercice d'une autre unité (ex. répétitions au lieu de kg) : l'historique ne peut pas suivre, on propose d'en faire un NOUVEL exercice
   const [swapOther, setSwapOther] = useState(null);
   const handleReplaceExercise = catId => {
@@ -315,5 +336,5 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon, swapOther, setSwapOther };
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon, swapOther, setSwapOther, measure, changeMeasure, canChangeMeasure };
 }
