@@ -41,3 +41,24 @@ drop trigger if exists check_invite_before_signup on auth.users;
 create trigger check_invite_before_signup
   before insert on auth.users
   for each row execute function public.check_invite();
+
+-- 4) Photos souvenirs : une ligne par photo et par personne ---------------------------------------------
+create table if not exists public.photos (
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  id         text not null,
+  data       jsonb not null,
+  version    integer not null default 1,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id),
+  constraint photos_taille_max check (pg_column_size(data) < 3000000)
+);
+alter table public.photos enable row level security;
+grant select, insert, update, delete on public.photos to authenticated;
+drop policy if exists photos_select_own on public.photos;
+drop policy if exists photos_insert_own on public.photos;
+drop policy if exists photos_update_own on public.photos;
+drop policy if exists photos_delete_own on public.photos;
+create policy photos_select_own on public.photos for select to authenticated using (auth.uid() = user_id);
+create policy photos_insert_own on public.photos for insert to authenticated with check (auth.uid() = user_id);
+create policy photos_update_own on public.photos for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy photos_delete_own on public.photos for delete to authenticated using (auth.uid() = user_id);

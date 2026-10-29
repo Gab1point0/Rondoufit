@@ -65,15 +65,20 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
   // Photos souvenirs : une par fichier dans le dépôt (voir sync/photoSync.js).
   const photoPorts = useMemo(
     () => ({
-      api: github,
+      api: {
+        listDir: (c, d) => (c.kind === 'account' ? supabase.photos : github).listDir(c, d),
+        getFile: c => (c.kind === 'account' ? supabase.photos : github).getFile(c),
+        putFile: (c, ...r) => (c.kind === 'account' ? supabase.photos : github).putFile(c, ...r),
+        deleteFile: (c, ...r) => (c.kind === 'account' ? supabase.photos : github).deleteFile(c, ...r),
+      },
       local: {
         index: () => PhotoDB.index(),
         get: id => PhotoDB.get(id),
         put: p => PhotoDB.put(p, { remote: true }),
         del: id => PhotoDB.del(id, { remote: true }),
       },
-      getMeta: store.readPhotoMeta,
-      setMeta: store.writePhotoMeta,
+      getMeta: () => (cfgRef.current && cfgRef.current.kind === 'account' ? store.readPhotoMetaAccount() : store.readPhotoMeta()),
+      setMeta: m => (cfgRef.current && cfgRef.current.kind === 'account' ? store.writePhotoMetaAccount(m) : store.writePhotoMeta(m)),
     }),
     []
   );
@@ -87,7 +92,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     const p = (async () => {
       try {
         await syncOnce(cfg, ports);
-        if (cfg.kind !== 'account') await syncPhotos(cfg, photoPorts); // photos : GitHub seulement pour l'instant
+        await syncPhotos(cfg, photoPorts); // photos : même destination que les données (compte ou GitHub)
         lastSyncRef.current = Date.now();
         setLastSync(lastSyncRef.current);
         setError(null);
@@ -154,7 +159,7 @@ export function useGithubSync({ stateRef, version, applyRemote }) {
     }
     if (last !== uid) {
       store.writeSynced(null);
-      store.writePhotoMeta(null);
+      store.writePhotoMetaAccount(null);
     }
     store.writeLastUser(uid);
     const next = { session };

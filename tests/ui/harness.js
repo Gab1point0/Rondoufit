@@ -232,7 +232,7 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
   const users = new Map(); // email -> { id, password }
   const tokens = new Map(); // access_token -> user id
   const saves = new Map(); // user id -> { data, version }
-  const srv = { users, saves, calls: [], offline: false, expireAll: false, n: 0 };
+  const srv = { users, saves, photos: new Map(), calls: [], offline: false, expireAll: false, n: 0 };
   const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
   const session = (email, id) => {
     const access_token = `at_${id}_${++srv.n}`;
@@ -292,6 +292,32 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
         return res(200, [{ version: body.version }]);
       }
       if (method === 'DELETE') { if (own) saves.delete(uid); return res(204, null); }
+    }
+    if (u.pathname === '/rest/v1/photos') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      if (u.searchParams.get('user_id') !== `eq.${uid}`) return method === 'GET' ? res(200, []) : res(200, []); // règle RLS
+      const mine = srv.photos.get(uid) || new Map();
+      srv.photos.set(uid, mine);
+      const idq = u.searchParams.get('id');
+      const id = idq ? idq.replace('eq.', '') : null;
+      if (method === 'GET') {
+        const rows = [...mine.entries()].filter(([k]) => !id || k === id).map(([k, r]) => ({ id: k, data: r.data, version: r.version }));
+        return res(200, rows);
+      }
+      if (method === 'POST') {
+        if (mine.has(body.id)) return res(409, { code: '23505' });
+        mine.set(body.id, { data: body.data, version: 1 });
+        return res(201, [{ version: 1 }]);
+      }
+      if (method === 'PATCH') {
+        const row = mine.get(id);
+        const want = Number((u.searchParams.get('version') || '').replace('eq.', ''));
+        if (!row || row.version !== want) return res(200, []);
+        mine.set(id, { data: body.data, version: body.version });
+        return res(200, [{ version: body.version }]);
+      }
+      if (method === 'DELETE') { mine.delete(id); return res(204, null); }
     }
     return res(404, {});
   };

@@ -8,6 +8,7 @@ const KEYS = {
   photoMeta: 'rondoufit:photoSync', // { id: { sha, at } } : état des photos à la dernière synchro
   dirty: 'rondoufit:dirty',       // '1' tant que des modifications de cet appareil n'ont pas été envoyées
   localTs: 'rondoudou_local_ts',  // date (ms) de la dernière modification faite sur cet appareil
+  photoMetaAcc: 'rondoufit:photoSyncAccount', // état des photos à la dernière synchro avec le compte
   account: 'rondoufit:account',   // compte de l'application : { session, expired? } (jamais le mot de passe)
   lastUser: 'rondoufit:lastUser', // dernier compte connecté sur cet appareil (pour ne jamais mélanger deux personnes)
   carnet: 'carnet-eps:github',    // réglages de l'appli Carnet EPS (même appareil), pour les reprendre en un clic
@@ -78,6 +79,15 @@ export function readPhotoMeta() {
   }
 }
 export const writePhotoMeta = m => write(KEYS.photoMeta, m ? JSON.stringify(m) : null);
+
+export function readPhotoMetaAccount() {
+  try {
+    return JSON.parse(read(KEYS.photoMetaAcc) || 'null');
+  } catch {
+    return null;
+  }
+}
+export const writePhotoMetaAccount = m => write(KEYS.photoMetaAcc, m ? JSON.stringify(m) : null);
 
 export const isDirty = () => read(KEYS.dirty) === '1';
 export const markDirty = () => write(KEYS.dirty, '1');

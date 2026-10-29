@@ -198,6 +198,7 @@ export function App() {
         onOpenSync={openSync}
         onOpenTrial={() => setTrialOpen(true)}
         onRetrySync={sync.syncNow}
+        accountOn={!!sync.user}
         setActiveTab={goToTab}
         streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
@@ -340,6 +341,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onClose={() => setMoreOpen(false)}
           onExport={handleExportJSON}
           onGoTab={goToTab}
+          onOpenAccount={() => setAccountOpen(true)}
+          accountEnabled={sync.accountEnabled}
+          hasAccount={!!sync.user}
           onOpenOnboarding={() => setObOpen(true)}
           onOpenSync={openSync}
           onReset={() => setConfirmResetOpen(true)}

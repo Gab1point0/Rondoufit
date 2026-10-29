@@ -9,7 +9,7 @@ const chip = 'px-2 py-0.5 rounded-full text-[0.75rem] sm:text-xs font-bold borde
 
 export function HeaderProfile({
   currentStreak, gameState, levelInfo, lifetimeStats, onOpenMore, onOpenRewards, onOpenSync, onOpenTrial,
-  onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank,
+  onRetrySync, accountOn = false, setActiveTab, streakBonusPct, syncStatus, trialRank,
 }) {
   const { theme, accessory, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
   const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
@@ -114,7 +114,7 @@ export function HeaderProfile({
           }`}
         >
           {syncStatus === 'synced' ? (
-            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{pick('☁️ Sauvegardé sur GitHub', '☁️ Sauvegardé en ligne')}</span></>
+            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{(NEUTRAL || accountOn ? '☁️ Sauvegardé en ligne' : '☁️ Sauvegardé sur GitHub')}</span></>
           ) : syncStatus === 'saving' ? (
             '⏳ Synchronisation…'
           ) : syncStatus === 'loading' ? (

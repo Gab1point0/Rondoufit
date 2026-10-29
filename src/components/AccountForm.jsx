@@ -30,7 +30,7 @@ export function AccountForm({ sync, recovery = null, onDone, onUseGithub }) {
       <div className="space-y-3" data-testid="account-connected">
         <p className="text-sm text-slate-300">Connecté : <strong className="text-white" data-testid="account-email">{sync.user.email}</strong></p>
         <p className={`text-sm font-bold ${sync.status === 'synced' ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="account-status">{status}</p>
-        <p className="text-[0.75rem] text-slate-500">Tes données sont copiées automatiquement dans ton espace personnel : change de téléphone, reconnecte-toi avec le même e-mail et tout revient. Les photos restent pour l’instant sur le téléphone.</p>
+        <p className="text-[0.75rem] text-slate-500">Tes données sont copiées automatiquement dans ton espace personnel : change de téléphone, reconnecte-toi avec le même e-mail et tout revient. Tes photos souvenirs sont sauvegardées aussi.</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy} onClick={() => run(async () => { await sync.signOut(); setMsg({ ok: true, text: 'Déconnecté. Tes données restent sur ce téléphone.' }); })} className={`${btn} bg-slate-800 border border-slate-600 text-white`} data-testid="account-signout">Me déconnecter</button>
           {onDone && <button type="button" onClick={onDone} className={`${btn} bg-sky-600 text-white`}>OK</button>}

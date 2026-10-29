@@ -1,6 +1,6 @@
 // Comptes dans l'application (édition amis) : créer un compte, sauvegarde automatique, nouvel appareil, un autre compte sur le même appareil.
 import { afterEach, describe, expect, it } from 'vitest';
-import { SUPABASE_URL, advance, clickEl, fakeSupabase, launch, pageText, setInput } from './harness';
+import { SUPABASE_URL, advance, clickEl, fakeGithub, fakeSupabase, launch, pageText, setInput } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -151,6 +151,32 @@ describe('compte dans l’application', () => {
     await advance(h, 300);
     await toBackupStep(h);
     expect(byTest(h, 'gh-owner')).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('migration : mes données (déjà sauvegardées sur GitHub) passent dans mon nouveau compte, sans rien perdre ni toucher à GitHub', async () => {
+    const SAVE = { xp: 777, quests: [{ id: 'q1', catalogId: 'bench_press', name: 'Développé couché', category: 'Pectoraux', type: 'strength', unit: 'kg', goalMode: 'sets_reps', level: 1, startValue: 40, currentValue: 60, goalValue: 80, goalSets: 3, goalReps: 6, setDetails: [6, 6, 6], history: [] }], weightHistory: [], unlockedAchievements: [], claimedChallenges: [], soundEnabled: false, heroName: 'Dresseur Rondoudou', _savedAt: 5 };
+    const gh = fakeGithub(SAVE);
+    const sb = fakeSupabase();
+    const both = (url, opts) => (String(url).startsWith(SUPABASE_URL) ? sb.fetch(url, opts) : gh.fetch(url, opts));
+    const CFG = JSON.stringify({ owner: 'Gab1point0', repo: 'rondoufit-donnees', path: 'rondoufit-data.json', branch: 'main', token: 'github_pat_test' });
+    const h = await launch({ empty: true, fetchImpl: both, storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1', 'rondoufit:github': CFG, 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'k' }) } });
+    open.push(h);
+    await advance(h, 3000); // la synchro GitHub habituelle
+    expect(pageText(h)).toContain('777 EXP');
+    const putsAvant = gh.puts.length;
+    const gear = [...h.doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Réglages et données');
+    await clickEl(h, gear);
+    await clickEl(h, byTest(h, 'open-account'));
+    await signUp(h, 'gabin@example.fr', 'motdepasse1', 'MOTSECRET');
+    await advance(h, 4000);
+    expect(byTest(h, 'account-status').textContent).toContain('Sauvegarde automatique activée');
+    const row = [...sb.saves.values()][0];
+    expect(row).toBeTruthy();
+    expect(row.data.xp).toBe(777);
+    expect(row.data.quests[0].name).toBe('Développé couché');
+    expect(saved(h).xp).toBe(777); // rien perdu en local
+    expect(gh.puts).toHaveLength(putsAvant); // plus aucune écriture vers GitHub : tout passe par le compte
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

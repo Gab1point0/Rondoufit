@@ -155,3 +155,45 @@ export async function deleteCloudSave(cfg) {
   const s = await freshSession(cfg);
   await call(cfg, 'DELETE', '/rest/v1/saves', { token: s.access_token, query: `?user_id=eq.${encodeURIComponent(s.user.id)}` });
 }
+
+// ---- Photos souvenirs : table `photos` (user_id, id, data jsonb, version), mêmes règles « chacun les siennes » ----
+const photoId = path => String(path || '').replace(/^photos\//, '').replace(/\.json$/, '');
+const uid = s => encodeURIComponent(s.user.id);
+
+export const photos = {
+  /** [{ name: '<id>.json', sha: '<version>' }] : toutes les photos du compte (le dossier est ignoré). */
+  async listDir(cfg) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'GET', '/rest/v1/photos', { token: s.access_token, query: `?select=id,version&user_id=eq.${uid(s)}` });
+    return (Array.isArray(rows) ? rows : []).map(r => ({ name: `${r.id}.json`, sha: String(r.version) }));
+  },
+  async getFile(cfg) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'GET', '/rest/v1/photos', { token: s.access_token, query: `?select=data,version&user_id=eq.${uid(s)}&id=eq.${encodeURIComponent(photoId(cfg.path))}` });
+    if (!Array.isArray(rows) || rows.length === 0) return { content: null, sha: null };
+    return { content: JSON.stringify(rows[0].data), sha: String(rows[0].version) };
+  },
+  async putFile(cfg, content, sha) {
+    const s = await freshSession(cfg);
+    const id = photoId(cfg.path);
+    const data = JSON.parse(content);
+    const prefer = { Prefer: 'return=representation' };
+    if (sha === null || sha === undefined) {
+      try {
+        const rows = await call(cfg, 'POST', '/rest/v1/photos', { token: s.access_token, headers: prefer, body: { user_id: s.user.id, id, data } });
+        return String(Array.isArray(rows) && rows[0] ? rows[0].version : 1);
+      } catch (e) {
+        if (e instanceof AccountError && (e.status === 409 || e.code === '23505')) throw asConflict();
+        throw e;
+      }
+    }
+    const v = Number(sha);
+    const rows = await call(cfg, 'PATCH', '/rest/v1/photos', { token: s.access_token, headers: prefer, query: `?user_id=eq.${uid(s)}&id=eq.${encodeURIComponent(id)}&version=eq.${v}`, body: { data, version: v + 1, updated_at: new Date().toISOString() } });
+    if (!Array.isArray(rows) || rows.length === 0) throw asConflict();
+    return String(rows[0].version);
+  },
+  async deleteFile(cfg) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'DELETE', '/rest/v1/photos', { token: s.access_token, query: `?user_id=eq.${uid(s)}&id=eq.${encodeURIComponent(photoId(cfg.path))}` });
+  },
+};
