@@ -44,7 +44,7 @@ describe('activité annexe', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('vélo de route : distance et vitesse, mais pas de dénivelé ; randonnée et course : dénivelé et pente', async () => {
+  it('vélo de route et VTT : distance, vitesse et dénivelé ; natation et vélo d’appartement : pas de dénivelé', async () => {
     const h = await launch({ empty: true });
     open.push(h);
     await clickText(h, '+ Activité annexe');
@@ -52,8 +52,12 @@ describe('activité annexe', () => {
     let t = modal(h).textContent;
     expect(t).toContain('Distance (km)');
     expect(t).toContain('Vitesse + durée');
-    expect(t).not.toContain('Dénivelé');
-    expect(t).not.toContain('Pente en %');
+    expect(t).toContain('Dénivelé D+ (m)');
+    expect(t).toContain('Pente en %');
+    await choisir(h, 'fp_mtb');
+    expect(modal(h).textContent).toContain('Dénivelé D+ (m)');
+    await choisir(h, 'fp_bike');
+    expect(modal(h).textContent).not.toContain('Dénivelé');
     await choisir(h, 'fp_hiking');
     t = modal(h).textContent;
     expect(t).toContain('Dénivelé D+ (m)');

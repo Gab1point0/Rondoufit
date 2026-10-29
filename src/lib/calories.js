@@ -1,7 +1,10 @@
 import { ACTIVITY_MET } from '../data/activities';
 
-/** Modes pour lesquels le dénivelé a un sens : course et marche (extérieur ou tapis), randonnée, trail. */
-export const ELEVATION_MODES = ['run', 'interval', 'walk', 'incline_walk', 'hike', 'trail', 'nordic'];
+/** Modes pour lesquels le dénivelé a un sens : course et marche (extérieur ou tapis), randonnée, trail, vélo en extérieur. */
+const RUN_WALK_MODES = ['run', 'interval', 'walk', 'incline_walk', 'hike', 'trail', 'nordic'];
+/** Vélo en extérieur : le dénivelé compte aussi (énergie de la montée en plus de la dépense de base). */
+export const OUTDOOR_CYCLING_MODES = ['fp_road_bike', 'fp_mtb', 'fp_city_bike', 'fp_ebike'];
+export const ELEVATION_MODES = [...RUN_WALK_MODES, ...OUTDOOR_CYCLING_MODES];
 export const cardioHasElevation = mode => ELEVATION_MODES.includes(mode || 'run');
 
 // Calories NETTES (hors métabolisme de repos : 1 MET = 1 kcal/kg/h retiré)
@@ -35,7 +38,7 @@ export function calculateCardioCalories({
     // ~3 MET à RPE 4, ~4,8 à RPE 7, ~6 à RPE 9 (valeurs brutes), temps morts inclus
     const grossMet = Math.max(2, 3 + (Math.min(10, Math.max(1, rpe)) - 4) * 0.6);
     kcal = (grossMet - 1) * w * hours;
-  } else if (ELEVATION_MODES.includes(cardioMode)) {
+  } else if (RUN_WALK_MODES.includes(cardioMode)) {
     // Équations ACSM (vitesse + pente), VO2 en ml/kg/min, 1 L O2 ≈ 5 kcal
     const speed = (distKm * 1000) / durMin; // m/min
     const grade = Math.min(0.25, elevM / (distKm * 1000));
@@ -48,6 +51,11 @@ export function calculateCardioCalories({
     const MET_BY_MODE = { ...ACTIVITY_MET, bike: 6.8, elliptical: 5.0, rower: 7.0, stairs: 8.8, skierg: 7.5, jumprope: 10.5, hiit: 8.0, boxing: 7.5, group_class: 6.0 };
     const grossMet = (MET_BY_MODE[cardioMode] || 6.8) + (rpe - 6) * 0.5;
     kcal = (grossMet - 1) * w * hours + (cardioMode === 'other' ? w * elevM * 0.01 : 0);
+    if (OUTDOOR_CYCLING_MODES.includes(cardioMode) && elevM > 0) {
+      // montée : énergie potentielle (cycliste + vélo de 10 kg) ÷ rendement musculaire d'environ 25 % ; moitié moins avec assistance électrique
+      const joules = (w + 10) * 9.81 * elevM;
+      kcal += (joules / 0.25 / 4184) * (cardioMode === 'fp_ebike' ? 0.5 : 1);
+    }
   }
   return Math.max(20, Math.round(kcal));
 }
