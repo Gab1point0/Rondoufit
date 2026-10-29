@@ -1,15 +1,15 @@
 import { EXERCISE_CATALOG } from '../../data/catalog';
 import { card } from './ui';
 
-export function CoachVolley({ gameState, onAddExercise }) {
+export function CoachVolley({ gameState, onAddExercise, sport }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">🏐 Volley : épaules et gainage</h3>
+      <h3 className="font-black text-white">{sport.icon} {sport.cap} : {sport.title}</h3>
       <p className="text-xs text-slate-300">
-        Le volley sollicite beaucoup les épaules et les jambes. Renforcer la coiffe des rotateurs, le haut du dos et le tronc est une pratique courante en prévention. Attention : les preuves de réduction des blessures chez les volleyeurs restent limitées.
+        {sport.intro} {sport.note}
       </p>
       <div className="flex flex-wrap gap-1.5 text-xs">
-        {['fp_ext_rotation', 'fp_face_pull', 'fp_plank'].map(id => {
+        {sport.exercises.map(id => {
           const c = EXERCISE_CATALOG.find(x => x.id === id);
           if (!c) return null;
           const owned = gameState.quests.some(q => q.catalogId === id);

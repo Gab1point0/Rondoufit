@@ -51,8 +51,9 @@ describe('édition neutre pour les amis', () => {
     await setInput(h, byTest(h, 'kg-bench_press'), '60');
     await clickEl(h, byTest(h, 'ex-squat'));
     await next(h);
-    await clickEl(h, byTest(h, 'sport-2'));
-    await clickEl(h, byTest(h, 'sport-4'));
+    await clickEl(h, byTest(h, 'sport-football'));
+    await clickEl(h, byTest(h, 'sportday-2'));
+    await clickEl(h, byTest(h, 'sportday-4'));
     await next(h);
     expect(byTest(h, 'ob-backup')).toBeTruthy();
     await next(h); // « Plus tard »
@@ -67,6 +68,7 @@ describe('édition neutre pour les amis', () => {
     expect(s.targetWeightKg).toBe(60);
     expect(s.coach.workProfile).toBe('puissance');
     expect(s.coach.volleyDays).toEqual([2, 4]);
+    expect(s.coach.sport).toBe('football');
     expect(s.coach.profile).toMatchObject({ heightCm: 168, age: 28, sex: 'm' });
     const bench = s.quests.find(q => q.catalogId === 'bench_press');
     expect(bench).toBeTruthy();

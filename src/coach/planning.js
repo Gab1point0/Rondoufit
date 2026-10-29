@@ -3,7 +3,7 @@ import { COACH_TYPES, COACH_TYPE_ORDER, coachDaysBetween, coachDow, coachTimeToM
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
-import { SPORT } from '../edition';
+import { sportInfo } from '../data/sports';
 
 // Contraintes d'un jour : volley (jeudi/vendredi par défaut), match, récupération
 // Volley un jour donné : jours habituels, sauf les dates « pas de volley », plus les volleys exceptionnels
@@ -17,6 +17,7 @@ export function coachDayInfo(iso, coach) {
   const volleyDays = coach.volleyDays || [];
   const matches = new Set(coach.matchDates || []);
   const dow = coachDow(iso);
+  const sp = sportInfo(coach.sport);
   const isVolley = coachHasVolley(coach, iso);
   const isMatch = matches.has(iso);
   const next1 = addDaysISO(iso, 1);
@@ -27,12 +28,12 @@ export function coachDayInfo(iso, coach) {
   const afterMatch = matches.has(prev1);
   const legsOk = !isVolley && !isMatch && !volleyNext && !matchSoon && !afterMatch;
   let legsWhy = '';
-  if (isVolley || isMatch) legsWhy = isMatch ? 'jour de match' : `jour de ${SPORT}`;
+  if (isVolley || isMatch) legsWhy = isMatch ? 'jour de match' : `jour ${sp.de}`;
   else if (matches.has(next1)) legsWhy = 'match demain';
   else if (matchSoon) legsWhy = 'match dans 2 jours';
   else if (afterMatch) legsWhy = 'lendemain de match';
-  else if (volleyNext) legsWhy = `${SPORT} demain`;
-  return { iso, dow, isVolley, isMatch, blocked: isVolley || isMatch, legsOk, legsWhy };
+  else if (volleyNext) legsWhy = `${sp.label} demain`;
+  return { iso, dow, sport: sp, isVolley, isMatch, blocked: isVolley || isMatch, legsOk, legsWhy };
 }
 
 // Créneaux de salle choisis par l'utilisateur (jour de la semaine + horaires)

@@ -52,6 +52,7 @@ export function applyOnboarding(prev, a, today) {
     sessionsPerWeek: sessions,
     sessionMinutes: Math.max(20, Math.min(150, Number(a.sessionMinutes) || 60)),
     workProfile: goal.profile,
+    sport: a.sport || '',
     volleyDays: (a.sportDays || []).map(Number).sort(),
     gymSlots: gymDays.reduce((o, d) => ({ ...o, [d]: { start: '18:00', end: '19:30' } }), {}),
   };

@@ -23,7 +23,7 @@ import { CoachVolley } from './CoachVolley';
 import { CoachWeek } from './CoachWeek';
 import { CoachWeeklyGoals } from './CoachWeeklyGoals';
 import { CoachWeightHealth } from './CoachWeightHealth';
-import { NEUTRAL, SPORT } from '../../edition';
+import { sportInfo } from '../../data/sports';
 
 export function CoachPanel({
   gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
@@ -271,6 +271,7 @@ export function CoachPanel({
 
       {/* SEMAINE */}
       <CoachWeek
+        sport={sportInfo(coach.sport)}
         dayShort={dayShort}
         first={first}
         ov={ov}
@@ -283,7 +284,7 @@ export function CoachPanel({
       <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
 
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
-      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, équilibre, poids, ${SPORT}, sources`}>
+      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, équilibre, poids, ${sportInfo(coach.sport).label}, sources`}>
         {/* PROFIL DE TRAVAIL */}
         <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
 
@@ -330,8 +331,8 @@ export function CoachPanel({
         />
 
         {/* VOLLEY */}
-        {(coach.volleyDays || []).length > 0 && !NEUTRAL && (
-          <CoachVolley gameState={gameState} onAddExercise={onAddExercise} />
+        {(coach.volleyDays || []).length > 0 && (
+          <CoachVolley gameState={gameState} onAddExercise={onAddExercise} sport={sportInfo(coach.sport)} />
         )}
 
         {/* SOURCES */}

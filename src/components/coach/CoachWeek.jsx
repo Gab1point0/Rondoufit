@@ -1,8 +1,8 @@
 import { COACH_TYPES } from '../../coach/settings';
 import { card } from './ui';
-import { SPORT_CAP, SPORT_ICON, SPORT } from '../../edition';
 
-export function CoachWeek({ dayShort, first, ov, plan, plannedMap, today }) {
+
+export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today }) {
   return (
     <section className={card}>
       <h3 className="font-black text-white">📅 Ma semaine</h3>
@@ -19,7 +19,7 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, today }) {
               const map = {
                 done: ['✅', 'Fait', 'border-emerald-500/50 bg-emerald-950/20'],
                 planned: ['💪', d.type ? COACH_TYPES[d.type].label : p ? `Séance ${ov.templates[p.templateIdx] ? ov.templates[p.templateIdx].id : ''}` : 'Muscu', 'border-pink-500/60 bg-pink-950/20'],
-                volley: [SPORT_ICON, SPORT_CAP, 'border-sky-500/40 bg-sky-950/20'],
+                volley: [sport.icon, sport.cap, 'border-sky-500/40 bg-sky-950/20'],
                 match: ['🏆', 'Match', 'border-amber-500/50 bg-amber-950/20'],
                 rest: ['😴', 'Repos', 'border-slate-800 bg-slate-950']
               };
@@ -42,7 +42,7 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, today }) {
         </div>
       ))}
       <p className="text-[0.75rem] text-slate-500">
-        Les séances sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes la veille d’un jour de {SPORT}, ni à moins de 48 h ou le lendemain d’un match.
+        Les séances sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes la veille d’un jour {sport.de}, ni à moins de 48 h ou le lendemain d’un match.
       </p>
     </section>
   );

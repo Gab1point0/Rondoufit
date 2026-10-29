@@ -19,11 +19,6 @@ export const NEUTRAL = readStyle() === 'neutral';
 /** Choisit le texte selon l'édition. */
 export const pick = (fun, neutral) => (NEUTRAL ? neutral : fun);
 
-/** Le sport collectif fixe de l'emploi du temps : « volley » (Gabin) ou « sport » (édition neutre : l'utilisateur choisit lui-même ses jours). */
-export const SPORT = NEUTRAL ? 'sport' : 'volley';
-export const SPORT_CAP = NEUTRAL ? 'Sport' : 'Volley';
-export const SPORT_ICON = NEUTRAL ? '🎽' : '🏐';
-
 /** Change d'édition puis recharge la page (les couleurs, les icônes et le nom installé en dépendent). */
 export function setStyle(style) {
   try { localStorage.setItem(KEY, style === 'neutral' ? 'neutral' : 'fun'); } catch (e) { /* rien */ }

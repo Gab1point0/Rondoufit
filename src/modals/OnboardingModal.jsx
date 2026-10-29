@@ -4,6 +4,7 @@ import { getTodayISODate } from '../lib/dates';
 import { GOALS, STARTER_EXERCISES, applyOnboarding } from '../lib/onboarding';
 import { stripAccents } from '../lib/text';
 import { EMPTY_CONFIG } from '../sync/storage';
+import { SPORTS, sportInfo } from '../data/sports';
 
 // Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
 // Tout est modifiable ensuite (onglet Coach, Exercices, Mes maxima, ⚙️).
@@ -28,7 +29,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
-    gymDays: [], sportDays: [], exercises: {},
+    gymDays: [], sport: '', sportDays: [], exercises: {},
   });
   const [search, setSearch] = useState('');
   const [gh, setGh] = useState({ owner: '', token: '' });
@@ -158,9 +159,14 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
 
         {step === 5 && (
           <section className="space-y-3">
-            <h2 className="text-xl font-black text-white">Un sport ou une activité régulière ?</h2>
-            <p className="text-xs text-slate-400">Foot, basket, danse, course… Choisis ses jours habituels : le coach évitera de te faire travailler les jambes la veille et placera la musculation au bon moment. Laisse vide si tu n’en as pas.</p>
-            <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.sportDays.includes(d)} onClick={() => toggleDay('sportDays', d)} testid={`sport-${d}`}>{n}</Toggle>)}</div>
+            <h2 className="text-xl font-black text-white">Un sport régulier ?</h2>
+            <p className="text-xs text-slate-400">Choisis ton sport, puis ses jours habituels : le coach évitera de te faire travailler les jambes la veille, gardera de l’énergie le jour J, comptera ton endurance et te proposera une préparation adaptée à ce sport. Tu pourras aussi ajouter tes matchs (onglet Coach).</p>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Sport">
+              <Toggle on={!a.sport} onClick={() => patch({ sport: '', sportDays: [] })} testid="sport-none">Aucun</Toggle>
+              {SPORTS.map(s => <Toggle key={s.id} on={a.sport === s.id} onClick={() => patch({ sport: s.id })} testid={`sport-${s.id}`}>{s.icon} {s.cap}</Toggle>)}
+            </div>
+            {a.sport && <p className="text-xs text-slate-300">Jours habituels de {sportInfo(a.sport).label} :</p>}
+            {a.sport && <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.sportDays.includes(d)} onClick={() => toggleDay('sportDays', d)} testid={`sportday-${d}`}>{n}</Toggle>)}</div>}
             <p className="text-[0.75rem] text-slate-500">Tes autres activités (vélo, natation, randonnée…) s’ajoutent ensuite avec le bouton « + » → « Activité annexe ».</p>
           </section>
         )}
@@ -198,7 +204,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
               <li>{a.sessionsPerWeek} séance(s) par semaine de {a.sessionMinutes} min</li>
               <li>Profil de travail : {(GOALS.find(g => g.id === a.goal) || {}).label}</li>
               <li>{Object.keys(a.exercises).length} exercice(s) créé(s) avec ta charge de départ</li>
-              {a.sportDays.length > 0 && <li>Sport régulier pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}
+              {a.sport && <li>{sportInfo(a.sport).icon} {sportInfo(a.sport).cap} pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}
               <li>{sync.configured ? 'Sauvegarde automatique réglée' : '⚠️ Sauvegarde automatique non réglée : tes données ne sont que sur ce téléphone'}</li>
             </ul>
             <p className="text-xs text-slate-400">Ouvre l’onglet Coach pour voir ta première séance. Tout se modifie ensuite dans les onglets Coach, Exercices et Mes maxima.</p>

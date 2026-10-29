@@ -3,7 +3,7 @@ import { COACH_TYPES, coachDaysBetween, getCoachSettings } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO, getTodayISODate, getWeekStart } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
-import { SPORT, pick } from '../edition';
+import { pick } from '../edition';
 
 // Note de 1 à 10 pour une séance (proposée par le coach ou composée par l'utilisateur),
 // avec des remarques écrites. Ce sont des règles de bon sens appuyées sur les repères ACSM 2009 /
@@ -31,10 +31,10 @@ export function coachRateSession(state, session) {
 
   // 1. Jour choisi
   if (di.isMatch) add(3, 'bad', 'Tu as placé la séance un jour de match.', 'Choisis un autre jour : la veille et le lendemain d’un match sont aussi à éviter pour les jambes.');
-  else if (di.isVolley) add(1, 'warn', `Ce jour-là tu as ${SPORT} : séance de muscu + ${SPORT} = fatigue cumulée.`, `Fais-la plutôt un jour sans ${SPORT}, ou réduis le volume (4 à 5 exercices).`);
-  else ok(`Le jour choisi est libre de ${SPORT} et de match.`);
-  if (legSets > 0 && !di.legsOk) add(3, 'bad', `Il y a des jambes (${legSets} séries) alors que ce n’est pas le bon moment (${di.legsWhy}).`, 'Retire les exercices de jambes ou déplace la séance : des jambes fatiguées gênent ${SPORT} et augmentent le risque de blessure.');
-  else if (legSets > 0) ok(`Les jambes sont compatibles avec ton calendrier de ${SPORT} et de match.`);
+  else if (di.isVolley) add(1, 'warn', `Ce jour-là est un jour ${di.sport.de} : séance de muscu + ${di.sport.label} = fatigue cumulée.`, `Fais-la plutôt un jour sans ${di.sport.label}, ou réduis le volume (4 à 5 exercices).`);
+  else ok(`Le jour choisi est libre ${di.sport.de} et de match.`);
+  if (legSets > 0 && !di.legsOk) add(3, 'bad', `Il y a des jambes (${legSets} séries) alors que ce n’est pas le bon moment (${di.legsWhy}).`, 'Retire les exercices de jambes ou déplace la séance : des jambes fatiguées gênent ${di.sport.poss} et augmentent le risque de blessure.');
+  else if (legSets > 0) ok(`Les jambes sont compatibles avec ton calendrier ${di.sport.de} et de match.`);
   if (wk.matchInWeek && legSets > 6) add(1, 'warn', 'Semaine de match : beaucoup de séries de jambes.', 'Limite-toi à environ 6 séries de jambes cette semaine-là.');
 
   // 2. Récupération

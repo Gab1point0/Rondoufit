@@ -10,7 +10,7 @@ import { profileOpts } from './profiles';
 import { getAllEntries, isStartEntry, isTimedQuest } from '../lib/quests';
 import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoads';
 import { stripAccents } from '../lib/text';
-import { SPORT, SPORT_CAP, SPORT_ICON, pick } from '../edition';
+import { sportInfo } from '../data/sports';
 
 // ---- Conseils du jour (volley / match) ----
 export function coachDayAdvice(state, today) {
@@ -22,8 +22,8 @@ export function coachDayAdvice(state, today) {
   if (t.isMatch) out.push({ icon: '🏆', text: 'Match aujourd’hui : pas de muscu. Échauffe bien les épaules et les jambes, hydrate-toi et mange des glucides avant de jouer.' });
   else if (n.isMatch) out.push({ icon: '🏆', text: 'Match demain : pas de jambes aujourd’hui. Si tu fais de la muscu, reste sur le haut du corps et les abdos, garde des séries loin de l’échec, et dors bien.' });
   else if (y.isMatch) out.push({ icon: '🛌', text: 'Lendemain de match : récupération (marche, mobilité). Évite les jambes lourdes aujourd’hui.' });
-  if (!t.isMatch && t.isVolley) out.push({ icon: SPORT_ICON, text: `${SPORT_CAP} ce soir : si tu fais de la muscu aujourd’hui, privilégie le haut du corps et finis-la plusieurs heures avant.` + pick(' Prévois 2 à 3 minutes d’échauffement d’épaules (rotations externes à l’élastique).', '') });
-  else if (!t.isMatch && !n.isMatch && n.isVolley) out.push({ icon: SPORT_ICON, text: `${SPORT_CAP} demain : pas de jambes lourdes aujourd’hui pour garder de l’énergie.` });
+  if (!t.isMatch && t.isVolley) out.push({ icon: t.sport.icon, text: `${t.sport.cap} ce soir : si tu fais de la muscu aujourd’hui, privilégie le haut du corps et finis-la plusieurs heures avant.` + (t.sport.shoulders ? ' Prévois 2 à 3 minutes d’échauffement d’épaules (rotations externes à l’élastique).' : '') });
+  else if (!t.isMatch && !n.isMatch && n.isVolley) out.push({ icon: n.sport.icon, text: `${n.sport.cap} demain : pas de jambes lourdes aujourd’hui pour garder de l’énergie.` });
   return out;
 }
 
@@ -39,7 +39,7 @@ export function coachMissed(state, today) {
     msgs.push(`Tu n’as pas fait de séance depuis lundi (jour libre : ${coachDayLabel(pastFree[0].iso)}). Pas grave : le coach a recalé ta semaine à partir d’aujourd’hui.`);
   }
   if (wk.shortfall > 0) {
-    msgs.push(`Il reste ${wk.remaining} séance(s) à faire cette semaine mais seulement ${wk.planned.length} créneau(x) libre(s) avec ton ${SPORT} et tes matchs. Tu peux en reporter une, ou lancer la version courte de 40 minutes.`);
+    msgs.push(`Il reste ${wk.remaining} séance(s) à faire cette semaine mais seulement ${wk.planned.length} créneau(x) libre(s) avec ${sportInfo(coach.sport).poss} et tes matchs. Tu peux en reporter une, ou lancer la version courte de 40 minutes.`);
   }
   return msgs;
 }
@@ -109,7 +109,7 @@ export function coachWeeklyGoals(state, today) {
   const weigh = (state.weightHistory || []).filter(w => w.date >= ws && w.date <= end).length;
   const goals = [
     { id: 'strength', icon: '💪', label: 'Séances de muscu', value: act.strengthDays, target: coach.sessionsPerWeek, unit: '' },
-    { id: 'cardio', icon: SPORT_ICON, label: `Endurance (${SPORT} + cardio)`, value: act.aerobicMin, target: 150, unit: ' min' },
+    { id: 'cardio', icon: sportInfo(coach.sport).icon, label: `Endurance (${sportInfo(coach.sport).label} + cardio)`, value: act.aerobicMin, target: 150, unit: ' min' },
     { id: 'weigh', icon: '⚖️', label: 'Pesées', value: weigh, target: 3, unit: '' }
   ].map(g => ({ ...g, done: g.value >= g.target }));
   return { weekStart: ws, goals, allDone: goals.every(g => g.done), claimed: (coach.weeklyClaimed || []).includes(ws), xp: 150 };
