@@ -18,7 +18,11 @@ export class AccountError extends Error {
 const trimSlash = u => String(u || '').replace(/\/+$/, '');
 
 function baseHeaders(cfg, token) {
-  return { apikey: cfg.anonKey, Authorization: `Bearer ${token || cfg.anonKey}`, 'Content-Type': 'application/json' };
+  const h = { apikey: cfg.anonKey, 'Content-Type': 'application/json' };
+  // Nouvelle clé « publishable » (sb_publishable_…) : elle ne se met que dans l'en-tête apikey. Ancienne clé « anon » (JWT, eyJ…) : aussi en Authorization.
+  if (token) h.Authorization = `Bearer ${token}`;
+  else if (/^eyJ/.test(cfg.anonKey)) h.Authorization = `Bearer ${cfg.anonKey}`;
+  return h;
 }
 
 /** Message simple en français pour une réponse d'erreur de Supabase. */
@@ -26,7 +30,7 @@ function friendly(status, body) {
   const raw = String((body && (body.error_description || body.msg || body.message || body.error)) || '').toLowerCase();
   if (/invalid login credentials|invalid_grant/.test(raw)) return 'E-mail ou mot de passe incorrect.';
   if (/already registered|already been registered|user_already_exists/.test(raw)) return 'Un compte existe déjà avec cet e-mail : connecte-toi.';
-  if (/database error saving new user/.test(raw)) return 'Inscription refusée : code d’invitation incorrect (ou inscriptions fermées).';
+  if (/database error saving new user|invitation invalide/.test(raw)) return 'Inscription refusée : code d’invitation incorrect (ou inscriptions fermées).';
   if (/password should be at least|weak_password|at least 6/.test(raw)) return 'Mot de passe trop court (6 caractères minimum, mieux : 10).';
   if (/email not confirmed/.test(raw)) return 'Adresse e-mail pas encore confirmée : ouvre le message reçu.';
   if (/rate limit|too many|over_email_send_rate_limit|429/.test(raw) || status === 429) return 'Trop de tentatives, réessaie dans quelques minutes.';

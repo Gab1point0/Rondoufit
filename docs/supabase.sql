@@ -13,6 +13,9 @@ create table if not exists public.saves (
 -- 2) Règle de sécurité : chacun ne voit et ne modifie QUE sa propre ligne -----------------------------
 alter table public.saves enable row level security;
 
+-- Droits d'accès pour les comptes connectés (nécessaire si l'option « exposer automatiquement les nouvelles tables » est désactivée) :
+grant select, insert, update, delete on public.saves to authenticated;
+
 drop policy if exists saves_select_own on public.saves;
 drop policy if exists saves_insert_own on public.saves;
 drop policy if exists saves_update_own on public.saves;

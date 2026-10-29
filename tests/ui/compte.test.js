@@ -146,7 +146,7 @@ describe('compte dans l’application', () => {
   }, TIMEOUT);
 
   it('sans service réglé (adresse vide) : l’assistant garde la sauvegarde GitHub guidée', async () => {
-    const h = await launch({ empty: true, storage: { 'rondoufit:style': 'neutral' } });
+    const h = await launch({ empty: true, storage: { 'rondoufit:style': 'neutral', 'rondoufit:supabase': JSON.stringify({ disabled: true }) } });
     open.push(h);
     await advance(h, 300);
     await toBackupStep(h);

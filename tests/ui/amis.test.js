@@ -6,7 +6,7 @@ import { advance, clickEl, clickText, fakeGithub, launch, pageText, setInput } f
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const NEUTRAL = { 'rondoufit:style': 'neutral' };
+const NEUTRAL = { 'rondoufit:style': 'neutral', 'rondoufit:supabase': JSON.stringify({ disabled: true }) }; // ces tests couvrent la sauvegarde GitHub guidée (voir compte.test.js pour les comptes)
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const ob = h => h.doc.querySelector('[data-testid="onboarding"]');
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
