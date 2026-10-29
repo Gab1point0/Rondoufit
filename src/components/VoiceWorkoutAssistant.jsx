@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { PROFILES, profileOpts } from '../coach/profiles';
 import { coachIsCompound } from '../coach/settings';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { isTimedCatalog } from '../lib/quests';
 import { stripAccents } from '../lib/text';
 import { parseSpokenWorkout } from '../voice/parser';
 import { computeXp, xpNote } from '../lib/xp';
 import { getTodayISODate } from '../lib/dates';
 import { pick } from '../edition';
+import { arenaOf } from '../data/muscles';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -111,7 +112,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
       setIsListening(false);
     }
 
-    const knownArenas = new Set(gameState.quests.map(q => normalizeArenaGroup(q.category, q.type)));
+    const knownArenas = new Set(gameState.quests.map(q => arenaOf(q)));
     const createdNames = [];
     const newArenas = [];
     editableItems.forEach(item => {
@@ -123,7 +124,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
       );
       if (exists) return;
       createdNames.push(item.name);
-      const arena = normalizeArenaGroup(item.category, item.type);
+      const arena = arenaOf(item);
       if (!knownArenas.has(arena)) {
         knownArenas.add(arena);
         newArenas.push(arena);

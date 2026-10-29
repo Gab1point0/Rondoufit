@@ -5,9 +5,10 @@ import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
 import { PROFILES, coachProfileAt } from '../../coach/profiles';
 import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
-import { normalizeArenaGroup } from '../../data/arenas';
+
 import { card } from './ui';
 import { sportInfo } from '../../data/sports';
+import { hasArena } from '../../data/muscles';
 
 export function CoachNextSession({
   addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
@@ -82,8 +83,8 @@ export function CoachNextSession({
             <p className="text-xs font-bold text-slate-300">Ajouter un groupe musculaire :</p>
             <div className="flex flex-wrap gap-1.5">
               {COACH_ARENAS.map(a => {
-                const cands = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a).slice(0, a === 'Abdominaux' ? 1 : 2);
-                const none = !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a);
+                const cands = availQuests.filter(q => hasArena(q, a)).slice(0, a === 'Abdominaux' ? 1 : 2);
+                const none = !strengthQuests.some(q => hasArena(q, a));
                 return (
                   <button key={a} disabled={!cands.length}
                     onClick={() => planAdd(cands.map(q => q.id))}
@@ -98,7 +99,7 @@ export function CoachNextSession({
                 <select value={addSel} onChange={e => setAddSel(e.target.value)} className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
                   <option value="">Ajouter un exercice précis…</option>
                   {COACH_ARENAS.map(a => {
-                    const list = availQuests.filter(q => normalizeArenaGroup(q.category, q.type) === a);
+                    const list = availQuests.filter(q => hasArena(q, a));
                     return list.length ? (
                       <optgroup key={a} label={a}>
                         {list.map(q => <option key={q.id} value={q.id}>{q.icon} {q.name}</option>)}
@@ -109,7 +110,7 @@ export function CoachNextSession({
                 <button disabled={!addSel} onClick={() => { planAdd([addSel]); setAddSel(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-black">Ajouter</button>
               </div>
             )}
-            {COACH_ARENAS.filter(a => !strengthQuests.some(q => normalizeArenaGroup(q.category, q.type) === a)).map(a => (
+            {COACH_ARENAS.filter(a => !strengthQuests.some(q => hasArena(q, a))).map(a => (
               <div key={a} className="flex flex-wrap items-center gap-1.5 text-xs">
                 <span className="text-slate-400">Tu n’as pas encore d’exercice de {a} :</span>
                 {coachSuggestExercises(gameState, a, 2).map(c => (

@@ -1,10 +1,11 @@
-import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
+import { ARENA_GROUPS } from '../data/arenas';
 import { openMovement } from '../lib/movement';
 import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons';
 import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { pick } from '../edition';
+import { arenaLabel } from '../data/muscles';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
@@ -104,7 +105,7 @@ export function QuestsTab({
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-[0.7rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40">
-                            Niv. {questLevel} • {normalizeArenaGroup(quest.category, quest.type)}
+                            Niv. {questLevel} • {arenaLabel(quest)}
                           </span>
 
                           {quest.type === 'strength' && (

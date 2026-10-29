@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { ExercisePicker } from '../components/ExercisePicker';
 import { ARENA_GROUPS } from '../data/arenas';
+import { FINE_GROUPS, coarseOf, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
 import { Target, X } from '../icons';
 import { timedAdvice } from '../lib/quests';
 import { pick } from '../edition';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
+  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
@@ -83,8 +84,9 @@ export function QuestFormModal({
                         {pick('Arène / Groupe Musculaire', 'Groupe musculaire')}
                       </label>
                       <select
-                        value={formCategory}
-                        onChange={e => setFormCategory(e.target.value)}
+                        value={isOptimized() ? (formMuscle || fineGroupOf({ catalogId: formCatalogId, name: formCustomName, category: formCategory, type: formType })) : formCategory}
+                        onChange={e => { const v = e.target.value; if (isOptimized()) { setFormMuscle(FINE_GROUPS.some(g => g.id === v) ? v : ''); setFormCategory(coarseOf(v)); } else setFormCategory(v); }}
+                        data-testid="form-group"
                         className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white"
                       >
                         {ARENA_GROUPS.map(g => (
@@ -93,6 +95,22 @@ export function QuestFormModal({
                           </option>
                         ))}
                       </select>
+                      {isOptimized() && (
+                        <div className="mt-2">
+                          <label className="block text-xs font-bold text-slate-400 mb-1">2ᵉ muscle travaillé (facultatif)</label>
+                          <select
+                            value={formMuscle2 || secondGroupOf({ catalogId: formCatalogId, name: formCustomName, category: formCategory, type: formType, muscle: formMuscle }) || 'none'}
+                            onChange={e => setFormMuscle2(e.target.value)}
+                            data-testid="form-group2"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-white"
+                          >
+                            <option value="none">Aucun</option>
+                            {FINE_GROUPS.map(g => (
+                              <option key={g.id} value={g.id}>{g.icon} {g.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
 

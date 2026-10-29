@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { STORAGE_KEY } from '../config';
+import { setMuscleMode } from '../data/muscles';
 import { loadLocalState } from '../data/state';
 import * as store from '../sync/storage';
 import { useCloudSync } from './useCloudSync';
@@ -10,6 +11,7 @@ import { useCloudSync } from './useCloudSync';
  */
 export function useGameState() {
   const [gameState, setRawState] = useState(loadLocalState);
+  setMuscleMode(gameState.muscleMode); // mode des muscles : état global lu par l'interface et le coach (voir data/muscles.js)
   const stateRef = useRef(gameState);
   stateRef.current = gameState;
   const version = useRef(0);        // augmente à chaque modification faite par l'utilisateur

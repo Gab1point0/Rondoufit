@@ -6,7 +6,7 @@ import { PhotoReminder } from './components/photos/PhotoReminder';
 import { RestTimer } from './components/RestTimer';
 import { SessionRecap } from './components/SessionRecap';
 import { CoachBanner } from './components/CoachBanner';
-import { normalizeArenaGroup } from './data/arenas';
+
 import { getTodayISODate } from './lib/dates';
 import { BilanTab } from './tabs/BilanTab';
 import { ChartsTab } from './tabs/ChartsTab';
@@ -53,6 +53,7 @@ import { needsOnboarding } from './lib/onboarding';
 import { NEUTRAL } from './edition';
 import { AccountModal } from './modals/AccountModal';
 import { readRecoveryToken } from './components/AccountForm';
+import { hasArena } from './data/muscles';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
@@ -81,6 +82,7 @@ export function App() {
 
   const { toast, triggerToast, dismissToast } = useToast();
   const [obOpen, setObOpen] = useState(false);
+  useEffect(() => { setQuestFilter('all'); }, [gameState.muscleMode]); // les groupes changent avec le mode : on repart de « tous »
   const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
   // lien « mot de passe oublié » reçu par e-mail : l'adresse contient un jeton temporaire
   useEffect(() => {
@@ -153,7 +155,7 @@ export function App() {
   const filteredQuests = useMemo(() => {
     if (questFilter === 'all') return gameState.quests;
     return gameState.quests.filter(
-      q => normalizeArenaGroup(q.category, q.type) === questFilter
+      q => hasArena(q, questFilter)
     );
   }, [gameState.quests, questFilter]);
 

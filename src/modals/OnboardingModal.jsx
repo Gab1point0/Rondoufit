@@ -14,7 +14,7 @@ const chip = on => `px-3 py-2 rounded-xl border text-sm font-bold ${on ? 'bg-sky
 const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Jeu'], [5, 'Ven'], [6, 'Sam'], [0, 'Dim']];
 const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
 
-const STEPS = ['Bienvenue', 'Toi', 'Objectif', 'Organisation', 'Exercices connus', 'Sport régulier', 'Sauvegarde', 'Terminé'];
+const STEPS = ['Bienvenue', 'Toi', 'Objectif et muscles', 'Organisation', 'Exercices connus', 'Sport régulier', 'Sauvegarde', 'Terminé'];
 
 function Toggle({ on, onClick, children, testid }) {
   return <button type="button" onClick={onClick} aria-pressed={on} data-testid={testid} className={chip(on)}>{children}</button>;
@@ -24,7 +24,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
-    gymDays: [], sport: '', sportDays: [], exercises: {},
+    gymDays: [], sport: '', sportDays: [], exercises: {}, muscleMode: 'simple',
   });
   const [search, setSearch] = useState('');
   const patch = p => setA(x => ({ ...x, ...p }));
@@ -88,6 +88,15 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">Ton objectif principal</h2>
             <p className="text-xs text-slate-400">Il choisit ton « profil de travail » (nombre de répétitions, charges, repos). Tu pourras le changer dans l’onglet Coach.</p>
+            <div className="space-y-2 pt-1" data-testid="muscle-mode-choice">
+              <h3 className="text-base font-black text-white pt-2">Comment suivre tes muscles ?</h3>
+              <button type="button" onClick={() => patch({ muscleMode: 'simple' })} aria-pressed={a.muscleMode === 'simple'} data-testid="mode-simple" className={`${chip(a.muscleMode === 'simple')} w-full text-left`}>
+                🟢 Simplifié <span className="block text-[0.75rem] font-semibold opacity-90">5 grands groupes : pectoraux, dos, jambes, épaules &amp; bras, abdominaux. Facile à suivre, idéal pour débuter.</span>
+              </button>
+              <button type="button" onClick={() => patch({ muscleMode: 'optimized' })} aria-pressed={a.muscleMode === 'optimized'} data-testid="mode-optimized" className={`${chip(a.muscleMode === 'optimized')} w-full text-left`}>
+                🎯 Optimisé <span className="block text-[0.75rem] font-semibold opacity-90">14 muscles suivis séparément (biceps, triceps, avant-bras, quadriceps, ischios, fessiers, mollets…). Le coach répartit le travail pour que tout le corps soit couvert. Modifiable à tout moment dans ⚙️.</span>
+              </button>
+            </div>
             <div className="space-y-2">{GOALS.map(g => <button key={g.id} type="button" data-testid={`goal-${g.id}`} onClick={() => patch({ goal: g.id })} aria-pressed={a.goal === g.id} className={`${chip(a.goal === g.id)} w-full text-left`}>{g.icon} {g.label}</button>)}</div>
           </section>
         )}
@@ -173,6 +182,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             <h2 className="text-2xl font-black text-white">Tout est prêt{a.name ? `, ${a.name}` : ''} ✅</h2>
             <ul className="text-sm text-slate-300 list-disc pl-5 space-y-1">
               <li>{a.sessionsPerWeek} séance(s) par semaine de {a.sessionMinutes} min</li>
+              <li>Suivi des muscles : {a.muscleMode === 'optimized' ? 'optimisé (14 muscles)' : 'simplifié (5 grands groupes)'}</li>
               <li>Profil de travail : {(GOALS.find(g => g.id === a.goal) || {}).label}</li>
               <li>{Object.keys(a.exercises).length} exercice(s) créé(s) avec ta charge de départ</li>
               {a.sport && <li>{sportInfo(a.sport).icon} {sportInfo(a.sport).cap} pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}

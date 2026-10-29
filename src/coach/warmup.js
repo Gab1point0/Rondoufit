@@ -1,4 +1,5 @@
 import { coachRound, coachStep } from './settings';
+import { coarseOf } from '../data/muscles';
 
 // Échauffement d'un exercice de la séance guidée : 1 ou 2 séries légères avant les séries de travail.
 //  - charge : montée progressive vers la charge de travail (pourcentages usuels : ~50 % × 8, puis 70-80 % × 3-5),
@@ -14,7 +15,7 @@ const round5 = x => Math.max(5, Math.round(x / 5) * 5);
 export function warmupSets(item, previousItems = [], loadNow, assistNow) {
   if (!item) return [];
   const firstWork = Number(item.targetReps && item.targetReps[0]) || Number(item.goalReps) || 8;
-  const warm = previousItems.some(p => p.arena === item.arena);
+  const warm = previousItems.some(p => coarseOf(p.arena) === coarseOf(item.arena)); // un seul échauffement par grande région, même en mode optimisé
 
   if (item.timed) {
     return [{ reps: round5(firstWork * 0.5), restSec: 30, label: 'Tenue facile' }];

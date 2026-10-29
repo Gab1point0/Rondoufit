@@ -1,9 +1,10 @@
 import { coachDayInfo, coachPlanWeek } from './planning';
 import { COACH_TYPES, coachDaysBetween, getCoachSettings } from './settings';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { addDaysISO, getTodayISODate, getWeekStart } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
 import { pick } from '../edition';
+import { arenasOf, coreArenas, isAbsArena, isLegArena } from '../data/muscles';
 
 // Note de 1 à 10 pour une séance (proposée par le coach ou composée par l'utilisateur),
 // avec des remarques écrites. Ce sont des règles de bon sens appuyées sur les repères ACSM 2009 /
@@ -25,7 +26,7 @@ export function coachRateSession(state, session) {
   const setsBy = {};
   let total = 0;
   ex.forEach(e => { setsBy[e.arena] = (setsBy[e.arena] || 0) + e.sets; total += e.sets; });
-  const legSets = setsBy['Jambes'] || 0;
+  const legSets = Object.entries(setsBy).filter(([a]) => isLegArena(a)).reduce((s, [, n]) => s + n, 0);
   const entries = getAllEntries(state).filter(e => e.quest.type === 'strength' && !isStartEntry(e));
   const wkEnd = addDaysISO(wkStart, 6);
 
@@ -41,8 +42,8 @@ export function coachRateSession(state, session) {
   const before = entries.map(e => e.date).filter(d => d < iso).sort();
   const lastBefore = before.length ? before[before.length - 1] : null;
   const daysSince = lastBefore ? coachDaysBetween(lastBefore, iso) : null;
-  const recentArenas = new Set(entries.filter(e => e.date < iso && coachDaysBetween(e.date, iso) <= 1).map(e => normalizeArenaGroup(e.quest.category, e.quest.type)));
-  const sharedRecent = Object.keys(setsBy).filter(a => a !== 'Abdominaux' && recentArenas.has(a));
+  const recentArenas = new Set(entries.filter(e => e.date < iso && coachDaysBetween(e.date, iso) <= 1).flatMap(e => arenasOf(e.quest)));
+  const sharedRecent = Object.keys(setsBy).filter(a => !isAbsArena(a) && recentArenas.has(a));
   if (entries.some(e => e.date === iso)) add(1, 'warn', 'Tu as déjà une séance de muscu enregistrée ce jour-là.', 'Évite d’empiler deux séances le même jour.');
   else if (daysSince !== null && daysSince <= 1) {
     if (sharedRecent.length) add(1, 'warn', 'Ta dernière séance de muscu date de moins de 48 h et touche les mêmes muscles.', 'Laisse au moins 2 jours entre deux séances sur les mêmes groupes (ACSM 2009 : 48 h de récupération).');
@@ -64,14 +65,14 @@ export function coachRateSession(state, session) {
   else ok(`Séance n°${cnt} de la semaine : dans ton objectif.`);
 
   // 4. Couverture des groupes
-  const weekArenas = new Set(entries.filter(e => e.date >= wkStart && e.date <= wkEnd && e.date !== iso).map(e => normalizeArenaGroup(e.quest.category, e.quest.type)));
+  const weekArenas = new Set(entries.filter(e => e.date >= wkStart && e.date <= wkEnd && e.date !== iso).flatMap(e => arenasOf(e.quest)));
   const sessType = session.type ? COACH_TYPES[session.type] : null;
-  const core = ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras'].filter(a => !sessType || sessType.arenas.includes(a));
+  const core = coreArenas().filter(a => !sessType || sessType.arenas.includes(a));
   let covPen = 0;
   const missing = [];
   core.forEach(a => {
     if (setsBy[a]) return;
-    if (a === 'Jambes' && !di.legsOk) return;
+    if (isLegArena(a) && !di.legsOk) return;
     if (weekArenas.has(a)) return;
     missing.push(a);
   });
@@ -109,7 +110,7 @@ export function coachRateSession(state, session) {
 
   // 7. Ordre des exercices
   const firstCompound = ex.findIndex(e => e.compound);
-  const isoBeforeCompound = ex.some((e, i) => !e.compound && e.arena !== 'Abdominaux' && ex.slice(i + 1).some(x => x.compound));
+  const isoBeforeCompound = ex.some((e, i) => !e.compound && !isAbsArena(e.arena) && ex.slice(i + 1).some(x => x.compound));
   if (firstCompound >= 0 && isoBeforeCompound) add(0.5, 'info', 'Des exercices d’isolation passent avant des exercices polyarticulaires.', 'Commence par les gros mouvements (squat, développé, rowing) quand tu es frais.');
 
   // 8. Progression

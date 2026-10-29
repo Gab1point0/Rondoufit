@@ -35,6 +35,13 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
             <span className="text-lg">{gameState.soundEnabled ? '🔊' : '🔇'}</span>
             <span>Sons : {gameState.soundEnabled ? 'activés' : 'coupés'}</span>
           </button>
+          <button onClick={() => setGameState(prev => ({ ...prev, muscleMode: prev.muscleMode === 'optimized' ? 'simple' : 'optimized' }))} className={row} data-testid="toggle-muscle-mode" aria-pressed={gameState.muscleMode === 'optimized'}>
+            <span className="text-lg">🧬</span>
+            <span>
+              Suivi des muscles : {gameState.muscleMode === 'optimized' ? 'optimisé (14 muscles)' : 'simplifié (5 grands groupes)'}
+              <span className="block text-[0.7rem] font-semibold text-slate-400">{gameState.muscleMode === 'optimized' ? 'Biceps, triceps, avant-bras, quadriceps, ischios, fessiers… Touche pour revenir au mode simplifié.' : 'Touche pour passer en mode optimisé : le coach suit chaque muscle séparément.'}</span>
+            </span>
+          </button>
           <button onClick={toggleBigText} className={row}>
             <span className="text-lg">🔠</span>
             <span>Texte : {prefs.bigText ? 'grand' : 'normal'}</span>

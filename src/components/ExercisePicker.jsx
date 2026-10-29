@@ -1,22 +1,27 @@
 import { useState } from 'react';
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
+import { FINE_GROUPS, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 
 // Sélecteur d'exercice avec barre de recherche
 export function ExercisePicker({ value, onSelect, accept, allowCustom = true }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
-  const FILTERS = [['all', 'Tous'], ['Dos', '🦅 Dos'], ['Pectoraux', '🛡️ Pecs'], ['Jambes', '🦵 Jambes'], ['Épaules & Bras', '💪 Épaules/Bras'], ['Abdominaux', '🍫 Abdos'], ['cardio', '🏃 Cardio']];
-  const ORDER = ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
+  const optimized = isOptimized();
+  const FILTERS = optimized
+    ? [['all', 'Tous'], ...FINE_GROUPS.map(g => [g.id, `${g.icon} ${g.id === 'Hanches' ? 'Adducteurs' : g.id.replace('Ischio-jambiers', 'Ischios')}`]), ['cardio', '🏃 Cardio']]
+    : [['all', 'Tous'], ['Dos', '🦅 Dos'], ['Pectoraux', '🛡️ Pecs'], ['Jambes', '🦵 Jambes'], ['Épaules & Bras', '💪 Épaules/Bras'], ['Abdominaux', '🍫 Abdos'], ['cardio', '🏃 Cardio']];
+  const ORDER = optimized ? [...FINE_GROUPS.map(g => g.id), 'Course & Cardio', 'Volley-ball'] : ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
+  const groupOf = c => (optimized ? fineGroupOf({ ...c, catalogId: c.id }) : c.category);
   const tokens = normSearch(query).split(/\s+/).filter(Boolean);
   const results = EXERCISE_CATALOG
     .filter(c => {
       if (accept && !accept(c)) return false;
-      const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : c.category === filter && c.type !== 'cardio');
+      const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : (groupOf(c) === filter || (optimized && secondGroupOf({ ...c, catalogId: c.id }) === filter)) && c.type !== 'cardio');
       if (!inFilter) return false;
       const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''} ${c.brands || ''}`);
       return tokens.every(t => hay.includes(t));
     })
-    .sort((a, b) => ORDER.indexOf(a.category) - ORDER.indexOf(b.category));
+    .sort((a, b) => ORDER.indexOf(groupOf(a)) - ORDER.indexOf(groupOf(b)));
   const selected = EXERCISE_CATALOG.find(c => c.id === value);
   return (
     <div className="space-y-2">

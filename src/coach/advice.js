@@ -4,13 +4,14 @@ import { coachBuildPlanned } from './sessions';
 import { COACH_ARENAS, COACH_TYPES, coachDayLabel, coachDaysBetween, coachKind, coachRealEntries, coachSetsOf, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { addDaysISO, getWeekStart } from '../lib/dates';
 import { profileOpts } from './profiles';
 import { getAllEntries, isStartEntry, isTimedQuest } from '../lib/quests';
 import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoads';
 import { stripAccents } from '../lib/text';
 import { sportInfo } from '../data/sports';
+import { arenaOf, arenasOf, arenaBand, pushPullSide } from '../data/muscles';
 
 // ---- Conseils du jour (volley / match) ----
 export function coachDayAdvice(state, today) {
@@ -119,8 +120,8 @@ export function coachWeeklyGoals(state, today) {
 export function coachSwapOptions(state, questId, sessionIds) {
   const q = (state.quests || []).find(x => x.id === questId);
   if (!q) return { own: [], catalog: [] };
-  const arena = normalizeArenaGroup(q.category, q.type);
-  const own = (state.quests || []).filter(x => x.id !== questId && x.type === 'strength' && x.goalMode !== 'free_mode' && !sessionIds.includes(x.id) && normalizeArenaGroup(x.category, x.type) === arena);
+  const arena = arenaOf(q);
+  const own = (state.quests || []).filter(x => x.id !== questId && x.type === 'strength' && x.goalMode !== 'free_mode' && !sessionIds.includes(x.id) && arenaOf(x) === arena);
   const catalog = coachSuggestExercises(state, arena, 3);
   return { own, catalog, arena };
 }
@@ -192,21 +193,19 @@ export function coachBalance(state, today) {
   const sets = {}, days = {};
   COACH_ARENAS.forEach(a => { sets[a] = 0; days[a] = new Set(); });
   let push = 0, pull = 0;
-  const PUSH = /developpe|pompes|dips|pec|ecarte|chest|triceps|push|militaire|elevation/i;
-  const PULL = /traction|tirage|rowing|row|pull|oiseau|curl|shrug/i;
   getAllEntries(state).forEach(e => {
     if (e.quest.type !== 'strength' || e.date < from || e.date > today) return;
-    const a = normalizeArenaGroup(e.quest.category, e.quest.type);
+    const a = arenaOf(e.quest);
     const n = Array.isArray(e.setDetails) ? e.setDetails.length : Number(e.sets) || 0;
     if (sets[a] === undefined) return;
-    sets[a] += n;
-    days[a].add(e.date);
-    const nm = stripAccents(e.quest.name || '');
-    if (a === 'Dos' || (a === 'Épaules & Bras' && PULL.test(nm) && !PUSH.test(nm))) pull += n;
-    else if (a === 'Pectoraux' || (a === 'Épaules & Bras' && PUSH.test(nm))) push += n;
+    // un exercice à deux muscles compte une série pour chacun
+    arenasOf(e.quest).forEach(x => { if (sets[x] === undefined) return; sets[x] += n; days[x].add(e.date); });
+    const side = pushPullSide(a, e.quest.name);
+    if (side === 'pull') pull += n;
+    else if (side === 'push') push += n;
   });
   const rows = COACH_ARENAS.map(a => {
-    const band = a === 'Abdominaux' ? { min: 4, good: 8 } : { min: 6, good: 10 };
+    const band = arenaBand(a);
     const avg = Math.round((sets[a] / 4) * 10) / 10;
     const status = avg < band.min ? 'low' : avg < band.good ? 'mid' : 'good';
     return { arena: a, avg, perWeekFreq: Math.round((days[a].size / 4) * 10) / 10, band, status };

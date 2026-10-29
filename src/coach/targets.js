@@ -1,10 +1,11 @@
 import { PROFILES } from './profiles';
 import { decideProfileTarget } from './profileTarget';
 import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { getTodayISODate } from '../lib/dates';
 import { evaluateQuestProgress } from '../lib/progress';
 import { isTimedQuest } from '../lib/quests';
+import { arenaOf, arenaTier, isAbsArena, isOptimized } from '../data/muscles';
 
 // Objectif de la prochaine séance pour UN exercice
 export function computeExerciseTarget(q, opts = {}) {
@@ -17,7 +18,7 @@ export function computeExerciseTarget(q, opts = {}) {
   const goalAssist = Number(q.goalAssistanceKg) || 0;
   const entries = coachRealEntries(q);
   const last = entries[entries.length - 1] || null;
-  const arena = normalizeArenaGroup(q.category, q.type);
+  const arena = arenaOf(q);
   const compound = coachIsCompound(q.name);
   const boss = evaluateQuestProgress(q).isBossDefeated;
 
@@ -177,17 +178,20 @@ export function composeTemplates(quests, N) {
   const strength = (quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
   const byArena = {};
   strength.forEach(q => {
-    const a = normalizeArenaGroup(q.category, q.type);
+    const a = arenaOf(q);
     (byArena[a] = byArena[a] || []).push(q);
   });
   const templates = Array.from({ length: N }, (_, i) => ({ idx: i, id: 'ABC'[i], quests: [] }));
-  COACH_ARENAS.forEach(a => {
+  COACH_ARENAS.forEach((a, gi) => {
     const list = (byArena[a] || []).slice().sort((x, y) => String(x.id).localeCompare(String(y.id)));
-    const cap = a === 'Abdominaux' ? 1 : 2;
+    const tier = arenaTier(a);
+    const cap = isAbsArena(a) ? 1 : isOptimized() && tier > 1 ? 1 : 2;
     if (!list.length) return;
     // chaque groupe est travaillé dans chaque séance (fréquence ≥ 2/semaine) :
     // les exercices sont répartis, et s'il y en a moins que de séances, ils sont répétés
     templates.forEach((t, i) => {
+      // mode optimisé : les petits muscles (mollets, avant-bras, obliques…) tournent, un séance sur deux, pour garder des séances de durée raisonnable
+      if (isOptimized() && tier === 3 && N > 1 && (gi + i) % 2 !== 0) return;
       let mine = list.filter((q, j) => j % N === i).slice(0, cap);
       if (!mine.length) mine = [list[i % list.length]];
       mine.forEach(q => t.quests.push(q));
@@ -195,8 +199,8 @@ export function composeTemplates(quests, N) {
   });
   templates.forEach(t =>
     t.quests.sort((x, y) => {
-      const ax = COACH_ARENAS.indexOf(normalizeArenaGroup(x.category, x.type));
-      const ay = COACH_ARENAS.indexOf(normalizeArenaGroup(y.category, y.type));
+      const ax = COACH_ARENAS.indexOf(arenaOf(x));
+      const ay = COACH_ARENAS.indexOf(arenaOf(y));
       if (ax !== ay) return ax - ay;
       return (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0);
     })

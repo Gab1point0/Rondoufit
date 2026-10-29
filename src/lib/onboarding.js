@@ -67,6 +67,7 @@ export function applyOnboarding(prev, a, today) {
     weightHistory: (prev.weightHistory || []).length ? prev.weightHistory : [{ id: `w_${Date.now()}`, date: today, weightKg: w, note: 'Poids de départ' }],
     maxRecords: { ...(prev.maxRecords || {}) },
     quests: [...(prev.quests || [])],
+    muscleMode: a.muscleMode === 'optimized' ? 'optimized' : 'simple',
     onboarded: true,
   };
 

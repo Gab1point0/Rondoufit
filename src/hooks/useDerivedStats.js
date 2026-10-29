@@ -1,4 +1,4 @@
-import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
+import { ARENA_GROUPS } from '../data/arenas';
 import { getTodayISODate } from '../lib/dates';
 import { levelFromXp } from '../lib/levels';
 import { compareWithPreviousSession, evaluateQuestProgress } from '../lib/progress';
@@ -6,6 +6,7 @@ import { getSetDetailsArray, isTimedQuest } from '../lib/quests';
 import { computeCurrentStreak } from '../lib/stats';
 import { streakBonusPct } from '../lib/xp';
 import { useMemo } from 'react';
+import { arenaOf } from '../data/muscles';
 
 export function useDerivedStats({ gameState, selectedDate }) {
   // ==========================================
@@ -18,7 +19,7 @@ export function useDerivedStats({ gameState, selectedDate }) {
   const arenaLevels = useMemo(() => {
     return ARENA_GROUPS.map(arena => {
       const matchingQuests = gameState.quests.filter(
-        q => normalizeArenaGroup(q.category, q.type) === arena.id
+        q => arenaOf(q) === arena.id
       );
       const levelUpsInGroup = matchingQuests.reduce(
         (sum, q) => sum + Math.max(0, (Number(q.level) || 1) - 1),

@@ -1,8 +1,9 @@
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { estimateOneRm, estimateQuestMax } from '../lib/maxima';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { PROFILES, coachProfileAt } from './profiles';
 import { coachIsCompound, coachRound, coachStep, getCoachSettings } from './settings';
+import { arenaOf } from '../data/muscles';
 
 // Départ d'un NOUVEL exercice : charge, séries et répétitions proposées d'après ce que tu sais déjà soulever
 // (maxima estimés ou records réels de tes autres exercices) et d'après ton profil de travail du moment.
@@ -32,7 +33,7 @@ export function relativeStrength(state, arena, today, catalog) {
     if (!(e1 > 0)) continue;
     const ref = estimateOneRm(cat.defaultStart, (cat.defaultGoalReps || 6) + EXTRA_REPS);
     if (!ref) continue;
-    const w = normalizeArenaGroup(q.category, q.type) === arena ? 3 : 1;
+    const w = arenaOf(q) === arena ? 3 : 1;
     sum += Math.log(e1 / ref.mean) * w;
     weight += w;
     used.push(q.name);
@@ -70,13 +71,13 @@ export function suggestStart(c, state, today, catalog) {
     return { ...base, note: P ? `Séries et répétitions adaptées à ton profil du moment.${profText}` : '' };
   }
 
-  const arena = normalizeArenaGroup(c.category, c.type);
+  const arena = arenaOf(c);
   const { level, used } = relativeStrength(state, arena, today, catalog);
   const step = coachStep({ catalogId: c.id, name: c.name }, c.defaultStart);
   let start;
   if (P) {
     const ref = estimateOneRm(c.defaultStart, (c.defaultGoalReps || 6) + EXTRA_REPS);
-    start = coachRound(level * ref.mean * (P.pctStart / 100), step);
+    start = coachRound(level * (ref ? ref.mean : c.defaultStart) * (P.pctStart / 100), step);
   } else {
     start = coachRound(level * c.defaultStart, step);
   }

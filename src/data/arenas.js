@@ -2,7 +2,7 @@ import { pick } from '../edition';
 // ==========================================
 // LES 6 ARÈNES / GROUPES MUSCULAIRES
 // ==========================================
-export const ARENA_GROUPS = [
+export const ARENA_GROUPS_COARSE = [
   { id: 'Dos', label: 'Dos', icon: '🦅', badgeName: 'Badge Aile', color: 'from-violet-500 to-indigo-600' },
   { id: 'Pectoraux', label: 'Pectoraux', icon: '🛡️', badgeName: 'Badge Armure', color: 'from-pink-500 to-rose-600' },
   { id: 'Jambes', label: 'Jambes', icon: '🦵', badgeName: 'Badge Séisme', color: 'from-amber-500 to-orange-600' },
@@ -11,6 +11,9 @@ export const ARENA_GROUPS = [
  { id: 'Course & Cardio', label: 'Course & Cardio', icon: '🏃', badgeName: 'Badge Zéphyr', color: 'from-emerald-500 to-teal-600' },
 { id: 'Volley-ball', label: pick('Volley-ball', 'Sport collectif'), icon: pick('🏐', '🎽'), badgeName: 'Badge Smash', color: 'from-sky-400 to-blue-600' }
 ];
+
+/** Liste vivante des groupes affichés par l'interface : grands groupes (mode simple) ou muscles précis (mode optimisé), mise à jour par data/muscles.js (setMuscleMode). */
+export const ARENA_GROUPS = [...ARENA_GROUPS_COARSE];
 
 export function normalizeArenaGroup(category = '', type = 'strength') {
 if (category.toLowerCase().includes('volley')) return 'Volley-ball';

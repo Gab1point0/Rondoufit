@@ -6,7 +6,7 @@ import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions
 import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoachSettings } from '../../coach/settings';
 import { profileOpts } from '../../coach/profiles';
 import { computeExerciseTarget } from '../../coach/targets';
-import { normalizeArenaGroup } from '../../data/arenas';
+
 import { addDaysISO, getTodayISODate, getWeekStart } from '../../lib/dates';
 import { evaluateQuestProgress } from '../../lib/progress';
 import { CoachAdvice } from './CoachAdvice';
@@ -24,6 +24,7 @@ import { CoachWeek } from './CoachWeek';
 import { CoachWeeklyGoals } from './CoachWeeklyGoals';
 import { CoachWeightHealth } from './CoachWeightHealth';
 import { sportInfo } from '../../data/sports';
+import { arenaOf } from '../../data/muscles';
 
 export function CoachPanel({
   gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
@@ -55,7 +56,7 @@ export function CoachPanel({
         .filter(q => q.type === 'strength' && q.goalMode !== 'free_mode')
         .map(q => ({
           q,
-          arena: normalizeArenaGroup(q.category, q.type),
+          arena: arenaOf(q),
           target: computeExerciseTarget(q, { ...profileOpts(gameState, today), today }),
           progress: evaluateQuestProgress(q).percent,
           plateau: coachPlateau(q),

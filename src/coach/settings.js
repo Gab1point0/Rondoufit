@@ -1,4 +1,5 @@
 import { pick } from '../edition';
+import { COACH_ARENAS, typeArenas } from '../data/muscles';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { isStartEntry } from '../lib/quests';
 import { stripAccents } from '../lib/text';
@@ -17,15 +18,16 @@ const COACH_DEFAULTS = { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: pic
 
 export const getCoachSettings = state => ({ ...COACH_DEFAULTS, ...((state && state.coach) || {}) });
 
-export const COACH_ARENAS = ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'];
+// Groupes suivis par le coach : 5 grands groupes (mode simple) ou 14 muscles précis (mode optimisé) ; liste vivante (data/muscles.js).
+export { COACH_ARENAS };
 
 export const COACH_DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
 // Types de séance du mode « 3 séances » : full body, jambes, haut du corps
 export const COACH_TYPES = {
-  FB: { id: 'FB', label: 'Full body', legs: true, upper: true, arenas: ['Jambes', 'Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'] },
-  LEGS: { id: 'LEGS', label: 'Jambes', legs: true, upper: false, arenas: ['Jambes', 'Abdominaux'] },
-  UPPER: { id: 'UPPER', label: 'Haut du corps', legs: false, upper: true, arenas: ['Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'] }
+  FB: { id: 'FB', label: 'Full body', legs: true, upper: true, get arenas() { return typeArenas('FB'); } },
+  LEGS: { id: 'LEGS', label: 'Jambes', legs: true, upper: false, get arenas() { return typeArenas('LEGS'); } },
+  UPPER: { id: 'UPPER', label: 'Haut du corps', legs: false, upper: true, get arenas() { return typeArenas('UPPER'); } }
 };
 
 export const COACH_TYPE_ORDER = ['FB', 'LEGS', 'UPPER'];

@@ -9,6 +9,7 @@ export const INITIAL_STATE = {
   targetWeightKg: 75,
   coach: { sessionsPerWeek: 2, sessionMinutes: 60, volleyDays: pick([4, 5], []), matchDates: [], deloadWeeks: [], cycleWeeks: 0, cycleStart: null, weeklyClaimed: [], splitMode: 'auto', gymSlots: {}, gymSkips: [] },
   weightHistory: [],
+  muscleMode: 'simple',                         // suivi des muscles : 'simple' (5 grands groupes) ou 'optimized' (14 muscles précis)
   onboarded: false,                             // l'assistant d'accueil a été fait (ou passé)
   xp: 0,
   streak: 0,

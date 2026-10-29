@@ -2,9 +2,10 @@ import { coachSlotFor } from './planning';
 import { COACH_ARENAS, COACH_TYPES, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { profileOpts } from './profiles';
 import { calculateStrengthCalories } from '../lib/calories';
+import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, typeArenas } from '../data/muscles';
 
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
 function coachEstimateMin(exercises) {
@@ -26,23 +27,23 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
     (state.quests || []).filter(q => {
       if (q.type !== 'strength' || q.goalMode === 'free_mode') return false;
       if (ex.some(e => e.questId === q.id)) return false;
-      const a = normalizeArenaGroup(q.category, q.type);
+      const a = arenaOf(q);
       if (opts.allowedArenas && !opts.allowedArenas.includes(a)) return false;
-      if (a === 'Jambes' && !legsAllowed) return false;
-      return arenaCount(a) < 2;
+      if (isLegArena(a) && !legsAllowed) return false;
+      return arenaCount(a) < (arenaTier(a) === 1 ? 2 : 1);
     });
   const addSet = e => { e.sets += 1; e.targetReps.push(e.targetReps[e.targetReps.length - 1]); };
   let guard = 0;
   while (coachEstimateMin(ex) < targetMin - 3 && guard++ < 40) {
     const cands = pool().sort((x, y) => {
-      const ax = normalizeArenaGroup(x.category, x.type), ay = normalizeArenaGroup(y.category, y.type);
+      const ax = arenaOf(x), ay = arenaOf(y);
       const d = arenaSets(ax) - arenaSets(ay);
       if (d) return d;
       return (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0);
     });
     const allThree = ex.every(e => e.sets >= 3);
     const canSet = ex
-      .filter(e => e.sets < 4 && !(opts.matchWeek && e.arena === 'Jambes'))
+      .filter(e => e.sets < 4 && !(opts.matchWeek && isLegArena(e.arena)))
       .sort((a, b) => a.sets - b.sets || (b.compound ? 1 : 0) - (a.compound ? 1 : 0));
     if (allThree && cands.length && ex.length < 8) {
       const q = cands[0];
@@ -54,11 +55,12 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
     } else break;
   }
   // Allègement si la séance dépasse nettement la durée voulue
+  const dropIdx = list => { let best = list.length - 1, bt = 0; list.forEach((e, i) => { const t = arenaTier(e.arena); if (t >= bt) { bt = t; best = i; } }); return best; };
   guard = 0;
   while (coachEstimateMin(ex) > targetMin + 8 && guard++ < 30) {
     const big = ex.filter(e => e.sets > 3).sort((a, b) => b.sets - a.sets)[0];
     if (big) { big.sets -= 1; big.targetReps.pop(); continue; }
-    if (ex.length > 3) { ex.pop(); continue; }
+    if (ex.length > 3) { ex.splice(dropIdx(ex), 1); continue; } // d'abord les muscles les moins prioritaires (mode optimisé)
     break;
   }
   ex.sort((a, b) => {
@@ -98,7 +100,7 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
       ...profileOpts(state, di.iso),
       today: di.iso,
       deload: eff.deload,
-      reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'
+      reduceSets: !!opts.matchWeek && isLegArena(arenaOf(q))
     })
   );
   const slot = coachSlotFor(coach, di.iso);
@@ -120,7 +122,7 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   if (target && estMin < target - 8 && !eff.deload) {
     const legsAllowed = di.legsOk && !opts.matchWeek;
     const arenas = (allowedArenas || COACH_ARENAS)
-      .filter(a => a !== 'Abdominaux' && (a !== 'Jambes' || legsAllowed) && exercises.filter(e => e.arena === a).length < 2)
+      .filter(a => !isAbsArena(a) && (!isLegArena(a) || legsAllowed) && exercises.filter(e => e.arena === a).length < (arenaTier(a) === 1 ? 2 : 1))
       .sort((x, y) => exercises.filter(e => e.arena === x).length - exercises.filter(e => e.arena === y).length)
       .slice(0, 3);
     arenas.forEach(a => coachSuggestExercises(state, a, 2).forEach(c => fillSuggestions.push({ id: c.id, name: c.name, arena: a })));
@@ -136,7 +138,7 @@ function coachBuildSession(state, templateIdx, di, opts = {}) {
   const notes = [];
   let quests = t.quests;
   if (!di.legsOk) {
-    const without = quests.filter(q => normalizeArenaGroup(q.category, q.type) !== 'Jambes');
+    const without = quests.filter(q => !isLegArena(arenaOf(q)));
     if (without.length !== quests.length) notes.push(`Pas d'exercices de jambes (${di.legsWhy}) pour garder les jambes fraîches.`);
     quests = without;
   }
@@ -144,15 +146,24 @@ function coachBuildSession(state, templateIdx, di, opts = {}) {
   return { templateIdx, templateId: t.id, date: di.iso, ...r };
 }
 
+// Nombre maximal d'exercices par groupe dans une séance typée (mode simple : comme avant ; mode optimisé : un par petit muscle, deux pour les gros)
+function typedCaps(type) {
+  if (!isOptimized()) return type === 'LEGS' ? { Jambes: 3, Abdominaux: 1 } : type === 'UPPER' ? { Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 } : { Jambes: 2, Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 };
+  const big = type === 'LEGS' ? ['Quadriceps', 'Ischio-jambiers'] : type === 'UPPER' ? ['Dos', 'Pectoraux'] : [];
+  const caps = {};
+  typeArenas(type).forEach(a => { caps[a] = big.includes(a) ? 2 : 1; });
+  return caps;
+}
+
 // Exercices d'une séance typée : les moins récemment travaillés d'abord
 function coachTypedQuests(state, type, legsOk) {
   const arenas = COACH_TYPES[type].arenas;
-  const caps = type === 'LEGS' ? { Jambes: 3, Abdominaux: 1 } : type === 'UPPER' ? { Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 } : { Jambes: 2, Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 };
+  const caps = typedCaps(type);
   const qs = (state.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
   const lastDate = q => { const es = coachRealEntries(q); return es.length ? es[es.length - 1].date : ''; };
   const out = [];
-  COACH_ARENAS.filter(a => arenas.includes(a) && (legsOk || a !== 'Jambes')).forEach(a => {
-    qs.filter(q => normalizeArenaGroup(q.category, q.type) === a)
+  COACH_ARENAS.filter(a => arenas.includes(a) && (legsOk || !isLegArena(a))).forEach(a => {
+    qs.filter(q => arenaOf(q) === a)
       .sort((x, y) => lastDate(x).localeCompare(lastDate(y)) || (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0))
       .slice(0, caps[a])
       .sort((x, y) => (coachIsCompound(y.name) ? 1 : 0) - (coachIsCompound(x.name) ? 1 : 0))
@@ -170,7 +181,7 @@ function coachBuildTypedSession(state, type, di, opts = {}) {
   }
   if (tp === 'FB' && !di.legsOk) notes.push(`Pas d'exercices de jambes (${di.legsWhy}) pour garder les jambes fraîches.`);
   const quests = coachTypedQuests(state, tp, di.legsOk);
-  const r = coachAssemble(state, quests, di, opts, notes, COACH_TYPES[tp].arenas.filter(a => a !== 'Jambes' || di.legsOk));
+  const r = coachAssemble(state, quests, di, opts, notes, COACH_TYPES[tp].arenas.filter(a => !isLegArena(a) || di.legsOk));
   return { templateIdx: -1, templateId: COACH_TYPES[tp].label, type: tp, typeLabel: COACH_TYPES[tp].label, date: di.iso, ...r };
 }
 
@@ -190,7 +201,7 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
       ...profileOpts(state, dateIso),
       today: dateIso,
       deload: deloadOn,
-      reduceSets: !!opts.matchWeek && normalizeArenaGroup(q.category, q.type) === 'Jambes'
+      reduceSets: !!opts.matchWeek && isLegArena(arenaOf(q))
     });
     const want = opts.sets && Number(opts.sets[q.id]);
     if (!deloadOn && want > e.sets && want <= 8) {

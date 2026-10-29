@@ -22,7 +22,7 @@ describe('édition neutre pour les amis', () => {
     for (const mot of ['Rondoudou', 'Grosdoudou', 'Dresseur', 'Arène', 'Pokédex', 'Pokéball']) expect(t, mot).not.toContain(mot);
     expect(h.doc.documentElement.dataset.style).toBe('neutral');
     expect(h.doc.title).toBe('Road2Fit');
-    expect(h.doc.querySelector('h1').textContent).toBe('Road2Fit');
+    expect(h.doc.querySelector('h1').textContent).toBe('Road2Fit'); // sans prénom : le titre reste Road2Fit
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
@@ -160,5 +160,16 @@ describe('édition neutre pour les amis', () => {
     expect(prive.w.localStorage.getItem('rondoufit:style')).toBeNull();
     expect(prive.errors).toEqual([]);
     expect(classique.errors).toEqual([]);
+  }, TIMEOUT);
+});
+
+describe('en-tête', () => {
+  it('le prénom est le grand titre, Road2Fit s’affiche à côté de l’écrou des réglages', async () => {
+    const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ onboarded: true, heroName: 'Léa', xp: 0, quests: [], weightHistory: [] }) } });
+    open.push(h);
+    await advance(h, 300);
+    expect(h.doc.querySelector('h1').textContent).toBe('Léa');
+    expect(byTest(h, 'app-title').textContent).toBe('Road2Fit');
+    expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

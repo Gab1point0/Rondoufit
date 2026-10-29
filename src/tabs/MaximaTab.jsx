@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { coachStep } from '../coach/settings';
 import { MaxCard } from '../components/MaxCard';
-import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
+import { ARENA_GROUPS } from '../data/arenas';
 import { getTodayISODate } from '../lib/dates';
 import { estimateQuestMax } from '../lib/maxima';
+import { arenaOf } from '../data/muscles';
 
 const RPE_KEY = 'rondoufit:maxUseRpe';
 const readRpe = () => { try { return localStorage.getItem(RPE_KEY) === '1'; } catch (e) { return false; } };
@@ -21,7 +22,7 @@ export function MaximaTab({ gameState, setGameState }) {
     return ARENA_GROUPS.map(a => ({
       arena: a,
       items: quests
-        .filter(q => normalizeArenaGroup(q.category, q.type) === a.id)
+        .filter(q => arenaOf(q) === a.id)
         .map(q => ({ q, result: estimateQuestMax(q, gameState, { useRpe, today }) })),
     })).filter(g => g.items.length);
   }, [gameState.quests, gameState.maxRecords, gameState.weightHistory, gameState.userWeightKg, useRpe, today]);

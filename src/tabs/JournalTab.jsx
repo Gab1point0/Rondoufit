@@ -1,10 +1,11 @@
 import { cardioHasElevation } from '../lib/calories';
 import { useState } from 'react';
 import { EntryEditor } from '../components/EntryEditor';
-import { normalizeArenaGroup } from '../data/arenas';
+
 import { Calendar, Trash2 } from '../icons';
 import { isTimedQuest, repUnit } from '../lib/quests';
 import { fmtLoads, isMixed } from '../lib/setLoads';
+import { arenaLabel } from '../data/muscles';
 
 export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDeleteSessionEntry, handleEditSessionEntry, setSelectedJournalDay }) {
   const [editingId, setEditingId] = useState(null);
@@ -105,7 +106,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                             {quest.name}
                           </h4>
                           <span className="px-2 py-0.5 rounded bg-slate-800 text-[0.7rem] font-bold text-slate-300">
-                            {normalizeArenaGroup(quest.category, quest.type)}
+                            {arenaLabel(quest)}
                           </span>
                           {comparison.goalBeaten && (
                             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-[0.7rem] font-black">

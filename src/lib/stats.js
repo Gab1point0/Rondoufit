@@ -1,4 +1,4 @@
-import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
+import { ARENA_GROUPS_COARSE as ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO, toLocalISODate } from './dates';
 import { entryKm, entryReps, entryVolume, getAllEntries, isRunQuest, isStartEntry, isTimedQuest, isVolleyQuest, repUnit } from './quests';
 

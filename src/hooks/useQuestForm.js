@@ -20,6 +20,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
   const [formCustomName, setFormCustomName] = useState('');
 
   const [formCategory, setFormCategory] = useState('Dos');
+  const [formMuscle2, setFormMuscle2] = useState(''); // 2e muscle (facultatif) ; 'none' = aucun, même si l'exercice du catalogue en a un
+  const [formMuscle, setFormMuscle] = useState(''); // mode optimisé : muscle précis choisi à la main (exercices personnalisés)
 
   const [formType, setFormType] = useState('strength');
 
@@ -56,6 +58,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormCatalogId(def.id);
     setFormCustomName(def.name);
     setFormCategory(def.category);
+    setFormMuscle('');
+    setFormMuscle2('');
     setFormType(def.type);
     setFormUnit(def.unit);
     setFormTimed(isTimedCatalog(def));
@@ -77,6 +81,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormCatalogId(quest.catalogId || 'custom');
     setFormCustomName(quest.name);
     setFormCategory(normalizeArenaGroup(quest.category, quest.type));
+    setFormMuscle(quest.muscle || '');
+    setFormMuscle2(quest.muscle2 || '');
     setFormType(quest.type || 'strength');
     setFormUnit(quest.unit || 'reps');
     setFormTimed(isTimedQuest(quest));
@@ -96,6 +102,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
 
   const handleSelectCatalogExercise = catId => {
     setFormCatalogId(catId);
+    setFormMuscle('');
+    setFormMuscle2('');
     setFormSuggestion('');
     if (catId === 'custom_strength') {
       setFormCustomName('');
@@ -169,6 +177,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     setFormCatalogId(catId);
     setFormCustomName(found.name);
     setFormCategory(normalizeArenaGroup(found.category, found.type));
+    setFormMuscle('');
+    setFormMuscle2('');
     setFormIcon(found.icon);
     setFormCardioMode(found.cardioMode || formCardioMode);
     setFormSwapNote(`Exercice remplacé par « ${found.name} ». Tout l’historique, la charge et l’objectif sont conservés : enregistre pour valider.`);
@@ -196,6 +206,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
             catalogId: formCatalogId && formCatalogId !== 'custom' ? formCatalogId : q.catalogId,
             name: cleanName,
             category: formCategory,
+            muscle: formMuscle || undefined,
+            muscle2: formMuscle2 || undefined,
             type: formType,
             unit: effectiveUnit,
             timed: formType === 'strength' && effectiveUnit === 'reps' ? formTimed : undefined,
@@ -248,6 +260,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
         catalogId: formCatalogId,
         name: cleanName,
         category: formCategory,
+            muscle: formMuscle || undefined,
+            muscle2: formMuscle2 || undefined,
         type: formType,
         cardioMode: formCardioMode,
         unit: effectiveUnit,
@@ -298,5 +312,5 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon };
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon };
 }

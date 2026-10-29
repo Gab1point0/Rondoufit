@@ -48,9 +48,12 @@ export function HeaderProfile({
                 )}
               </div>
               <h1 className="mt-1 text-base sm:text-2xl font-black tracking-tight leading-tight bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">
-                {pick('From Grosdoudou to Rondoudou', 'Road2Fit')}
+                {pick('From Grosdoudou to Rondoudou', hero || 'Road2Fit')}
               </h1>
             </div>
+            {NEUTRAL && hero && (
+              <span className="ml-auto self-center text-sm sm:text-base font-black tracking-tight text-slate-300" data-testid="app-title">Road2Fit</span>
+            )}
             <button
               type="button"
               onClick={onOpenMore}
