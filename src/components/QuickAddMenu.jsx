@@ -25,9 +25,9 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
           onClick={() => setOpen(o => !o)}
           aria-label="Ajouter"
           title="Ajouter"
-          className={`w-14 h-14 rounded-full text-3xl font-black text-white shadow-2xl shadow-pink-600/40 bg-gradient-to-br from-pink-500 to-fuchsia-600 border-2 border-pink-300/60 transition-transform ${open ? 'rotate-45' : ''}`}
+          className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl shadow-pink-600/40 bg-gradient-to-br from-pink-500 to-fuchsia-600 border-2 border-pink-300/60 transition-transform ${open ? 'rotate-45' : ''}`}
         >
-          +
+          <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>
         </button>
       </div>
     </>
