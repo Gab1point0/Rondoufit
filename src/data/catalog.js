@@ -1,3 +1,4 @@
+import { ACTIVITIES, LEGACY_GROUP } from './activities';
 // ==========================================
 // BIBLIOTHÈQUE COMPLÈTE D'EXERCICES (AVEC ABDOMINAUX & COURSE)
 // ==========================================
@@ -176,6 +177,7 @@ const NEW_CARDIO = [
   mkCardio('fp_treadmill', 'Tapis de Course (Treadmill)', 'km', 'run', 3, 10, 30, '🏃'),
   mkCardio('fp_recumbent', 'Vélo Semi-Allongé (Recumbent)', 'min', 'bike', 20, 60, 30, '🚴'),
   mkCardio('fp_climbmill', 'Climbmill / Échelle (Jacob’s Ladder)', 'min', 'stairs', 5, 20, 10, '🪜'),
+  ...ACTIVITIES.map(a => ({ ...mkCardio(a.id, a.name, a.unit, a.mode, a.start, a.goal, a.dur, a.icon), group: a.group })),
   mkCardio('fp_group_class', 'Cours Collectif', 'min', 'group_class', 30, 60, 45, '🧑‍🤝‍🧑')
 ];
 
@@ -206,4 +208,7 @@ const BRANDS_BY_EQUIP = {
   Cardio: 'Technogym Matrix Life Fitness cardio',
 };
 const BRANDS_BY_ID = { hs_oblique_crunch: 'Hammer Strength plaques', tg_total_abdominal: 'Technogym Selection' };
-EXERCISE_CATALOG.forEach(e => { e.brands = BRANDS_BY_ID[e.id] || BRANDS_BY_EQUIP[e.equip] || ''; });
+EXERCISE_CATALOG.forEach(e => {
+  e.brands = BRANDS_BY_ID[e.id] || BRANDS_BY_EQUIP[e.equip] || '';
+  if (e.type === 'cardio' && !e.group) e.group = LEGACY_GROUP[e.id] || 'Cardio salle & cours';
+});

@@ -1,4 +1,4 @@
-import { calculateCardioCalories, calculateStrengthCalories } from './calories';
+import { calculateCardioCalories, cardioHasElevation, calculateStrengthCalories } from './calories';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest } from './quests';
 import { fmtLoads, isMixed } from './setLoads';
 
@@ -34,7 +34,7 @@ export function rebuildEntry(q, entry, patch, userWeightKg) {
   if (q.type === 'cardio') {
     const value = Math.max(0.1, Number(e.value) || 0);
     const durationMin = Math.max(1, Number(e.durationMin) || 20);
-    const elevationM = Math.max(0, Number(e.elevationM) || 0);
+    const elevationM = cardioHasElevation(q.cardioMode) ? Math.max(0, Number(e.elevationM) || 0) : 0;
     const calories = calculateCardioCalories({
       cardioMode: q.cardioMode || 'run',
       distanceKm: q.unit === 'km' ? value : (value / 60) * 5.2,

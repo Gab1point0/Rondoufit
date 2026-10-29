@@ -40,7 +40,7 @@ describe('navigation', () => {
     const h = await start();
     const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
     await clickEl(h, fab);
-    for (const t of ['+ Course / Marche', '+ Objectif / Exercice', 'Dicter ma séance', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
+    for (const t of ['+ Activité annexe', '+ Objectif / Exercice', 'Dicter ma séance', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
     expect(pageText(h)).not.toContain('Repos entre séries');
     await clickText(h, 'Minuteur de repos');
     expect(pageText(h)).toContain('Repos entre séries');

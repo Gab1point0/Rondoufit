@@ -1,6 +1,6 @@
 import { profileOpts } from '../coach/profiles';
 import { computeExerciseTarget } from '../coach/targets';
-import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, calculateStrengthCalories, cardioInputNote } from '../lib/calories';
+import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, calculateStrengthCalories, cardioHasElevation, cardioInputNote } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
 import { applyStrengthSession } from '../lib/sessionRecord';
 import { getSetDetailsArray, isTimedQuest } from '../lib/quests';
@@ -46,7 +46,7 @@ export function useLogSession({
     const dur = isKm ? Number(logDurationMin) || 25 : Number(logValue) || 20;
     let dist = isKm ? Number(logValue) || 0 : (dur / 60) * 5.2;
     if (ci.inputMode === 'speed') dist = Math.round(Math.max(0, Number(ci.speedKmh) || 0) * dur / 60 * 100) / 100;
-    const elev = ci.slopeMode === 'percent' ? Math.round(Math.max(0, Number(ci.slopePct) || 0) / 100 * dist * 1000) : Math.max(0, Number(logElevationM) || 0);
+    const elev = !cardioHasElevation(quest.cardioMode) ? 0 : ci.slopeMode === 'percent' ? Math.round(Math.max(0, Number(ci.slopePct) || 0) / 100 * dist * 1000) : Math.max(0, Number(logElevationM) || 0);
     return { distanceKm: dist, durationMin: dur, elevationM: elev };
   };
 
@@ -264,7 +264,7 @@ export function useLogSession({
           date: logDate,
           value: val,
           durationMin: dur,
-          elevationM: elev,
+          ...(cardioHasElevation(q.cardioMode) ? { elevationM: elev } : {}),
           rpe: logRpe,
           calories,
           goalBeaten: isBoss,

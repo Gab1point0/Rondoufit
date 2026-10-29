@@ -1,3 +1,9 @@
+import { ACTIVITY_MET } from '../data/activities';
+
+/** Modes pour lesquels le dénivelé a un sens : course et marche (extérieur ou tapis), randonnée, trail. */
+export const ELEVATION_MODES = ['run', 'interval', 'walk', 'incline_walk', 'hike', 'trail', 'nordic'];
+export const cardioHasElevation = mode => ELEVATION_MODES.includes(mode || 'run');
+
 // Calories NETTES (hors métabolisme de repos : 1 MET = 1 kcal/kg/h retiré)
 export function calculateStrengthCalories({
   unit, weightKg = 0, assistanceKg = 0, setDetails = [6, 6, 6], rpe = 7, userWeightKg = 82,
@@ -19,7 +25,8 @@ export function calculateCardioCalories({
 }) {
   const durMin = Math.max(1, Number(durationMin) || 20);
   const distKm = Math.max(0.1, Number(distanceKm) || 0);
-  const elevM = Math.max(0, Number(elevationM) || 0);
+  // le dénivelé ne compte que pour la course et la marche
+  const elevM = cardioHasElevation(cardioMode) ? Math.max(0, Number(elevationM) || 0) : 0;
   const w = Math.max(30, Number(userWeightKg) || 82);
   const hours = durMin / 60;
   let kcal = 0;
@@ -28,17 +35,17 @@ export function calculateCardioCalories({
     // ~3 MET à RPE 4, ~4,8 à RPE 7, ~6 à RPE 9 (valeurs brutes), temps morts inclus
     const grossMet = Math.max(2, 3 + (Math.min(10, Math.max(1, rpe)) - 4) * 0.6);
     kcal = (grossMet - 1) * w * hours;
-  } else if (['run', 'interval', 'walk', 'incline_walk'].includes(cardioMode)) {
+  } else if (ELEVATION_MODES.includes(cardioMode)) {
     // Équations ACSM (vitesse + pente), VO2 en ml/kg/min, 1 L O2 ≈ 5 kcal
     const speed = (distKm * 1000) / durMin; // m/min
     const grade = Math.min(0.25, elevM / (distKm * 1000));
-    const isRunning = cardioMode === 'run' || cardioMode === 'interval' || speed >= 120;
+    const isRunning = cardioMode === 'run' || cardioMode === 'interval' || cardioMode === 'trail' || speed >= 120;
     const vo2 = isRunning
       ? 0.2 * speed + 0.9 * speed * grade + 3.5
       : 0.1 * speed + 1.8 * speed * grade + 3.5;
     kcal = (vo2 - 3.5) * w * durMin / 1000 * 5; // net : repos retiré
   } else {
-    const MET_BY_MODE = { bike: 6.8, elliptical: 5.0, rower: 7.0, stairs: 8.8, skierg: 7.5, jumprope: 10.5, hiit: 8.0, boxing: 7.5, group_class: 6.0 };
+    const MET_BY_MODE = { ...ACTIVITY_MET, bike: 6.8, elliptical: 5.0, rower: 7.0, stairs: 8.8, skierg: 7.5, jumprope: 10.5, hiit: 8.0, boxing: 7.5, group_class: 6.0 };
     const grossMet = (MET_BY_MODE[cardioMode] || 6.8) + (rpe - 6) * 0.5;
     kcal = (grossMet - 1) * w * hours + (cardioMode === 'other' ? w * elevM * 0.01 : 0);
   }

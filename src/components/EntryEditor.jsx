@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cardioHasElevation } from '../lib/calories';
 import { isTimedQuest, repUnit } from '../lib/quests';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white text-center';
@@ -7,6 +8,8 @@ const label = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
 /** Formulaire de correction d'une séance déjà enregistrée (onglet Journal). */
 export function EntryEditor({ entry, onCancel, onSave, quest }) {
   const cardio = quest.type === 'cardio';
+  const isMinutes = quest.unit === 'min'; // la valeur est alors la durée
+  const showElevation = cardioHasElevation(quest.cardioMode); // dénivelé : course et marche seulement
   const [date, setDate] = useState(entry.date);
   const [rpe, setRpe] = useState(entry.rpe || 7);
   const [note, setNote] = useState(entry.note || '');
@@ -26,7 +29,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
     e.preventDefault();
     onSave(
       cardio
-        ? { date, value, durationMin: duration, elevationM: elevation, rpe, note }
+        ? { date, value, durationMin: isMinutes ? value : duration, elevationM: showElevation ? elevation : 0, rpe, note }
         : { date, setDetails: sets, value, assistanceKg: assist, rpe, note, ...(loads ? { setLoads: loads } : {}), ...(assists ? { setAssists: assists } : {}) }
     );
   };
@@ -36,19 +39,23 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
       <p className="text-xs font-black text-pink-300">✏️ Corriger cette séance</p>
 
       {cardio ? (
-        <div className="grid grid-cols-3 gap-2">
+        <div className={`grid gap-2 ${isMinutes && !showElevation ? 'grid-cols-1' : isMinutes || !showElevation ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <div>
-            <label className={label}>{quest.unit === 'min' ? 'Durée (min)' : 'Distance (km)'}</label>
+            <label className={label}>{isMinutes ? 'Durée (min)' : 'Distance (km)'}</label>
             <input type="number" step="0.1" min="0" value={value} onChange={e => setValue(e.target.value)} className={field} />
           </div>
-          <div>
-            <label className={label}>Durée (min)</label>
-            <input type="number" min="1" value={duration} onChange={e => setDuration(e.target.value)} className={field} />
-          </div>
-          <div>
-            <label className={label}>Dénivelé (m)</label>
-            <input type="number" min="0" value={elevation} onChange={e => setElevation(e.target.value)} className={field} />
-          </div>
+          {!isMinutes && (
+            <div>
+              <label className={label}>Durée (min)</label>
+              <input type="number" min="1" value={duration} onChange={e => setDuration(e.target.value)} className={field} />
+            </div>
+          )}
+          {showElevation && (
+            <div>
+              <label className={label}>Dénivelé (m)</label>
+              <input type="number" min="0" value={elevation} onChange={e => setElevation(e.target.value)} className={field} />
+            </div>
+          )}
         </div>
       ) : (
         <>

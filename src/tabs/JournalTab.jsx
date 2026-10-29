@@ -1,3 +1,4 @@
+import { cardioHasElevation } from '../lib/calories';
 import { useState } from 'react';
 import { EntryEditor } from '../components/EntryEditor';
 import { normalizeArenaGroup } from '../data/arenas';
@@ -181,7 +182,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-300 font-bold">
                       <span>🏃 Distance/Durée : {entry.value} {quest.unit}</span>
                       {entry.durationMin && <span>⏱️ Temps : {entry.durationMin} min</span>}
-                      {entry.elevationM !== undefined && <span>⛰️ D+ : {entry.elevationM} m</span>}
+                      {entry.elevationM !== undefined && cardioHasElevation(quest.cardioMode) && <span>⛰️ D+ : {entry.elevationM} m</span>}
                     </div>
                   )}
 

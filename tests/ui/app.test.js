@@ -83,7 +83,7 @@ describe('application', () => {
   }, TIMEOUT);
 
   it('ouvre et ferme chaque fenêtre (noter une séance, objectif, course, valider, réinitialiser)', async () => {
-    for (const texte of ['Noter Séance', '+ Objectif / Exercice', '+ Course / Marche', 'Valider cet objectif', 'Ajuster', 'Réinitialiser']) {
+    for (const texte of ['Noter Séance', '+ Objectif / Exercice', '+ Activité annexe', 'Valider cet objectif', 'Ajuster', 'Réinitialiser']) {
       const h = await start();
       await clickText(h, texte);
       expect(h.doc.querySelector('.fixed.inset-0'), texte).toBeTruthy();

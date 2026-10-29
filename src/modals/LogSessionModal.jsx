@@ -1,5 +1,6 @@
 import { CardioInputToggles } from '../components/CardioInputToggles';
 import { ELASTIC_PRESETS } from '../data/presets';
+import { cardioHasElevation } from '../lib/calories';
 import { openMovement } from '../lib/movement';
 import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
@@ -399,7 +400,7 @@ export function LogSessionModal({
             </>
           ) : (
             <div className="bg-slate-950 border border-emerald-500/30 rounded-xl p-4 space-y-3">
-              <CardioInputToggles ci={logCardioInput} setCi={setLogCardioInput} distanceKm={cardioFigures(logModalQuest).distanceKm} elevationM={cardioFigures(logModalQuest).elevationM} />
+              <CardioInputToggles ci={logCardioInput} setCi={setLogCardioInput} showSpeed={logModalQuest.unit === 'km'} showSlope={cardioHasElevation(logModalQuest.cardioMode)} distanceKm={cardioFigures(logModalQuest).distanceKm} elevationM={cardioFigures(logModalQuest).elevationM} />
               <div className="grid grid-cols-3 gap-3">
                 {!(logModalQuest.unit === 'km' && logCardioInput.inputMode === 'speed') && (
                 <div>
@@ -428,7 +429,7 @@ export function LogSessionModal({
                     />
                   </div>
                 )}
-                {logCardioInput.slopeMode !== 'percent' && (
+                {cardioHasElevation(logModalQuest.cardioMode) && logCardioInput.slopeMode !== 'percent' && (
                 <div>
                   <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
                     Dénivelé D+ (m)

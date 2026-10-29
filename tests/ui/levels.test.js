@@ -20,7 +20,7 @@ const start = async state => {
   return h;
 };
 async function ajouterCourse(h) {
-  await clickText(h, '+ Course / Marche');
+  await clickText(h, '+ Activité annexe');
   await clickText(h, 'Ajouter au Bilan du Jour');
 }
 /** Laisse défiler les messages (ils s'affichent l'un après l'autre) et renvoie tout ce qui a été vu. */

@@ -1,7 +1,7 @@
 import { ARENA_GROUPS, normalizeArenaGroup } from '../data/arenas';
 import { openMovement } from '../lib/movement';
 import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons';
-import { formatPaceAndSpeed } from '../lib/calories';
+import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 
@@ -333,7 +333,7 @@ export function QuestsTab({
                             </strong>{' '}
                             ({formatPaceAndSpeed(quest.currentValue, quest.durationMin).speed})
                           </span>
-                          <span>⛰️ D+ : {quest.elevationM || 0} m</span>
+                          {cardioHasElevation(quest.cardioMode) && <span>⛰️ D+ : {quest.elevationM || 0} m</span>}
                         </div>
                       )}
                     </div>
