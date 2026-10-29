@@ -6,7 +6,7 @@ import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExport, onGoTab, onOpenOnboarding, onOpenSync, onReset, onRestore, setGameState, syncStatus }) {
+export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
@@ -27,6 +27,20 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
               <span>{t.label}</span>
             </button>
           ))}
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Progression</p>
+          <button onClick={close(onOpenRewards)} className={row}>
+            <span className="text-lg">🎁</span>
+            <span>🎁 Récompenses</span>
+          </button>
+          {trialRank && (
+            <button onClick={close(onOpenTrial)} className={row}>
+              <span className="text-lg">{levelInfo && levelInfo.locked ? '🔒' : '⚔️'}</span>
+              <span>Épreuve de rang</span>
+            </button>
+          )}
         </div>
 
         <div className="space-y-2">

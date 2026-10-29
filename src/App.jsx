@@ -332,6 +332,10 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           activeTab={activeTab}
           gameState={gameState}
           importInputRef={importInputRef}
+          levelInfo={levelInfo}
+          onOpenRewards={() => setRewardsOpen(true)}
+          onOpenTrial={() => setTrialOpen(true)}
+          trialRank={trialRank}
           onClose={() => setMoreOpen(false)}
           onExport={handleExportJSON}
           onGoTab={goToTab}

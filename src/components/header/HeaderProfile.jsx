@@ -105,58 +105,44 @@ export function HeaderProfile({
         )
       )}
 
+      {/* Essentiel seulement : série, poids, état de la sauvegarde. Récompenses, épreuve de rang et le reste sont dans ⚙️. */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className={`${chip} bg-amber-500/15 text-amber-300 border-amber-500/30`}>
-          <Flame className="w-3.5 h-3.5 text-amber-400" /> Série : {currentStreak} j
+        <span
+          title={`${lifetimeStats.totalKcal} kcal brûlées au total${streakBonusPct > 0 ? ` · chaque semaine d’affilée avec une séance : +10 % d’EXP (maximum +50 %)` : ''}`}
+          className={`${chip} bg-amber-500/15 text-amber-300 border-amber-500/30`}
+        >
+          <Flame className="w-3.5 h-3.5 text-amber-400" /> Série : {currentStreak} j{streakBonusPct > 0 ? ` · bonus +${streakBonusPct} %` : ''}
         </span>
-        <span className={`${chip} bg-rose-500/15 text-rose-300 border-rose-500/30`}>🔥 {lifetimeStats.totalKcal} kcal brûlées</span>
-        {streakBonusPct > 0 && (
-          <span title="Chaque semaine d’affilée avec une séance : +10 % d’EXP sur tes séances (maximum +50 %)" className={`${chip} bg-lime-500/15 text-lime-300 border-lime-500/30`}>
-            📈 Bonus régularité +{streakBonusPct} %
-          </span>
-        )}
         <button type="button" onClick={() => setActiveTab('weight')} title="Voir le suivi du poids" className={`${chip} bg-slate-800 text-slate-200 border-slate-600`}>
           ⚖️ {gameState.userWeightKg} kg ➔ {gameState.targetWeightKg} kg
         </button>
         <button
           type="button"
           onClick={onOpenSync}
-          title="Mon compte et ma sauvegarde"
+          title={syncStatus === 'synced' ? 'Sauvegardé en ligne : touche pour ouvrir mon compte' : 'Mon compte et ma sauvegarde'}
+          aria-label="Mon compte et ma sauvegarde"
           className={`${chip} ${
             syncStatus === 'synced'
-              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+              ? 'bg-slate-800 text-emerald-300 border-slate-700'
               : syncStatus === 'saving' || syncStatus === 'loading'
-              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
+              ? 'bg-slate-800 text-amber-300 border-slate-700 animate-pulse'
               : syncStatus === 'off'
               ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
               : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
           }`}
         >
-          {syncStatus === 'synced' ? (
-            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{'☁️ Sauvegardé en ligne'}</span></>
-          ) : syncStatus === 'saving' ? (
-            '⏳ Synchronisation…'
-          ) : syncStatus === 'loading' ? (
-            '☁️ Chargement…'
-          ) : syncStatus === 'off' ? (
-            <><span className="sm:hidden">⚠️ Pas de sauvegarde</span><span className="hidden sm:inline">⚠️ Pas de sauvegarde en ligne : connecte-toi (données sur cet appareil seulement)</span></>
-          ) : (
-            <><span className="sm:hidden">⚠️ Sauvegarde injoignable</span><span className="hidden sm:inline">⚠️ Sauvegarde injoignable : données gardées sur cet appareil</span></>
-          )}
+          {syncStatus === 'synced' ? '☁️ ✓'
+            : syncStatus === 'saving' ? '☁️ …'
+            : syncStatus === 'loading' ? '☁️ …'
+            : syncStatus === 'off' ? '⚠️ Non sauvegardé'
+            : '⚠️ Sauvegarde injoignable'}
         </button>
         {syncStatus === 'error' && (
           <button onClick={onRetrySync} className={`${chip} bg-slate-800 text-white border-slate-600`}>🔄 Réessayer</button>
         )}
-        <button type="button" onClick={onOpenRewards} className={`${chip} bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600`}>
-          🎁 Récompenses
-        </button>
-        {trialRank && (
-          <button
-            type="button"
-            onClick={onOpenTrial}
-            className={`${chip} ${levelInfo.locked ? 'bg-amber-500/20 text-amber-200 border-amber-400/60 animate-pulse' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-600'}`}
-          >
-            {levelInfo.locked ? '🔒' : '⚔️'} Épreuve de rang
+        {trialRank && levelInfo.locked && (
+          <button type="button" onClick={onOpenTrial} className={`${chip} bg-amber-500/20 text-amber-200 border-amber-400/60 animate-pulse`}>
+            🔒 Épreuve de rang
           </button>
         )}
       </div>

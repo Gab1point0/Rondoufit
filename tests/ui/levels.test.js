@@ -79,7 +79,7 @@ describe('bonus de régularité', () => {
   it('+20 % d’EXP après deux semaines d’affilée, affiché dans l’en-tête', async () => {
     // séances les semaines du 5 et du 12 octobre (terminées) ; on est le mercredi 21
     const h = await start(save(1000, { rankTrials: [4], quests: [quest(['2026-10-06', '2026-10-13'])] }));
-    expect(pageText(h)).toContain('Bonus régularité +20 %');
+    expect(pageText(h)).toContain('bonus +20 %');
     const avant = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).xp;
     await ajouterCourse(h);
     const apres = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
