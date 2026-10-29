@@ -73,7 +73,7 @@ function FrontFigure({ scene, pose, showTrace }) {
         return <polygon key={'a' + k} points="0,0 -8,-4 -8,4" fill={C.trace} transform={`translate(${a[0]},${a[1]}) rotate(${ang})`} />;
       })}
       {!scene.noLegs && sides.map((s, k) => <Limb key={'l' + k} pts={[s.hip, s.knee, s.ankle, [s.ankle[0] + (k === 0 ? -7 : 7), s.ankle[1] + 3]]} w="7" c={C.body} />)}
-      <polygon points={pol([[f.c - SHOULDER_HALF, f.sy + 4], [f.c + SHOULDER_HALF, f.sy + 4], [f.c + HIP_HALF, f.hy], [f.c - HIP_HALF, f.hy]])} fill={C.body} stroke={C.body} strokeWidth="6" strokeLinejoin="round" />
+      <polygon points={pol([[f.c - f.shHalf + f.shift, f.sy + 4], [f.c + f.shHalf + f.shift, f.sy + 4], [f.c + HIP_HALF, f.hy], [f.c - HIP_HALF, f.hy]])} fill={C.body} stroke={C.body} strokeWidth="6" strokeLinejoin="round" />
       <line x1={f.c} y1={f.sy + 4} x2={f.c} y2={f.sy - 4} stroke={C.body} strokeWidth="8" />
       {sides.map((s, k) => <Limb key={'a' + k} pts={[s.shoulder, s.elbow, s.wrist]} w="6" c={C.body} />)}
       {scene.back && <line x1={f.c} y1={f.sy + 6} x2={f.c} y2={f.hy - 2} stroke="#be185d" strokeWidth="2" strokeDasharray="2 3" />}

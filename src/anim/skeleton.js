@@ -51,7 +51,7 @@ export function solvePose(p) {
   return { hip, shoulder, headC, elbow, wrist, knee, ankle, toe, fist, farElbow, farWrist, farKnee, farAnkle };
 }
 
-const NUM_KEYS = ['torso', 'neck', 'toe', 'handBend', 'footBend', 'lift', 'c', 'hipY', 'flex', 'bend'];
+const NUM_KEYS = ['torso', 'neck', 'toe', 'handBend', 'footBend', 'lift', 'c', 'hipY', 'flex', 'bend', 'twist'];
 const lerp = (a, b, t) => a + (b - a) * t;
 const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
@@ -108,9 +108,12 @@ export function solveFront(p) {
   const hy = p.hipY;
   // bend : buste penché en avant (0 = droit, 1 = presque horizontal) : en vue de face les épaules descendent
   const sy = hy - SEG.torso * (1 - 0.75 * (p.bend || 0)) - (p.lift || 0);
-  const out = { c, hy, sy, headC: [c, sy - 17 * (1 - 0.4 * (p.bend || 0))] };
+  const th = ((p.twist || 0) * Math.PI) / 180;
+  const shHalf = SHOULDER_HALF * Math.cos(th);
+  const shift = Math.sin(th) * 7;
+  const out = { c, hy, sy, shHalf, shift, headC: [c + shift * 0.8, sy - 17 * (1 - 0.4 * (p.bend || 0))] };
   for (const side of [1, -1]) {
-    const shoulder = [c + side * SHOULDER_HALF, sy + 4];
+    const shoulder = [c + side * shHalf + shift, sy + 4];
     const own = side === -1 ? { hand: p.handL, foot: p.footL, knee: p.kneeL } : {};
     const hand = own.hand ? own.hand : p.hand ? [c + side * (p.hand[0] - c), p.hand[1]] : [shoulder[0] + side * 4, shoulder[1] + 54];
     let a;

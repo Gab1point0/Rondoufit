@@ -142,6 +142,18 @@ const NEW_STRENGTH_ROWS = [
   ['fp_leg_raise_floor','Relevé de Jambes au Sol','Abdominaux','Poids du corps','reps',10,20,3,15,'🍫'],
   ['fp_situp','Sit-Ups','Abdominaux','Poids du corps','reps',12,25,3,20,'🍫'],
   ['fp_decline_crunch','Crunch Décliné (Banc)','Abdominaux','Banc','reps',10,20,3,15,'🍫'],
+  // MACHINES DES GRANDES MARQUES (Technogym, Life Fitness, Hammer Strength, Matrix, Gym80, BH, Bodytone…) : une seule entrée par mouvement
+  ['fp_rotary_torso','Rotary Torso (Rotation du Buste, machine)','Abdominaux','Machine guidée','kg',20,50,3,15,'🌀'],
+  ['fp_pullover_machine','Pull-over Machine','Dos','Machine guidée','kg',20,50,3,12,'🌊'],
+  ['fp_high_row','High Row Iso-Latéral (Tirage Haut, machine)','Dos','Hammer Strength','kg',30,80,3,10,'🦍'],
+  ['fp_shrug_machine','Shrug Machine (Trapèzes)','Dos','Hammer Strength','kg',40,140,3,12,'🗻'],
+  ['fp_decline_press_machine','Développé Décliné Machine (Iso-Latéral)','Pectoraux','Hammer Strength','kg',40,100,3,10,'🛡️'],
+  ['fp_assisted_dip','Dips Assistés Machine','Épaules & Bras','Machine guidée','reps',4,10,3,10,'💎','sets_reps',40],
+  ['fp_standing_leg_curl','Leg Curl Debout (machine)','Jambes','Machine guidée','kg',15,40,3,12,'🦿'],
+  ['fp_belt_squat','Belt Squat (Squat à la Ceinture, machine)','Jambes','Hammer Strength','kg',40,140,3,10,'🦵'],
+  ['fp_deadlift_machine','Soulevé de Terre Machine (Deadlift)','Jambes','Hammer Strength','kg',40,120,3,8,'🦍'],
+  ['fp_woodchop','Bûcheron Poulie (Woodchop)','Abdominaux','Poulie','kg',8,25,3,12,'🪓'],
+  ['fp_pallof','Pallof Press Poulie (Anti-Rotation)','Abdominaux','Poulie','kg',8,25,3,12,'🧱'],
   ['hs_oblique_crunch','Abdominal / Oblique Crunch (Hammer Strength)','Abdominaux','Machine guidée','kg',20,50,3,15,'🌪️'],
   ['tg_total_abdominal','Total Abdominal (Technogym)','Abdominaux','Machine guidée','kg',20,60,3,15,'🍫']
 ];
@@ -161,6 +173,9 @@ const NEW_CARDIO = [
   mkCardio('fp_jumprope', 'Corde à Sauter', 'min', 'jumprope', 5, 15, 10, '🪢'),
   mkCardio('fp_hiit', 'Cross-Training / HIIT', 'min', 'hiit', 15, 40, 25, '🔥'),
   mkCardio('fp_boxing', 'Boxe / Sac de Frappe', 'min', 'boxing', 15, 45, 30, '🥊'),
+  mkCardio('fp_treadmill', 'Tapis de Course (Treadmill)', 'km', 'run', 3, 10, 30, '🏃'),
+  mkCardio('fp_recumbent', 'Vélo Semi-Allongé (Recumbent)', 'min', 'bike', 20, 60, 30, '🚴'),
+  mkCardio('fp_climbmill', 'Climbmill / Échelle (Jacob’s Ladder)', 'min', 'stairs', 5, 20, 10, '🪜'),
   mkCardio('fp_group_class', 'Cours Collectif', 'min', 'group_class', 30, 60, 45, '🧑‍🤝‍🧑')
 ];
 
@@ -178,3 +193,17 @@ export const EXERCISE_CATALOG = [
   })),
   ...NEW_CARDIO
 ].filter((c, i, arr) => i < BASE_EXERCISE_CATALOG.length || !__existingNames.has(normSearch(c.name)));
+
+// Marques d'équipementiers par type de machine (sert à la recherche : « technogym », « hammer », « matrix »…).
+// Source : sites des fabricants et des enseignes (Basic-Fit : Matrix + Technogym ; Fitness Park : Technogym, Hammer Strength, Gym80 ;
+// L'Orange Bleue : BH + Bodytone). Une machine existe souvent chez plusieurs marques : une seule entrée générique par mouvement.
+const BRANDS_BY_EQUIP = {
+  'Machine guidée': 'Technogym Selection Matrix Life Fitness BH Bodytone Hammer Strength Select',
+  'Hammer Strength': 'Hammer Strength Technogym Pure Gym80 plaques',
+  'Machine à plaques': 'Hammer Strength Technogym Pure Gym80 plaques',
+  Poulie: 'Technogym Matrix Life Fitness BH Bodytone poulie',
+  Smith: 'Technogym Matrix Hammer Strength Gym80 Smith',
+  Cardio: 'Technogym Matrix Life Fitness cardio',
+};
+const BRANDS_BY_ID = { hs_oblique_crunch: 'Hammer Strength plaques', tg_total_abdominal: 'Technogym Selection' };
+EXERCISE_CATALOG.forEach(e => { e.brands = BRANDS_BY_ID[e.id] || BRANDS_BY_EQUIP[e.equip] || ''; });

@@ -12,7 +12,7 @@ export function ExercisePicker({ value, onSelect }) {
     .filter(c => {
       const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : c.category === filter && c.type !== 'cardio');
       if (!inFilter) return false;
-      const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''}`);
+      const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''} ${c.brands || ''}`);
       return tokens.every(t => hay.includes(t));
     })
     .sort((a, b) => ORDER.indexOf(a.category) - ORDER.indexOf(b.category));

@@ -2,6 +2,7 @@ import { cableFlyFront, chestMachineFront, dipsFront, facePullFront, lyingFlyFro
 import { backExtension, barbellRow, dbRow, invertedRow, pullUp, pulldown, seatedRow, shrugs } from './scenes-pull';
 import { curl, kickback, overheadExtension, pushdown, skullCrusher, tricepsMachine, wristCurl } from './scenes-arms';
 import { externalRotation, facePull, frontRaise, lateralRaise, overheadPress, rearFly, uprightRow } from './scenes-shoulders';
+import { assistedDip, beltSquat, deadliftMachine, declineMachine, highRow, pallof, pulloverMachine, rotaryTorso, shrugMachine, standingLegCurl, woodchop, woodchopFront } from './scenes-new';
 import { abMachine, hsObliqueCrunch, tgTotalAbdominal, abWheel, cableCrunch, captainChair, crunch, hangingRaise, hollowHold, plankHold } from './scenes-core';
 import { bulgarianSquat, burpee, calfRaise, deadlift, gluteBridge, gluteKickback, goodMorning, hipMachine, hipThrust, legCurl, legExtension, legPress, lunge, mountainClimber, multiHip, squat, stepUp, wallBall, wallSit } from './scenes-legs';
 import { benchPress, dips, fly, machinePress, pullover, pushUp } from './scenes-push';
@@ -134,6 +135,18 @@ add('fp_hollow_hold', 'Hollow hold', hollowHold());
 add('fp_diamond_pushups', 'Pompes diamant', pushUp({ narrow: true }));
 add('fp_smith_incline', 'Incliné Smith', benchPress({ tool: 'smith', ang: 30 }));
 add('fp_hammer_chest', 'Chest press hammer', machinePress({ hammer: true }));
+add('fp_rotary_torso', 'Rotary torso', rotaryTorso());
+add('fp_pullover_machine', 'Pull-over machine', pulloverMachine());
+add('fp_high_row', 'High row', highRow());
+add('fp_shrug_machine', 'Shrug machine', shrugMachine());
+add('fp_decline_press_machine', 'Développé décliné machine', declineMachine());
+add('fp_assisted_dip', 'Dips assistés', assistedDip());
+add('fp_standing_leg_curl', 'Leg curl debout', standingLegCurl());
+add('fp_belt_squat', 'Belt squat', beltSquat());
+add('fp_deadlift_machine', 'Soulevé de terre machine', deadliftMachine());
+add('fp_woodchop', 'Bûcheron poulie', woodchop());
+add('fp_pallof', 'Pallof press', pallof());
+
 // ---- Vues supplémentaires (face / dos) là où le profil masque le mouvement ----
 alt(['bench_press', 'fp_incline_barbell', 'fp_decline_barbell'], 'feet', 'Vue depuis les pieds', lyingPressFront({}));
 alt('fp_close_grip_bench', 'feet', 'Vue depuis les pieds', lyingPressFront({ grip: 16 }));
@@ -166,4 +179,7 @@ alt(['pushups', 'fp_decline_pushups'], 'head', 'Vue depuis la tête', pushUpFron
 alt('fp_diamond_pushups', 'head', 'Vue depuis la tête', pushUpFront({ narrow: true }));
 alt('dips', 'front', 'Vue de face', dipsFront());
 alt('fp_multihip', 'front', 'Vue de face', multiHipFront());
+alt('fp_high_row', 'front', 'Vue de face', pulldownFront({ grip: 36 }));
+alt('fp_woodchop', 'front', 'Vue de face', woodchopFront());
+alt('fp_decline_press_machine', 'front', 'Vue de face', chestMachineFront({ hammer: true }));
 export const ALL_SCENES = E;
