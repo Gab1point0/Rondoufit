@@ -44,7 +44,7 @@ export async function syncOnce(cfg, ports) {
         throw new Error("Le fichier distant n'est pas un JSON valide : synchronisation interrompue pour ne rien écraser.");
       }
       if (!parsed || !Array.isArray(parsed.quests)) {
-        throw new Error("Le fichier distant n'a pas le format d'une sauvegarde RondouFit : synchronisation interrompue pour ne rien écraser.");
+        throw new Error("Le fichier distant n'a pas le format d'une sauvegarde de l'appli : synchronisation interrompue pour ne rien écraser.");
       }
       const { _savedAt, ...rest } = parsed;
       remoteTs = Number(_savedAt) || 0;
@@ -97,7 +97,7 @@ export async function syncOnce(cfg, ports) {
     const content = JSON.stringify({ ...next, _savedAt: ts }, null, 2);
     let sha;
     try {
-      sha = await ports.api.putFile(cfg, content, remote.sha, 'RondouFit : sauvegarde automatique');
+      sha = await ports.api.putFile(cfg, content, remote.sha, 'Sauvegarde automatique');
     } catch (err) {
       if (err instanceof SyncError && (err.status === 409 || err.status === 422) && attempt < MAX_TRIES - 1) continue;
       throw err;

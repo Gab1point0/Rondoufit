@@ -48,7 +48,7 @@ export function HeaderProfile({
                 )}
               </div>
               <h1 className="mt-1 text-base sm:text-2xl font-black tracking-tight leading-tight bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">
-                {pick('From Grosdoudou to Rondoudou', hero ? `Salut ${hero}` : 'Ma musculation')}
+                {pick('From Grosdoudou to Rondoudou', 'Road2Fit')}
               </h1>
             </div>
             <button

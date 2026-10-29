@@ -51,7 +51,7 @@ export async function syncPhotos(cfg, ports) {
   const upload = async (id, sha) => {
     const photo = await ports.local.get(id);
     if (!photo) return;
-    const newSha = await ports.api.putFile(cfgFor(id), JSON.stringify(photo), sha || null, `RondouFit : photo du ${photo.date}`);
+    const newSha = await ports.api.putFile(cfgFor(id), JSON.stringify(photo), sha || null, `Photo du ${photo.date}`);
     meta[id] = { sha: newSha, at: photo.updatedAt || photo.createdAt || 0 };
     save();
     stats.up++;
@@ -91,7 +91,7 @@ export async function syncPhotos(cfg, ports) {
       }
     } else if (inRemote) {
       if (m) {
-        await ports.api.deleteFile(cfgFor(id), remote.get(id), 'RondouFit : photo supprimée'); // supprimée ici
+        await ports.api.deleteFile(cfgFor(id), remote.get(id), 'Photo supprimée'); // supprimée ici
         delete meta[id];
         save();
         stats.removedRemote++;

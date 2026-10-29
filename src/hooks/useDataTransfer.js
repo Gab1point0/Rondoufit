@@ -43,7 +43,7 @@ export function useDataTransfer({ gameState, paidAchievementsRef, setGameState, 
         });
         triggerToast('Sauvegarde restaurée', 'Votre progression a été rechargée.', 0, '📥');
       } catch (err) {
-        triggerToast('Import impossible', 'Ce fichier n’est pas une sauvegarde Rondoufit valide.', 0, '⚠️');
+        triggerToast('Import impossible', 'Ce fichier n’est pas une sauvegarde valide de l’appli.', 0, '⚠️');
       }
     };
     reader.readAsText(file);

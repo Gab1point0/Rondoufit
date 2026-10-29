@@ -1,4 +1,4 @@
--- RondouFit : comptes + sauvegarde automatique (Supabase). À coller UNE FOIS dans « SQL Editor » puis « Run ».
+-- Road2Fit : comptes + sauvegarde automatique (Supabase). À coller UNE FOIS dans « SQL Editor » puis « Run ».
 -- Avant de lancer : remplace REMPLACE_PAR_TON_CODE (2 endroits : une seule ligne en fait) par le code d'invitation que tu donneras à tes amis.
 
 -- 1) Une ligne de sauvegarde par personne -----------------------------------------------------------

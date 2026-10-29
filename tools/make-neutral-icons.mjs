@@ -45,7 +45,7 @@ fs.writeFileSync(path.join(OUT, 'icon-512.png'), icon(512));
 fs.writeFileSync(path.join(OUT, 'icon-maskable-512.png'), icon(512, 0.28, false));
 fs.writeFileSync(path.join(OUT, 'apple-touch-icon.png'), icon(180, 0.18, false));
 fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Ma musculation', short_name: 'Muscu', description: 'Suivi de musculation : coach, journal de séances et progression.', lang: 'fr',
+  name: 'Road2Fit', short_name: 'Road2Fit', description: 'Suivi de musculation : coach, journal de séances et progression.', lang: 'fr',
   start_url: '../', scope: '../', display: 'standalone', orientation: 'any', background_color: '#0f172a', theme_color: '#0f172a',
   icons: [
     { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

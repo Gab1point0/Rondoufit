@@ -21,7 +21,8 @@ describe('édition neutre pour les amis', () => {
     const t = pageText(h);
     for (const mot of ['Rondoudou', 'Grosdoudou', 'Dresseur', 'Arène', 'Pokédex', 'Pokéball']) expect(t, mot).not.toContain(mot);
     expect(h.doc.documentElement.dataset.style).toBe('neutral');
-    expect(h.doc.title).toBe('Ma musculation');
+    expect(h.doc.title).toBe('Road2Fit');
+    expect(h.doc.querySelector('h1').textContent).toBe('Road2Fit');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

@@ -1,6 +1,6 @@
-# Rondoufit — contexte du projet (à lire en premier)
+# Road2Fit (ex-RondouFit) — contexte du projet (à lire en premier)
 
-Application de fitness façon RPG Pokémon pour **un seul utilisateur** (français, Gabin). Publiée sur GitHub Pages depuis `main` (repo `gab1point0/rondoufit`) : https://gab1point0.github.io/Rondoufit/
+Application de fitness façon RPG Pokémon pour **un seul utilisateur** (français, Gabin). Publiée sur GitHub Pages depuis `main` (repo `Gab1point0/Road2Fit`) : https://gab1point0.github.io/Road2Fit/
 
 ## Règles de travail avec l'utilisateur
 - Parler **français**, réponses courtes, orientées résultat. L'utilisateur n'est pas développeur : instructions simples, pas de jargon.
@@ -140,3 +140,8 @@ Bouton « 🎬 Mouvement » sur les cartes d'exercice, dans la séance guidée, 
 - Ancienne version de l'appli (avant la refonte ergonomie du 28-29/10/2026) : tag et branche `sauvegarde-avant-refonte-ergonomie` sur GitHub (retour possible : voir l'historique git).
 - Anciens objectifs conservés si on retire un exercice du catalogue (seul le catalogue change).
 - Les hooks de `hooks/` reçoivent tout ce dont ils ont besoin en paramètre (pas de contexte global) : ajouter un paramètre plutôt qu'un import croisé.
+
+## Nom et adresse (renommage du 29/10/2026)
+- L'appli s'appelle **Road2Fit**. Dépôt GitHub : `Gab1point0/Road2Fit` (renommé depuis `Rondoufit`) → adresse **https://gab1point0.github.io/Road2Fit/** (l'ancienne adresse /Rondoufit/ ne répond plus). Lien amis : `…/Road2Fit/?amis`. Titre de l'apparence classique, de l'onglet, de l'icône installée (manifeste `public/neutral/`, généré par `tools/make-neutral-icons.mjs`) : « Road2Fit ». L'apparence Rondoudou garde son titre « From Grosdoudou to Rondoudou » et son manifeste « RondouFit » (index.html, public/manifest.webmanifest).
+- Les données (localStorage / IndexedDB) sont par ORIGINE (gab1point0.github.io), pas par chemin : elles restent là après le renommage ; seuls le service worker et l'icône installée sont à refaire sur la nouvelle adresse. Projet Supabase renommé « Road2Fit » ; sa « Site URL » et ses « Redirect URLs » pointent sur la nouvelle adresse.
+- Les clés internes `rondoufit:*` / `rondoudou_save_v1` ne changent JAMAIS (elles contiennent les données).

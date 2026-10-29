@@ -71,7 +71,7 @@ export async function launch({ storage = {}, fetchImpl, empty = false } = {}) {
   const code = await buildApp();
   const errors = [];
   const dom = new JSDOM('<!doctype html><html lang="fr"><body><div id="root"></div></body></html>', {
-    url: 'https://gab1point0.github.io/Rondoufit/', runScripts: 'outside-only', pretendToBeVisual: true,
+    url: 'https://gab1point0.github.io/Road2Fit/', runScripts: 'outside-only', pretendToBeVisual: true,
   });
   const w = dom.window;
   Object.defineProperty(w, 'indexedDB', { value: new IDBFactory(), configurable: true });

@@ -29,7 +29,7 @@ export function setStyle(style) {
 export function applyEdition() {
   document.documentElement.dataset.style = NEUTRAL ? 'neutral' : 'fun';
   if (!NEUTRAL) return;
-  document.title = 'Ma musculation';
+  document.title = 'Road2Fit';
   const set = (sel, attr, value) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, value); };
   set('link[rel="manifest"]', 'href', './neutral/manifest.webmanifest');
   set('link[rel="icon"]', 'href', './neutral/icon-192.png');
@@ -37,6 +37,6 @@ export function applyEdition() {
   set('meta[name="theme-color"]', 'content', '#0f172a');
   const apple = document.createElement('meta');
   apple.name = 'apple-mobile-web-app-title';
-  apple.content = 'Muscu';
+  apple.content = 'Road2Fit';
   document.head.appendChild(apple);
 }
