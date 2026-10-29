@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Figure } from '../anim/Figure';
 import { flagAnimation } from '../lib/movement';
 import { animatedList, animationIdFor, movementFor } from '../anim/resolve';
-import { TEMPO, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
+import { firstPhaseEnd, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
 
 const CYCLE_MS = 5200;
 const MISTAKES = [
@@ -89,17 +89,18 @@ export function MovementPreview({ initial = null }) {
   const canMistake = !!(scene && info && !info.hold && scene.view !== 'front');
   const err = canMistake ? mistake : null;
   const loop = scene ? scene.loop : 'pingpong';
-  const baseU = scene ? (err === 'fast' ? phaseToU(phase, loop) : tempoU(phase, loop)) : 0;
+  const eff = info && info.eff ? 1 : 0;
+  const baseU = scene ? (err === 'fast' ? phaseToU(phase, loop) : tempoU(phase, loop, eff)) : 0;
   const u = err === 'short' ? baseU * 0.5 : baseU;
   let pose = scene ? poseAt(scene.keys, u) : null;
   if (pose && err === 'lean') pose = { ...pose, torso: (pose.torso || 0) + 20 * u };
   if (pose && err === 'fast') pose = { ...pose, torso: (pose.torso || 0) + 14 * Math.sin(phase * Math.PI * 4) };
   const labels = info ? info.p : ['Effort', 'Retour'];
-  const goingForward = loop === 'cycle' ? true : phase < TEMPO.up + TEMPO.top;
+  const goingForward = loop === 'cycle' ? true : phase < firstPhaseEnd(eff);
   const phaseLabel = goingForward ? labels[0] : labels[1];
   const ghostU = loop === 'cycle' ? (baseU + 0.2) % 1 : goingForward ? 1 : 0;
   const ghostPose = scene ? poseAt(scene.keys, ghostU) : null;
-  const breath = !info ? '' : info.hold ? '🌬️ Respire calmement' : loop === 'cycle' ? '🌬️ Respire en rythme' : goingForward ? '💨 Expire' : '🌬️ Inspire';
+  const breath = !info ? '' : info.hold ? '🌬️ Respire calmement' : loop === 'cycle' ? '🌬️ Respire en rythme' : (goingForward ? eff === 0 : eff === 1) ? '💨 Expire' : '🌬️ Inspire';
   const geste = info && info.g ? info.g : [];
   const activeGeste = playing && geste.length ? Math.min(geste.length - 1, Math.floor(phase * geste.length)) : -1;
   const errInfo = MISTAKES.find(m => m.key === err);
@@ -159,7 +160,7 @@ export function MovementPreview({ initial = null }) {
               <button type="button" onClick={() => setSpeed(s => (s === 1 ? 0.5 : 1))} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-slate-100 text-sm font-bold">🐢 {speed === 0.5 ? 'Lent ✔' : 'Lent'}</button>
               <input
                 type="range" min="0" max="100" value={Math.round(u * 100)} aria-label="Position dans le mouvement"
-                onChange={e => { setPlaying(false); setPhase(phaseOfU(Number(e.target.value) / 100, scene.loop)); }}
+                onChange={e => { setPlaying(false); setPhase(phaseOfU(Number(e.target.value) / 100, scene.loop, eff)); }}
                 className="flex-1 accent-sky-400"
               />
             </div>

@@ -134,3 +134,28 @@ describe('muscles colorés', () => {
     expect(sans).toEqual([]);
   });
 });
+
+describe('respiration : on expire pendant l’effort', () => {
+  it('la phase d’effort de chaque exercice (eff) n’est jamais une descente / un retour', async () => {
+    const { FAMILIES } = await import('./info');
+    const exceptions = new Set(['pulloverMachine', 'abWheel']); // « descends les coudes » = tirer ; roue : l'effort (gainage) est le retour
+    const bad = [];
+    for (const [fam, f] of Object.entries(FAMILIES)) {
+      if (f.hold || exceptions.has(fam) || fam === 'burpee' || fam === 'mountain') continue;
+      const effLabel = f.p[f.eff ? 1 : 0];
+      if (/^(re)?descends|^reviens|^relâche|^penche|en contrôle|^remonte en étirant/i.test(effLabel)) bad.push(`${fam}: « ${effLabel} »`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('le squat (descente d’abord) expire à la remontée, le développé couché (poussée d’abord) à la poussée', async () => {
+    const { tempoU, firstPhaseEnd } = await import('./skeleton');
+    const { FAMILIES, INFO_FAMILY } = await import('./info');
+    expect(FAMILIES[INFO_FAMILY.squat].eff).toBe(1);
+    expect(FAMILIES[INFO_FAMILY.bench_press].eff).toBeUndefined();
+    // squat : 1re phase lente (descente), 2e rapide
+    expect(firstPhaseEnd(1)).toBeGreaterThan(firstPhaseEnd(0));
+    expect(tempoU(0.25, 'pingpong', 1)).toBeCloseTo(0.5, 5);
+    expect(tempoU(0.18, 'pingpong', 0)).toBeCloseTo(0.5, 5);
+  });
+});

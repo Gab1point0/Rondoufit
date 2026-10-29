@@ -98,6 +98,7 @@ export const FAMILIES = {
     p: ['Tire vers les cuisses', 'Remonte en contrôle'],
   },
   pushUp: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Pectoraux, triceps, avant des épaules, gainage',
     s: ['Mains sous les épaules (ou un peu plus larges), corps aligné de la tête aux talons, ventre et fessiers contractés.'],
     g: ['Descends la poitrine près du sol, coudes à environ 45°.', 'Repousse jusqu’à bras tendus sans creuser le dos.'],
@@ -105,6 +106,7 @@ export const FAMILIES = {
     p: ['Descends', 'Repousse'],
   },
   pushUpFeet: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Haut des pectoraux, épaules, triceps',
     s: ['Pieds sur un banc stable, mains au sol sous les épaules, corps en planche.'],
     g: ['Descends la tête vers le sol en contrôle.', 'Repousse en gardant le corps gainé.'],
@@ -112,6 +114,7 @@ export const FAMILIES = {
     p: ['Descends', 'Repousse'],
   },
   pushUpDiamond: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Triceps, pectoraux (partie interne)',
     s: ['Mains rapprochées sous la poitrine, pouces et index formant un losange.', 'Corps gainé comme une planche.'],
     g: ['Descends la poitrine vers les mains, coudes près du corps.', 'Repousse jusqu’à bras tendus.'],
@@ -119,6 +122,7 @@ export const FAMILIES = {
     p: ['Descends', 'Repousse'],
   },
   dips: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Triceps, pectoraux (bas), avant des épaules',
     s: ['Mains sur les barres, bras tendus, épaules basses (ne pas les remonter aux oreilles).', 'Jambes pliées derrière, légère inclinaison du buste vers l’avant pour les pectoraux.'],
     g: ['Descends jusqu’à ce que les coudes soient à environ 90°.', 'Repousse jusqu’à bras tendus.'],
@@ -126,6 +130,7 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Pousse vers le haut'],
   },
   benchDips: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Triceps, avant des épaules',
     s: ['Mains sur le bord du banc derrière toi, doigts vers l’avant, jambes tendues (ou pliées pour faciliter).'],
     g: ['Descends les fesses près du banc, coudes vers l’arrière à 90°.', 'Repousse jusqu’à bras tendus.'],
@@ -396,6 +401,7 @@ export const FAMILIES = {
     p: ['Pousse vers le bas', 'Remonte en contrôle'],
   },
   skull: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Triceps',
     s: ['Allongé sur un banc, barre EZ bras tendus au-dessus de la poitrine, coudes fixes.'],
     g: ['Plie les coudes pour descendre la barre vers le front.', 'Tends les bras sans bouger les coudes.'],
@@ -425,6 +431,7 @@ export const FAMILIES = {
     p: ['Tends les bras', 'Reviens en contrôle'],
   },
   squat: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers, ischio-jambiers, dos',
     s: ['Barre sur les trapèzes (pas sur la nuque), pieds largeur des épaules, pointes légèrement ouvertes.', 'Prends une grande inspiration, ventre gainé.'],
     g: ['Descends en poussant les fesses vers l’arrière et les genoux dans l’axe des pieds.', 'Pousse dans les talons pour remonter, buste gainé.'],
@@ -433,6 +440,7 @@ export const FAMILIES = {
     safe: 'Utilise un rack avec des butées de sécurité réglées sous la position basse.',
   },
   squatFront: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers, abdominaux',
     s: ['Barre sur le devant des épaules, coudes hauts et pointés devant, pieds largeur des épaules.'],
     g: ['Descends en gardant le buste très droit.', 'Remonte en poussant dans les talons, coudes hauts.'],
@@ -440,6 +448,7 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Remonte en poussant'],
   },
   squatSmith: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers',
     s: ['Pieds légèrement en avant de la barre, barre sur les trapèzes.', 'Décroche la barre en tournant les poignets.'],
     g: ['Descends en suivant les rails jusqu’à cuisses parallèles.', 'Remonte en poussant dans les talons.'],
@@ -447,6 +456,7 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Remonte en poussant'],
   },
   goblet: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers, gainage',
     s: ['Tiens l’haltère (ou le kettlebell) contre la poitrine, coudes dirigés vers le bas.'],
     g: ['Descends en gardant le buste droit, coudes entre les genoux.', 'Remonte en poussant dans les talons.'],
@@ -454,6 +464,7 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Remonte en poussant'],
   },
   bulgarian: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers',
     s: ['Pied arrière posé sur un banc, pied avant à environ un grand pas devant.', 'Haltères le long du corps, buste droit.'],
     g: ['Descends en pliant le genou avant (cuisse à peu près parallèle).', 'Pousse dans le talon avant pour remonter.'],
@@ -461,6 +472,7 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Remonte en poussant'],
   },
   hackSquat: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers',
     s: ['Dos et épaules contre les coussins, pieds au milieu de la plateforme à largeur des épaules.', 'Choisis la charge et déverrouille les sécurités.'],
     g: ['Descends jusqu’à environ 90° aux genoux.', 'Pousse dans les talons pour remonter sans verrouiller les genoux.'],
@@ -476,6 +488,7 @@ export const FAMILIES = {
     hold: true,
   },
   lunge: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers, équilibre',
     s: ['Debout, haltères (ou barre) en main, un grand pas en avant.', 'Buste droit, ventre gainé.'],
     g: ['Descends en pliant les deux genoux jusqu’à environ 90°.', 'Pousse dans le talon avant pour remonter (ou pour faire le pas suivant).'],
@@ -568,6 +581,7 @@ export const FAMILIES = {
     p: ['Monte en poussant', 'Redescends en contrôle'],
   },
   rdl: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Ischio-jambiers, fessiers, lombaires',
     s: ['Debout, barre devant les cuisses, genoux à peine fléchis, dos plat.'],
     g: ['Recule les fesses en faisant glisser la barre le long des jambes, jusqu’à sentir l’étirement des ischios (sous les genoux).', 'Remonte en poussant les hanches vers l’avant.'],
@@ -575,6 +589,7 @@ export const FAMILIES = {
     p: ['Descends en reculant les fesses', 'Remonte en poussant les hanches'],
   },
   goodMorning: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Ischio-jambiers, lombaires, fessiers',
     s: ['Barre sur le haut du dos, genoux légèrement fléchis, ventre gainé.'],
     g: ['Recule les fesses en penchant le buste, dos plat, jusqu’à environ parallèle.', 'Remonte en poussant les hanches.'],
@@ -696,6 +711,7 @@ export const FAMILIES = {
     p: ['Lève les genoux', 'Redescends en contrôle'],
   },
   abWheel: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Abdominaux, épaules, dos (gainage)',
     s: ['À genoux sur un tapis, roue sous les épaules, dos légèrement arrondi, abdos contractés.'],
     g: ['Roule vers l’avant en gardant le corps gainé, aussi loin que tu peux sans cambrer.', 'Reviens en tirant avec les abdominaux.'],
@@ -778,6 +794,7 @@ export const FAMILIES = {
     p: ['Pousse vers l’avant-bas', 'Reviens en contrôle'],
   },
   assistedDip: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Triceps, pectoraux (bas), avant des épaules',
     s: ['Choisis le contrepoids avec la goupille : plus il est lourd, plus la machine t’aide.', 'Pose les genoux sur le support, mains sur les poignées, épaules basses.'],
     g: ['Descends jusqu’à environ 90° aux coudes.', 'Repousse jusqu’à bras tendus, puis réduis peu à peu l’assistance au fil des séances.'],

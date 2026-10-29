@@ -40,7 +40,7 @@ export default function MiniMovement({ catalogId, name }) {
           {[0, 0.5, 1].map(u => <Figure key={u} scene={scene} pose={poseAt(scene.keys, u)} showTrace={false} muscleText={muscleText} />)}
         </div>
       ) : (
-        <Figure scene={scene} pose={poseAt(scene.keys, tempoU(phase, scene.loop))} muscleText={muscleText} />
+        <Figure scene={scene} pose={poseAt(scene.keys, tempoU(phase, scene.loop, mv.info && mv.info.eff ? 1 : 0))} muscleText={muscleText} />
       )}
     </button>
   );
