@@ -51,18 +51,20 @@ export function HeaderProfile({
                 {pick('From Grosdoudou to Rondoudou', hero || 'Road2Fit')}
               </h1>
             </div>
+            <div className="shrink-0 flex items-center gap-2">
             {NEUTRAL && hero && (
-              <span className="ml-auto self-center text-sm sm:text-base font-black tracking-tight text-slate-300" data-testid="app-title">Road2Fit</span>
+              <span className="text-sm sm:text-base font-black tracking-tight text-slate-300 leading-none" data-testid="app-title">Road2Fit</span>
             )}
             <button
               type="button"
               onClick={onOpenMore}
               title="Réglages et données"
               aria-label="Réglages et données"
-              className="shrink-0 w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 text-lg text-slate-200 hover:text-white"
+              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700 text-lg text-slate-200 hover:text-white"
             >
               ⚙️
             </button>
+            </div>
           </div>
 
           <div className="w-full max-w-md">
