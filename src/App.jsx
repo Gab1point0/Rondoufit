@@ -52,10 +52,14 @@ import { useWeightLog } from './hooks/useWeightLog';
 import { OnboardingModal } from './modals/OnboardingModal';
 import { needsOnboarding } from './lib/onboarding';
 import { NEUTRAL } from './edition';
+import { AccountModal } from './modals/AccountModal';
+import { readRecoveryToken } from './components/AccountForm';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
   const [syncOpen, setSyncOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [recovery, setRecovery] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('quests');
@@ -79,6 +83,13 @@ export function App() {
 
   const { toast, triggerToast, dismissToast } = useToast();
   const [obOpen, setObOpen] = useState(false);
+  // Sauvegarde : compte de l'application (amis, si le service est réglé) ou dépôt GitHub (avancé)
+  const openSync = () => (sync.accountEnabled && (NEUTRAL || sync.user) ? setAccountOpen(true) : setSyncOpen(true));
+  // lien « mot de passe oublié » reçu par e-mail : l'adresse contient un jeton temporaire
+  useEffect(() => {
+    const t = readRecoveryToken();
+    if (t) { setRecovery(t); setAccountOpen(true); try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* rien */ } }
+  }, []);
 
   // « 🚩 Cette animation est fausse » (fenêtre Voir le mouvement) : on garde la liste dans la sauvegarde pour la corriger ensuite
   useEffect(() => {
@@ -184,7 +195,7 @@ export function App() {
         lifetimeStats={lifetimeStats}
         onOpenMore={() => setMoreOpen(true)}
         onOpenRewards={() => setRewardsOpen(true)}
-        onOpenSync={() => setSyncOpen(true)}
+        onOpenSync={openSync}
         onOpenTrial={() => setTrialOpen(true)}
         onRetrySync={sync.syncNow}
         setActiveTab={goToTab}
@@ -330,7 +341,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onExport={handleExportJSON}
           onGoTab={goToTab}
           onOpenOnboarding={() => setObOpen(true)}
-          onOpenSync={() => setSyncOpen(true)}
+          onOpenSync={openSync}
           onReset={() => setConfirmResetOpen(true)}
           onRestore={handleRestoreSafetyCopy}
           setGameState={setGameState}
@@ -347,6 +358,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
+      {accountOpen && <AccountModal sync={sync} recovery={recovery} onClose={() => { setAccountOpen(false); setRecovery(null); }} onUseGithub={() => { setAccountOpen(false); setSyncOpen(true); }} />}
       <MovementHost />
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />

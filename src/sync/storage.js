@@ -8,6 +8,8 @@ const KEYS = {
   photoMeta: 'rondoufit:photoSync', // { id: { sha, at } } : état des photos à la dernière synchro
   dirty: 'rondoufit:dirty',       // '1' tant que des modifications de cet appareil n'ont pas été envoyées
   localTs: 'rondoudou_local_ts',  // date (ms) de la dernière modification faite sur cet appareil
+  account: 'rondoufit:account',   // compte de l'application : { session, expired? } (jamais le mot de passe)
+  lastUser: 'rondoufit:lastUser', // dernier compte connecté sur cet appareil (pour ne jamais mélanger deux personnes)
   carnet: 'carnet-eps:github',    // réglages de l'appli Carnet EPS (même appareil), pour les reprendre en un clic
 };
 
@@ -83,3 +85,17 @@ export const clearDirty = () => write(KEYS.dirty, null);
 
 export const getLocalTs = () => Number(read(KEYS.localTs)) || 0;
 export const setLocalTs = t => write(KEYS.localTs, String(t));
+
+// ---- Compte de l'application (Supabase) ----
+export function readAccount() {
+  try {
+    const a = JSON.parse(read(KEYS.account) || 'null');
+    return a && typeof a === 'object' ? a : null;
+  } catch {
+    return null;
+  }
+}
+export const writeAccount = a => write(KEYS.account, a ? JSON.stringify(a) : null);
+export const isAccountConnected = () => { const a = readAccount(); return !!(a && a.session && a.session.user && a.session.user.id); };
+export const readLastUser = () => read(KEYS.lastUser);
+export const writeLastUser = id => write(KEYS.lastUser, id || null);

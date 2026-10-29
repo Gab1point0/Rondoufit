@@ -5,6 +5,7 @@ import { GOALS, STARTER_EXERCISES, applyOnboarding } from '../lib/onboarding';
 import { stripAccents } from '../lib/text';
 import { EMPTY_CONFIG } from '../sync/storage';
 import { SPORTS, sportInfo } from '../data/sports';
+import { AccountForm } from '../components/AccountForm';
 
 // Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
 // Tout est modifiable ensuite (onglet Coach, Exercices, Mes maxima, ⚙️).
@@ -26,6 +27,7 @@ function Toggle({ on, onClick, children, testid }) {
 }
 
 export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
+  const useAccount = sync.accountEnabled;
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
@@ -172,6 +174,14 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         )}
 
         {step === 6 && (
+          useAccount ? (
+            <section className="space-y-3" data-testid="ob-backup">
+              <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
+              <p className="text-sm text-slate-300">Crée un compte (e-mail + mot de passe) : tes données sont alors <strong>sauvegardées automatiquement</strong> dans ton espace personnel, et tu les retrouves en te reconnectant sur n’importe quel téléphone.</p>
+              <AccountForm sync={sync} />
+              <p className="text-[0.75rem] text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
+            </section>
+          ) : (
           <section className="space-y-3" data-testid="ob-backup">
             <h2 className="text-xl font-black text-white">Sauvegarde automatique ☁️</h2>
             <p className="text-sm text-slate-300">Pour ne jamais perdre tes données (téléphone changé, navigateur vidé), elles sont copiées <strong>automatiquement</strong> dans un espace <strong>privé à toi</strong> sur GitHub (gratuit). À faire une seule fois, ~5 minutes. Ensuite tout est automatique.</p>
@@ -195,6 +205,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             </div>
             <p className="text-[0.75rem] text-slate-500">Tu peux aussi le faire plus tard (⚙️ → Sauvegarde), mais sans cette étape tes données ne sont que sur ce téléphone. Ta clé ne sert qu’à ce dépôt et n’est jamais envoyée ailleurs.</p>
           </section>
+          )
         )}
 
         {step === 7 && (

@@ -114,15 +114,15 @@ export function HeaderProfile({
           }`}
         >
           {syncStatus === 'synced' ? (
-            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">☁️ Sauvegardé sur GitHub</span></>
+            <><span className="sm:hidden">☁️ Sauvegardé</span><span className="hidden sm:inline">{pick('☁️ Sauvegardé sur GitHub', '☁️ Sauvegardé en ligne')}</span></>
           ) : syncStatus === 'saving' ? (
             '⏳ Synchronisation…'
           ) : syncStatus === 'loading' ? (
             '☁️ Chargement…'
           ) : syncStatus === 'off' ? (
-            <><span className="sm:hidden">⚠️ Pas de sauvegarde</span><span className="hidden sm:inline">⚠️ Sauvegarde GitHub non réglée : données sur cet appareil seulement</span></>
+            <><span className="sm:hidden">⚠️ Pas de sauvegarde</span><span className="hidden sm:inline">{pick('⚠️ Sauvegarde GitHub non réglée : données sur cet appareil seulement', '⚠️ Pas de sauvegarde en ligne : données sur ce téléphone seulement')}</span></>
           ) : (
-            <><span className="sm:hidden">⚠️ GitHub injoignable</span><span className="hidden sm:inline">⚠️ GitHub injoignable : données gardées sur cet appareil</span></>
+            <><span className="sm:hidden">{pick('⚠️ GitHub injoignable', '⚠️ Sauvegarde injoignable')}</span><span className="hidden sm:inline">{pick('⚠️ GitHub injoignable : données gardées sur cet appareil', '⚠️ Sauvegarde injoignable : données gardées sur ce téléphone')}</span></>
           )}
         </button>
         {syncStatus === 'error' && (

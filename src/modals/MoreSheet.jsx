@@ -3,6 +3,7 @@ import { PLUS_TABS } from '../components/TabBar';
 import { readSafetyCopy } from '../lib/safetyCopy';
 import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 import { NEUTRAL, setStyle } from '../edition';
+import { pick } from '../edition';
 
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
@@ -50,7 +51,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
           </button>
           <button onClick={close(onOpenSync)} className={row}>
             <span className="text-lg">☁️</span>
-            <span>Sauvegarde GitHub{syncStatus === 'off' ? ' (non réglée)' : ''}</span>
+            <span>{pick('Sauvegarde GitHub', 'Mon compte et ma sauvegarde')}{syncStatus === 'off' ? ' (non réglée)' : ''}</span>
           </button>
           <button onClick={close(onExport)} className={row} title="Exporter une sauvegarde (JSON)">
             <span className="text-lg">💾</span>

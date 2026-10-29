@@ -222,3 +222,78 @@ export function fakeGithub(initial) {
   };
   return srv;
 }
+
+/**
+ * Faux Supabase : comptes (inscription avec code d'invitation, connexion, renouvellement, déconnexion) et table `saves`
+ * avec la règle « chacun ne voit que sa ligne » (le jeton désigne l'utilisateur) et la version optimiste (PATCH ... version=eq.N).
+ */
+export const SUPABASE_URL = 'https://fake-project.supabase.co';
+export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}) {
+  const users = new Map(); // email -> { id, password }
+  const tokens = new Map(); // access_token -> user id
+  const saves = new Map(); // user id -> { data, version }
+  const srv = { users, saves, calls: [], offline: false, expireAll: false, n: 0 };
+  const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
+  const session = (email, id) => {
+    const access_token = `at_${id}_${++srv.n}`;
+    tokens.set(access_token, id);
+    return { access_token, refresh_token: `rt_${id}_${srv.n}`, expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, token_type: 'bearer', user: { id, email } };
+  };
+  srv.fetch = async (url, opts = {}) => {
+    url = String(url);
+    if (!url.startsWith(SUPABASE_URL)) return res(404, {});
+    if (srv.offline) throw new TypeError('Failed to fetch');
+    const u = new URL(url);
+    const method = opts.method || 'GET';
+    const body = opts.body ? JSON.parse(opts.body) : null;
+    srv.calls.push(`${method} ${u.pathname}${u.search}`);
+    const bearer = (opts.headers && (opts.headers.Authorization || '')).replace('Bearer ', '');
+    if (u.pathname === '/auth/v1/signup') {
+      if ((body.data && body.data.invite) !== invite) return res(500, { msg: 'Database error saving new user' });
+      if (users.has(body.email)) return res(422, { msg: 'User already registered' });
+      if (body.password.length < 6) return res(422, { msg: 'Password should be at least 6 characters' });
+      const id = `u${users.size + 1}`;
+      users.set(body.email, { id, password: body.password });
+      return confirmEmail ? res(200, { id, email: body.email }) : res(200, session(body.email, id));
+    }
+    if (u.pathname === '/auth/v1/token') {
+      if (u.searchParams.get('grant_type') === 'password') {
+        const usr = users.get(body.email);
+        if (!usr || usr.password !== body.password) return res(400, { error: 'invalid_grant', error_description: 'Invalid login credentials' });
+        return res(200, session(body.email, usr.id));
+      }
+      const m = /^rt_(u\d+)_/.exec(body.refresh_token || '');
+      if (!m || srv.expireAll) return res(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token' });
+      const email = [...users.entries()].find(([, v]) => v.id === m[1])[0];
+      return res(200, session(email, m[1]));
+    }
+    if (u.pathname === '/auth/v1/logout') return res(204, null);
+    if (u.pathname === '/auth/v1/recover') return res(200, {});
+    if (u.pathname === '/rest/v1/saves') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      const filter = u.searchParams.get('user_id');
+      const own = filter === `eq.${uid}`; // règle RLS : seulement SA ligne
+      if (method === 'GET') {
+        const row = own ? saves.get(uid) : null;
+        return res(200, row ? [{ data: row.data, version: row.version }] : []);
+      }
+      if (method === 'POST') {
+        if (body.user_id !== uid) return res(403, { message: 'new row violates row-level security policy' });
+        if (saves.has(uid)) return res(409, { code: '23505', message: 'duplicate key' });
+        saves.set(uid, { data: body.data, version: 1 });
+        return res(201, [{ version: 1 }]);
+      }
+      if (method === 'PATCH') {
+        const row = own ? saves.get(uid) : null;
+        const want = Number((u.searchParams.get('version') || '').replace('eq.', ''));
+        if (!row || row.version !== want) return res(200, []);
+        saves.set(uid, { data: body.data, version: body.version });
+        return res(200, [{ version: body.version }]);
+      }
+      if (method === 'DELETE') { if (own) saves.delete(uid); return res(204, null); }
+    }
+    return res(404, {});
+  };
+  return srv;
+}
