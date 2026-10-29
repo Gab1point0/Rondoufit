@@ -177,3 +177,36 @@ export function traceFront(keys, joint = 'wrist', steps = 40) {
   }
   return [R, L];
 }
+
+/**
+ * Vue de DESSUS (le bonhomme regarde vers le haut de l'écran) : bassin fixe, épaules qui tournent de `twist` degrés (sens horaire), tête, bras.
+ * Pose : { c, hipY, twist, hand: [x, y] (main droite, absolue), handL? (sinon miroir), handBend? }.
+ */
+export function solveTop(p) {
+  const th = rad(p.twist || 0);
+  const s0 = [p.c, p.hipY - 4];
+  const dir = [Math.cos(th), Math.sin(th)];
+  const shR = [s0[0] + dir[0] * 20, s0[1] + dir[1] * 20];
+  const shL = [s0[0] - dir[0] * 20, s0[1] - dir[1] * 20];
+  const handR = p.hand;
+  const handL = p.handL || [2 * p.c - p.hand[0], p.hand[1]];
+  const b = p.handBend === undefined ? 1 : p.handBend;
+  const aR = ik(shR, handR, SEG.uarm, SEG.farm, b);
+  const aL = ik(shL, handL, SEG.uarm, SEG.farm, -b);
+  return {
+    c: p.c, y: p.hipY, s0, head: [s0[0] + Math.sin(th) * 5, s0[1] - Math.cos(th) * 5],
+    hipR: [p.c + 13, p.hipY + 8], hipL: [p.c - 13, p.hipY + 8], wrist: aR.end, shoulder: shR,
+    R: { shoulder: shR, elbow: aR.mid, wrist: aR.end }, L: { shoulder: shL, elbow: aL.mid, wrist: aL.end },
+  };
+}
+
+export function traceTop(keys, steps = 40) {
+  const R = [];
+  const L = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = solveTop(poseAt(keys, i / steps));
+    R.push(t.R.wrist);
+    L.push(t.L.wrist);
+  }
+  return [R, L];
+}

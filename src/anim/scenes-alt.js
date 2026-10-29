@@ -178,3 +178,74 @@ export function multiHipFront() {
     equip: [floorRect(160), pad([C - 40, 120], [C - 40, 160], 7, true)], follow: [],
   };
 }
+
+// ---------------- Soulevé de terre : vue de face (barre contre les cuisses, genoux alignés sur les pieds) ----------------
+export function deadliftFront({ sumo = false } = {}) {
+  const fx = sumo ? 44 : 16;
+  const hx = sumo ? 12 : 24;
+  const bottom = F(150, { bend: 0.6, foot: [C + fx, 194], hand: [C + hx, 172], handBend: 1 });
+  const top = F(112, { foot: [C + fx, 194], hand: [C + hx, 118], handBend: 1 });
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [bottom, top],
+    equip: [floorRect(sumo ? 150 : 110)],
+    follow: [bar('wrist', { ext: 16, r: 15, dy: 0 })],
+  };
+}
+
+// ---------------- Curl : vue de face (les coudes restent le long du corps ; en alternance : un bras monte pendant que l'autre descend) ----------------
+export function curlFront({ alternate = false } = {}) {
+  const down = [C + 24, 116];
+  const up = [C + 33, 74];
+  const both = (r, l) => F(112, { hand: r, handL: [2 * C - l[0], l[1]], handBend: 1 });
+  const keys = alternate ? [both(up, down), both(down, up)] : [both(down, down), both(up, up)];
+  return {
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys,
+    equip: [floorRect(100)],
+    follow: alternate ? [{ k: 'db', at: 'wrist', r: 7 }] : [bar('wrist', { ext: 12, r: 6 })],
+  };
+}
+
+// ---------------- Shrugs : vue de face (les épaules montent vers les oreilles, bras tendus) ----------------
+export function shrugFront() {
+  const mk = lift => F(112, { lift, hand: [C + 25, 116 - lift], handBend: 1 });
+  return {
+    view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(0), mk(12)],
+    equip: [floorRect(100)],
+    follow: [{ k: 'db', at: 'wrist', r: 8 }],
+  };
+}
+
+// ---------------- Vues de DESSUS : exercices de rotation et d'anti-rotation ----------------
+const TOPY = 120;
+const rotOf = (th, x, y) => {
+  const a = (th * Math.PI) / 180;
+  return [C + x * Math.cos(a) - y * Math.sin(a), TOPY - 4 + x * Math.sin(a) + y * Math.cos(a)];
+};
+const topPose = (th, hand, handL) => ({ c: C, hipY: TOPY, twist: th, hand, handL, handBend: 1 });
+
+export function rotaryTop() {
+  const mk = th => ({ ...topPose(th, rotOf(th, 8, -26), rotOf(th, -8, -26)), handBend: -1 });
+  return {
+    view: 'top', box: [70, 24, 180, 135], legs: 'seated', trace: 'wrist', loop: 'pingpong', keys: [mk(-38), mk(0), mk(38)],
+    equip: [rect(C - 30, TOPY - 14, 60, 40, '#334155', 10), txt([76, 36], 'vue de dessus : seuls les épaules', 7, '#94a3b8'), txt([76, 46], 'et le buste tournent, le bassin reste fixe', 7, '#94a3b8')],
+    follow: [],
+  };
+}
+
+export function woodchopTop() {
+  const mk = th => topPose(th, rotOf(th, 4, -46), rotOf(th, -6, -46));
+  return {
+    view: 'top', box: [70, 24, 180, 135], legs: 'standing', trace: 'wrist', loop: 'pingpong', keys: [mk(34), mk(0), mk(-34)],
+    equip: [pulley([C + 84, 40], 7), txt([76, 36], 'vue de dessus : le buste pivote,', 7, '#94a3b8'), txt([76, 46], 'les pieds restent fixes', 7, '#94a3b8')],
+    follow: [{ k: 'handle', at: 'wrist' }, { k: 'cable', from: [C + 84, 40], at: 'wrist', dash: '2 3' }],
+  };
+}
+
+export function pallofTop() {
+  const mk = reach => topPose(0, [C + 3, TOPY - 4 - reach], [C - 3, TOPY - 4 - reach]);
+  return {
+    view: 'top', box: [70, 24, 180, 135], legs: 'standing', trace: 'wrist', loop: 'pingpong', keys: [mk(16), mk(46)],
+    equip: [pulley([C + 84, TOPY - 16], 7), txt([76, 36], 'vue de dessus : le câble tire sur le côté,', 7, '#94a3b8'), txt([76, 46], 'le buste résiste et ne tourne pas', 7, '#94a3b8')],
+    follow: [{ k: 'handle', at: 'wrist' }, { k: 'cable', from: [C + 84, TOPY - 16], at: 'wrist', dash: '2 3' }],
+  };
+}

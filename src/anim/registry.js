@@ -1,4 +1,4 @@
-import { cableFlyFront, chestMachineFront, dipsFront, facePullFront, lyingFlyFront, lyingPressFront, multiHipFront, overheadFront, pecDeckFront, pullUpBack, pulldownFront, pushUpFront, rowBack, seatedRowFront, squatFrontView, uprightRowFront } from './scenes-alt';
+import { cableFlyFront, chestMachineFront, dipsFront, facePullFront, lyingFlyFront, lyingPressFront, multiHipFront, overheadFront, pecDeckFront, pullUpBack, pulldownFront, pushUpFront, rowBack, seatedRowFront, squatFrontView, uprightRowFront , curlFront, deadliftFront, pallofTop, rotaryTop, shrugFront, woodchopTop } from './scenes-alt';
 import { backExtension, barbellRow, dbRow, invertedRow, pullUp, pulldown, seatedRow, shrugs } from './scenes-pull';
 import { curl, kickback, overheadExtension, pushdown, skullCrusher, tricepsMachine, wristCurl } from './scenes-arms';
 import { externalRotation, facePull, frontRaise, lateralRaise, overheadPress, rearFly, uprightRow } from './scenes-shoulders';
@@ -183,3 +183,11 @@ alt('fp_high_row', 'front', 'Vue de face', pulldownFront({ grip: 36 }));
 alt('fp_woodchop', 'front', 'Vue de face', woodchopFront());
 alt('fp_decline_press_machine', 'front', 'Vue de face', chestMachineFront({ hammer: true }));
 export const ALL_SCENES = E;
+alt(['deadlift', 'fp_rdl', 'fp_trapbar'], 'front', 'Vue de face', deadliftFront({}));
+alt('fp_sumo', 'front', 'Vue de face', deadliftFront({ sumo: true }));
+alt(['barbell_curl', 'fp_cable_curl'], 'front', 'Vue de face', curlFront({}));
+alt(['fp_db_curl', 'fp_hammer_curl'], 'front', 'Vue de face', curlFront({ alternate: true }));
+alt(['fp_shrugs_db', 'fp_shrugs_bar', 'fp_shrug_machine'], 'front', 'Vue de face', shrugFront());
+alt('fp_rotary_torso', 'top', 'Vue de dessus', rotaryTop());
+alt('fp_woodchop', 'top', 'Vue de dessus', woodchopTop());
+alt('fp_pallof', 'top', 'Vue de dessus', pallofTop());

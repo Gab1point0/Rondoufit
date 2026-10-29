@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { ALL_SCENES } from './registry';
-import { SEG, ik, poseAt, solveFront, solvePose } from './skeleton';
+import { SEG, ik, poseAt, solveFront, solvePose, solveTop } from './skeleton';
 
 const strength = EXERCISE_CATALOG.filter(c => c.type === 'strength');
 
@@ -56,9 +56,10 @@ describe('animations des exercices', () => {
     for (const s of ALL_SCENES) {
       for (const a of s.alts) {
         n++;
-        expect(a.scene.view, s.id + ' ' + a.key).toBe('front');
+        expect(['front', 'top'], s.id + ' ' + a.key).toContain(a.scene.view);
         for (let i = 0; i <= 20; i++) {
-          const f = solveFront(poseAt(a.scene.keys, i / 20));
+          const f = a.scene.view === 'top' ? { ...solveTop(poseAt(a.scene.keys, i / 20)), headC: solveTop(poseAt(a.scene.keys, i / 20)).head } : solveFront(poseAt(a.scene.keys, i / 20));
+          if (a.scene.view === 'top') { for (const p of [f.R.elbow, f.R.wrist, f.L.wrist, f.L.elbow, f.headC]) expect(Number.isFinite(p[0]) && Number.isFinite(p[1]), s.id + ' ' + a.key).toBe(true); continue; }
           for (const p of [f.R.elbow, f.R.wrist, f.L.wrist, f.L.elbow, f.R.ankle, f.headC]) expect(Number.isFinite(p[0]) && Number.isFinite(p[1]), s.id + ' ' + a.key).toBe(true);
         }
       }
@@ -109,7 +110,7 @@ describe('précision des animations (validateur automatique)', () => {
         let mf = 0;
         for (let i = 0; i <= 10; i++) {
           const pose = poseAt(v.scene.keys, i / 10);
-          const j = v.scene.view === 'front' ? solveFront(pose).R : solvePose(pose);
+          const j = v.scene.view === 'front' ? solveFront(pose).R : v.scene.view === 'top' ? solveTop(pose).R : solvePose(pose);
           if (pose.hand) mh = Math.max(mh, d(j.wrist, pose.hand));
           if (pose.foot) mf = Math.max(mf, d(j.ankle, pose.foot));
         }

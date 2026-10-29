@@ -1,5 +1,5 @@
 import { musclesOf } from './muscles';
-import { ik, SEG, solveFront, solvePose, tracePath, traceFront, SHOULDER_HALF, HIP_HALF } from './skeleton';
+import { ik, SEG, solveFront, solvePose, solveTop, tracePath, traceFront, traceTop, SHOULDER_HALF, HIP_HALF } from './skeleton';
 
 // Dessin SVG d'une scène à un instant donné : décor (machine, banc…), silhouette, charge, trajet.
 // scene = { keys:[poses], trace:'wrist'|'ankle'|…, equip:[éléments fixes], follow:[éléments liés au corps] }
@@ -131,6 +131,47 @@ function Head({ c, up, fill }) {
   );
 }
 
+function topMuscles(t, muscles) {
+  const out = [];
+  muscles.forEach(({ z, lvl }) => {
+    if (z === 'chest' || z === 'back' || z === 'core') out.push(<Hot key={z} a={t.s0} b={[t.c, t.y + 6]} w={z === 'core' ? 14 : 18} lvl={lvl} />);
+    [t.L, t.R].forEach((sd, k) => {
+      const id = z + k;
+      if (z === 'shoulder') out.push(<Hot key={id} a={sd.shoulder} w={8} lvl={lvl} />);
+      if (z === 'biceps' || z === 'triceps') out.push(<Hot key={id} a={sd.shoulder} b={sd.elbow} w={8} lvl={lvl} />);
+      if (z === 'forearm') out.push(<Hot key={id} a={sd.elbow} b={sd.wrist} w={6} lvl={lvl} />);
+    });
+  });
+  return out;
+}
+
+/** Vue de dessus : bassin, épaules qui tournent, tête, bras. */
+function TopFigure({ scene, pose, showTrace, muscles = [], ghost = false, bad = false }) {
+  const K = bad ? BAD : C;
+  const t = solveTop(pose);
+  const traces = showTrace && !ghost && scene.trace !== false ? traceTop(scene.keys) : null;
+  const pol = p => p.map(q => q.join(',')).join(' ');
+  const hipMid = [t.c, t.y + 8];
+  return (
+    <svg viewBox={(scene.box || [0, -24, 320, 244]).join(' ')} className="w-full h-auto select-none" style={ghost ? { opacity: 0.3 } : undefined} aria-hidden={ghost ? true : undefined} role="img" aria-label={scene.title || 'Animation du mouvement (vue de dessus)'}>
+      {!ghost && <rect x="-200" y="-200" width="800" height="800" fill="#0b1220" />}
+      {!ghost && (scene.equip || []).map((e, i) => <Fixed key={i} e={e} i={i} />)}
+      {traces && traces.map((tr, k) => <polyline key={k} points={pol(tr)} fill="none" stroke={C.trace} strokeWidth="2" strokeDasharray="4 4" opacity="0.9" />)}
+      {traces && traces.map((tr, k) => <circle key={'s' + k} cx={tr[0][0]} cy={tr[0][1]} r="3" fill="none" stroke={C.trace} strokeWidth="1.5" />)}
+      {scene.legs === 'seated' && [t.hipL, t.hipR].map((h, k) => <Taper key={'t' + k} a={h} b={[h[0] + (k === 0 ? -3 : 3), h[1] - 40]} ra={6.4} rb={4.6} c={K.body} />)}
+      {scene.legs === 'standing' && [-18, 18].map((dx, k) => <ellipse key={'f' + k} cx={t.c + dx} cy={t.y + 12} rx="5" ry="10" fill={K.body} />)}
+      <polygon points={pol([t.L.shoulder, t.R.shoulder, t.hipR, t.hipL])} fill={K.body} stroke={K.body} strokeWidth="6" strokeLinejoin="round" />
+      <Taper a={t.L.shoulder} b={t.R.shoulder} ra={5} rb={5} c={K.body} />
+      <Taper a={hipMid} b={t.s0} ra={7} rb={7} c={K.body} />
+      {[t.L, t.R].map((sd, k) => <g key={'a' + k}><Taper a={sd.shoulder} b={sd.elbow} ra={4.8} rb={3.6} c={K.body} /><Taper a={sd.elbow} b={sd.wrist} ra={3.6} rb={2.8} c={K.body} /><circle cx={sd.wrist[0]} cy={sd.wrist[1]} r="3.6" fill={K.body} /></g>)}
+      <circle cx={t.head[0]} cy={t.head[1]} r="10" fill={K.head} />
+      <circle cx={t.head[0] - Math.sin(((pose.twist || 0) * Math.PI) / 180) * 3} cy={t.head[1] + Math.cos(((pose.twist || 0) * Math.PI) / 180) * 3} r="9.2" fill="#7c3a5a" />
+      {topMuscles(t, muscles)}
+      {(ghost ? [] : scene.follow || []).map((e, i) => <Follow key={i} e={e} j={t} i={i} />)}
+    </svg>
+  );
+}
+
 function FrontFigure({ scene, pose, showTrace, muscles = [], ghost = false, bad = false }) {
   const K = bad ? BAD : C;
   const f = solveFront(pose);
@@ -174,6 +215,7 @@ function FrontFigure({ scene, pose, showTrace, muscles = [], ghost = false, bad 
 export function Figure({ scene, pose, showTrace = true, muscleText = '', ghost = false, bad = false }) {
   const K = bad ? BAD : C;
   const muscles = muscleText && !ghost ? musclesOf(muscleText) : [];
+  if (scene.view === 'top') return <TopFigure scene={scene} pose={pose} showTrace={showTrace} muscles={muscles} ghost={ghost} bad={bad} />;
   if (scene.view === 'front') return <FrontFigure scene={scene} pose={pose} showTrace={showTrace} muscles={muscles} ghost={ghost} bad={bad} />;
   const j = solvePose(pose);
   const far = { dx: -5, dy: 0 };
