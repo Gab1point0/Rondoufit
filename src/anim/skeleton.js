@@ -107,6 +107,23 @@ export function phaseToU(phase, loop) {
   return p < 0.5 ? p * 2 : (1 - p) * 2; // aller-retour
 }
 
+/**
+ * Rythme réaliste d'une répétition en aller-retour : effort assez vite, courte pause en haut, retour CONTRÔLÉ (plus lent), courte pause en bas.
+ * Parts du cycle : montée 36 %, haut 7 %, retour 50 %, bas 7 %. (phase 0→1 du temps ; renvoie u 0→1→0 de la scène)
+ */
+export const TEMPO = { up: 0.36, top: 0.07, down: 0.5 };
+export function tempoU(phase, loop) {
+  const p = phase % 1;
+  if (loop === 'cycle') return p;
+  const { up, top, down } = TEMPO;
+  if (p < up) return p / up;
+  if (p < up + top) return 1;
+  if (p < up + top + down) return 1 - (p - up - top) / down;
+  return 0;
+}
+/** Inverse approché pour la barre de position : u (0→1, aller) → phase. */
+export const phaseOfU = (u, loop) => (loop === 'cycle' ? u * 0.999 : u * TEMPO.up);
+
 /** Chemin (liste de points) suivi par une articulation (« wrist », « ankle », « hip », « knee »…) sur toute la séquence. */
 export function tracePath(keys, joint = 'wrist', steps = 40) {
   const pts = [];

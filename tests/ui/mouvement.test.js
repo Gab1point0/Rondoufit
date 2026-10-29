@@ -85,4 +85,20 @@ describe('voir le mouvement', () => {
     expect(dialog(h2)).toBeTruthy();
     expect(h2.errors).toEqual([]);
   }, TIMEOUT);
+
+  it('rythme, respiration, fantôme de la position visée et erreur fréquente', async () => {
+    const h = await start();
+    h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'squat' } }));
+    await advance(h, 300);
+    const d = dialog(h);
+    expect(d.querySelector('[data-testid="breath"]').textContent).toMatch(/Expire|Inspire/);
+    expect(d.querySelectorAll('svg[aria-hidden="true"]').length).toBe(1); // fantôme
+    const groupe = d.querySelector('[role="group"][aria-label="Erreur fréquente"]');
+    expect(groupe).toBeTruthy();
+    await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Amplitude trop courte')));
+    expect(dialog(h).querySelector('[data-testid="mistake-text"]').textContent).toContain('fantôme');
+    await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Bonne exécution')));
+    expect(dialog(h).querySelector('[data-testid="mistake-text"]')).toBeNull();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
 });
