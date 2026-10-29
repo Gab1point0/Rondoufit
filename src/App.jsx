@@ -49,6 +49,9 @@ import { useQuickCardio } from './hooks/useQuickCardio';
 import { useRewards } from './hooks/useRewards';
 import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
+import { OnboardingModal } from './modals/OnboardingModal';
+import { needsOnboarding } from './lib/onboarding';
+import { NEUTRAL } from './edition';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
@@ -75,6 +78,7 @@ export function App() {
   );
 
   const { toast, triggerToast, dismissToast } = useToast();
+  const [obOpen, setObOpen] = useState(false);
 
   // « 🚩 Cette animation est fausse » (fenêtre Voir le mouvement) : on garde la liste dans la sauvegarde pour la corriger ensuite
   useEffect(() => {
@@ -325,6 +329,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onClose={() => setMoreOpen(false)}
           onExport={handleExportJSON}
           onGoTab={goToTab}
+          onOpenOnboarding={() => setObOpen(true)}
           onOpenSync={() => setSyncOpen(true)}
           onReset={() => setConfirmResetOpen(true)}
           onRestore={handleRestoreSafetyCopy}
@@ -343,6 +348,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
       <MovementHost />
+      {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
+        <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />
+      )}
       <UpdateBanner />
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}

@@ -1,3 +1,4 @@
+import { pick } from '../edition';
 // ==========================================
 // LES 6 ARÈNES / GROUPES MUSCULAIRES
 // ==========================================
@@ -8,7 +9,7 @@ export const ARENA_GROUPS = [
   { id: 'Épaules & Bras', label: 'Épaules & Bras', icon: '💪', badgeName: 'Badge Poing', color: 'from-cyan-500 to-blue-600' },
   { id: 'Abdominaux', label: 'Abdominaux', icon: '🍫', badgeName: 'Badge Gainage', color: 'from-fuchsia-500 to-purple-600' },
  { id: 'Course & Cardio', label: 'Course & Cardio', icon: '🏃', badgeName: 'Badge Zéphyr', color: 'from-emerald-500 to-teal-600' },
-{ id: 'Volley-ball', label: 'Volley-ball', icon: '🏐', badgeName: 'Badge Smash', color: 'from-sky-400 to-blue-600' }
+{ id: 'Volley-ball', label: pick('Volley-ball', 'Sport collectif'), icon: pick('🏐', '🎽'), badgeName: 'Badge Smash', color: 'from-sky-400 to-blue-600' }
 ];
 
 export function normalizeArenaGroup(category = '', type = 'strength') {

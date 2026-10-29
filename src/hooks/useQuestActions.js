@@ -7,6 +7,7 @@ import { questAfterHistoryChange, rebuildEntry } from '../lib/history';
 import { getSetDetailsArray, isTimedCatalog } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { computeXp } from '../lib/xp';
+import { pick } from '../edition';
 
 export function useQuestActions({ gameState, registerUndo, setGameState, triggerToast }) {
   const handleClaimWeekly = ws => {
@@ -168,7 +169,7 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       ...prev,
       quests: prev.quests.filter(q => q.id !== questId)
     }));
-    triggerToast('Exercice retiré', 'L’exercice a été retiré du Pokédex.', 0, '🗑️');
+    triggerToast('Exercice retiré', pick('L’exercice a été retiré du Pokédex.', 'L’exercice a été retiré.'), 0, '🗑️');
   };
 
   return { handleClaimWeekly, addQuestFromCatalog, handleDeleteSessionEntry, handleEditSessionEntry, handleDeleteQuest };

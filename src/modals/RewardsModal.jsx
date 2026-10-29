@@ -1,5 +1,6 @@
 import { ACCESSORIES, THEMES, TITLES, activeCosmetics } from '../data/rewards';
 import { X } from '../icons';
+import { pick } from '../edition';
 
 function Choice({ item, selected, unlocked, onPick, children }) {
   return (
@@ -34,7 +35,7 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
             <h3 className="text-base font-black text-white">🎁 Récompenses de niveau</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Tu es niveau {level}. Plus tu montes, plus tu débloques de façons de personnaliser Rondoudou.</p>
+            <p className="text-xs text-slate-400 mt-0.5">Tu es niveau {level}. Plus tu montes, plus tu débloques de façons de personnaliser {pick('Rondoudou', 'l’appli')}.</p>
           </div>
           <button type="button" onClick={onClose} className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white shrink-0">
             <X className="w-4 h-4" />
@@ -54,7 +55,7 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
         </section>
 
         <section className="space-y-2">
-          <h4 className="text-xs font-black uppercase tracking-wider text-pink-300">Accessoires de Rondoudou</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-pink-300">{pick('Accessoires de Rondoudou', 'Accessoires')}</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ACCESSORIES.map(a => (
               <Choice key={a.id} item={a} selected={active.accessory.id === a.id} unlocked={level >= a.level} onPick={id => choose({ accessory: id })}>

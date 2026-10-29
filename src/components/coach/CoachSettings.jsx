@@ -2,6 +2,7 @@ import { coachSlotFor } from '../../coach/planning';
 import { COACH_DAY_NAMES, coachDayLabel, coachDow } from '../../coach/settings';
 import { addDaysISO } from '../../lib/dates';
 import { card } from './ui';
+import { SPORT, SPORT_CAP, SPORT_ICON } from '../../edition';
 
 export function CoachSettings({
   addMatches, addSeries, coach, dayShort, extraVolleyInput, matchInput, matchList, serie,
@@ -93,7 +94,7 @@ export function CoachSettings({
         <span className="text-[0.75rem] text-slate-500 w-full">Le coach complète chaque séance proposée (séries, puis exercices de tes objectifs) pour tenir cette durée. Estimation : échauffement 5 min + séries et repos.</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="text-slate-300 font-bold mr-1">Volley (entraînements) :</span>
+        <span className="text-slate-300 font-bold mr-1">{SPORT_CAP} (entraînements) :</span>
         {[1, 2, 3, 4, 5, 6, 0].map(dow => (
           <button key={dow} onClick={() => toggleVolleyDay(dow)}
             className={`px-2.5 py-1 rounded-lg font-bold border ${(coach.volleyDays || []).includes(dow) ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}>
@@ -102,25 +103,25 @@ export function CoachSettings({
         ))}
       </div>
       <div className="space-y-2">
-        <p className="text-xs text-slate-300 font-bold">🏐 Pas de volley (ou volley en plus)</p>
-        <p className="text-[0.75rem] text-slate-500">Touche un jour d’entraînement habituel pour dire que tu n’as pas volley ce jour-là : le coach te laisse alors faire des jambes la veille et planifier la muscu ce jour-là.</p>
+        <p className="text-xs text-slate-300 font-bold">{SPORT_ICON} Pas de {SPORT} (ou {SPORT} en plus)</p>
+        <p className="text-[0.75rem] text-slate-500">Touche un jour d’entraînement habituel pour dire que tu n’as pas {SPORT} ce jour-là : le coach te laisse alors faire des jambes la veille et planifier la muscu ce jour-là.</p>
         <div className="flex flex-wrap gap-1.5">
           {upcomingVolley.map(d => {
             const skipped = (coach.volleySkips || []).includes(d);
             return (
               <button key={d} onClick={() => toggleVolleySkip(d)}
                 className={`px-2 py-1 rounded-lg border text-[0.75rem] font-bold ${skipped ? 'bg-slate-800 border-slate-600 text-slate-500 line-through' : 'bg-sky-600/80 border-sky-400 text-white'}`}>
-                🏐 {coachDayLabel(d)}{skipped ? ' · annulé' : ''}
+                {SPORT_ICON} {coachDayLabel(d)}{skipped ? ' · annulé' : ''}
               </button>
             );
           })}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-slate-400">Volley exceptionnel :</span>
+          <span className="text-slate-400">{SPORT_CAP} exceptionnel :</span>
           <input type="date" value={extraVolleyInput} min={today} onChange={e => setExtraVolleyInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
           <button disabled={!extraVolleyInput} onClick={() => { updateCoach({ volleyExtra: Array.from(new Set([...(coach.volleyExtra || []), extraVolleyInput])).sort() }); setExtraVolleyInput(''); }} className="px-3 py-1.5 rounded-lg bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black">Ajouter</button>
           {(coach.volleyExtra || []).filter(d => d >= today).map(d => (
-            <button key={d} onClick={() => updateCoach({ volleyExtra: (coach.volleyExtra || []).filter(x => x !== d) })} className="px-2 py-1 rounded-lg bg-sky-600/80 text-white text-[0.75rem] font-bold">🏐 {coachDayLabel(d)} ✕</button>
+            <button key={d} onClick={() => updateCoach({ volleyExtra: (coach.volleyExtra || []).filter(x => x !== d) })} className="px-2 py-1 rounded-lg bg-sky-600/80 text-white text-[0.75rem] font-bold">{SPORT_ICON} {coachDayLabel(d)} ✕</button>
           ))}
         </div>
       </div>

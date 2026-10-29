@@ -2,6 +2,7 @@ import { INITIAL_STATE } from '../data/initialState';
 import { readSafetyCopy, saveSafetyCopy } from '../lib/safetyCopy';
 import { getTodayISODate } from '../lib/dates';
 import { useRef, useState } from 'react';
+import { pick } from '../edition';
 
 export function useDataTransfer({ gameState, paidAchievementsRef, setGameState, skipPRRef, triggerToast }) {
   // Modale d'avertissement de réinitialisation (Professeur Chen)
@@ -77,7 +78,7 @@ export function useDataTransfer({ gameState, paidAchievementsRef, setGameState, 
     setGameState(nextState);
     setConfirmResetOpen(false);
     triggerToast(
-      'Pokédex Réinitialisé',
+      pick('Pokédex Réinitialisé', 'Données réinitialisées'),
       'Page vierge prête : ajoute ton premier exercice avec le bouton +.',
       0,
       '🔄'

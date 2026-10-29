@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Calendar, Flame, Trash2 } from '../icons';
 import { formatSetsBreakdown, getSetDetailsArray } from '../lib/quests';
+import { pick } from '../edition';
 
 export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedDate, setSelectedDate }) {
   // la liste des séances du jour est repliée par défaut (gain de place sur téléphone)
@@ -24,7 +25,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </div>
           </div>
           <p className="hidden sm:block text-xs text-slate-400">
-            Cumul automatique des calories brûlées (Musculation & Course) par Rondoudou le{' '}
+            Cumul automatique des calories brûlées (Musculation & Course) {pick('par Rondoudou ', '')}le{' '}
             <span className="text-slate-200 font-semibold">{selectedDate}</span>. Cliquez sur 🗑️ à droite d'une séance pour la supprimer en cas d'erreur.
           </p>
         </div>

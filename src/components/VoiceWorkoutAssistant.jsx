@@ -7,6 +7,7 @@ import { stripAccents } from '../lib/text';
 import { parseSpokenWorkout } from '../voice/parser';
 import { computeXp, xpNote } from '../lib/xp';
 import { getTodayISODate } from '../lib/dates';
+import { pick } from '../edition';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -230,7 +231,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
       `🎤 ${editableItems.length} exercice(s) validé(s) d'un coup !`,
       `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}` +
         (createdNames.length ? ` • ${createdNames.length} nouvel(s) objectif(s) ajouté(s)` : '') +
-        (newArenas.length ? ` • Arène débloquée : ${newArenas.join(', ')}` : '') +
+        (newArenas.length ? ` • ${pick('Arène débloquée', 'Groupe musculaire ajouté')} : ${newArenas.join(', ')}` : '') +
         xpNote(award),
       award.gained,
       '🎤'
@@ -251,7 +252,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🎤</span>
                 <div>
-                  <h3 className="text-sm font-black text-white">Micro Magique de Rondoudou</h3>
+                  <h3 className="text-sm font-black text-white">{pick('Micro Magique de Rondoudou', 'Dictée vocale')}</h3>
                   <p className="text-xs text-slate-300">
                     Dictez toute votre séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
                   </p>

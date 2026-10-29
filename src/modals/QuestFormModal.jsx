@@ -4,6 +4,7 @@ import { ARENA_GROUPS } from '../data/arenas';
 import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
 import { Target, X } from '../icons';
 import { timedAdvice } from '../lib/quests';
+import { pick } from '../edition';
 
 export function QuestFormModal({
   editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formCategory, formCustomName, formGoalAssistanceKg, formGoalMode,
@@ -54,7 +55,7 @@ export function QuestFormModal({
                   {!editingQuestId && (
                     <div>
                       <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                        Choisir un exercice dans le Pokédex
+                        {pick('Choisir un exercice dans le Pokédex', 'Choisir un exercice dans la liste')}
                       </label>
                       <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
                       {formSuggestion && (
@@ -79,7 +80,7 @@ export function QuestFormModal({
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-400 mb-1">
-                        Arène / Groupe Musculaire
+                        {pick('Arène / Groupe Musculaire', 'Groupe musculaire')}
                       </label>
                       <select
                         value={formCategory}

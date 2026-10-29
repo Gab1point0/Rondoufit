@@ -7,6 +7,7 @@ import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { normalizeArenaGroup } from '../../data/arenas';
 import { card } from './ui';
+import { SPORT, SPORT_ICON } from '../../edition';
 
 export function CoachNextSession({
   addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
@@ -64,7 +65,7 @@ export function CoachNextSession({
       )}
       {ov.hasExercises && !first && !plan && (
         <p className="text-sm text-slate-300">
-          Aucun créneau libre dans les deux prochaines semaines avec tes contraintes (volley, matchs). Tu peux quand même choisir un jour toi-même ou lancer une séance maintenant.
+          Aucun créneau libre dans les deux prochaines semaines avec tes contraintes ({SPORT}, matchs). Tu peux quand même choisir un jour toi-même ou lancer une séance maintenant.
         </p>
       )}
 
@@ -75,7 +76,7 @@ export function CoachNextSession({
             <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
             <span className="text-slate-300 font-bold">{coachDayLabel(plan.date)}</span>
             {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🏆 match</span>}
-            {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">🏐 volley</span>}
+            {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">{SPORT_ICON} {SPORT}</span>}
           </div>
           <div className="space-y-2">
             <p className="text-xs font-bold text-slate-300">Ajouter un groupe musculaire :</p>
@@ -279,7 +280,7 @@ export function CoachNextSession({
             </p>
           )}
           {todayInfo.blocked && (
-            <p className="text-[0.75rem] text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : 'volley'} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
+            <p className="text-[0.75rem] text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : SPORT} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
           )}
         </div>
       )}

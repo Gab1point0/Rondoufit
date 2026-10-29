@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { PLUS_TABS } from '../components/TabBar';
 import { readSafetyCopy } from '../lib/safetyCopy';
 import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
+import { NEUTRAL, setStyle } from '../edition';
 
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExport, onGoTab, onOpenSync, onReset, onRestore, setGameState, syncStatus }) {
+export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExport, onGoTab, onOpenOnboarding, onOpenSync, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
@@ -38,6 +39,14 @@ export function MoreSheet({ activeTab, gameState, importInputRef, onClose, onExp
           <button onClick={toggleBigText} className={row}>
             <span className="text-lg">🔠</span>
             <span>Texte : {prefs.bigText ? 'grand' : 'normal'}</span>
+          </button>
+          <button onClick={close(onOpenOnboarding)} className={row} data-testid="open-onboarding">
+            <span className="text-lg">🧭</span>
+            <span>Assistant d’accueil (régler le coach)</span>
+          </button>
+          <button onClick={() => setStyle(NEUTRAL ? 'fun' : 'neutral')} className={row} data-testid="toggle-style">
+            <span className="text-lg">🎨</span>
+            <span>Apparence : {NEUTRAL ? 'classique (passer à Rondoudou)' : 'Rondoudou (passer à classique)'}</span>
           </button>
           <button onClick={close(onOpenSync)} className={row}>
             <span className="text-lg">☁️</span>

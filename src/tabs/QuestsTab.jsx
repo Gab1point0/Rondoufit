@@ -4,6 +4,7 @@ import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons
 import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
+import { pick } from '../edition';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
@@ -21,7 +22,7 @@ export function QuestsTab({
               : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
           }`}
         >
-          Toutes les Arènes ({gameState.quests.length})
+          {pick('Toutes les Arènes', 'Tous les groupes')} ({gameState.quests.length})
         </button>
         {ARENA_GROUPS.map(g => (
           <button
@@ -168,7 +169,7 @@ export function QuestsTab({
                             </span>
                           ) : (
                             <span>
-                              Poké-Séries validées :{' '}
+                              {pick('Poké-Séries validées', 'Séries validées')} :{' '}
                               <strong className="text-white">
                                 {Math.min(evalState.validatedSets, goalSets)} / {goalSets} séries de {goalReps} {repUnit(quest)}
                               </strong>
@@ -225,7 +226,7 @@ export function QuestsTab({
                                 <span className="flex items-center gap-1 font-black">
                                   {repDone}/{goalReps}
                                   {isValidated ? (
-                                    <span title="Pokéball validée">🔴</span>
+                                    <span title={pick('Pokéball validée', 'Série validée')}>{pick('🔴', '✅')}</span>
                                   ) : (
                                     <span className="text-[0.7rem] text-amber-400">⚪</span>
                                   )}

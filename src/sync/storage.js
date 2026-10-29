@@ -1,3 +1,4 @@
+import { pick } from '../edition';
 // Réglages et marqueurs de synchronisation, gardés dans le navigateur de chaque appareil.
 // (Le jeton GitHub ne quitte jamais l'appareil et n'est jamais écrit dans le fichier de sauvegarde.)
 
@@ -11,8 +12,8 @@ const KEYS = {
 };
 
 export const EMPTY_CONFIG = {
-  owner: 'Gab1point0',
-  repo: 'rondoufit-donnees',
+  owner: pick('Gab1point0', ''),
+  repo: pick('rondoufit-donnees', 'muscu-donnees'),
   path: 'rondoufit-data.json',
   branch: 'main',
   token: '',

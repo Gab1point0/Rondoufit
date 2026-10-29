@@ -1,5 +1,6 @@
 import { X } from '../icons';
 import { isTimedQuest } from '../lib/quests';
+import { pick } from '../edition';
 
 export function LevelUpModal({
   handleConfirmLevelUp, levelUpModalQuest, nextGoalAssistanceKg, nextGoalMode, nextGoalReps,
@@ -16,7 +17,7 @@ export function LevelUpModal({
             </div>
             <div>
               <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                🎵 ♪ Rondoudouuuu ! ♪ Objectif Validé !
+                {pick('🎵 ♪ Rondoudouuuu ! ♪ Objectif Validé !', '✅ Objectif atteint !')}
               </span>
               <h3 className="text-lg font-black text-white">
                 {levelUpModalQuest.name} passe au Niveau {(Number(levelUpModalQuest.level) || 1) + 1} !

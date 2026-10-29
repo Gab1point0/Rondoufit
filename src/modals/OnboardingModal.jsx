@@ -1,0 +1,217 @@
+import { useMemo, useState } from 'react';
+import { EXERCISE_CATALOG } from '../data/catalog';
+import { getTodayISODate } from '../lib/dates';
+import { GOALS, STARTER_EXERCISES, applyOnboarding } from '../lib/onboarding';
+import { stripAccents } from '../lib/text';
+import { EMPTY_CONFIG } from '../sync/storage';
+
+// Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
+// Tout est modifiable ensuite (onglet Coach, Exercices, Mes maxima, ⚙️).
+const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white placeholder:text-slate-600';
+const label = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
+const chip = on => `px-3 py-2 rounded-xl border text-sm font-bold ${on ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`;
+const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Jeu'], [5, 'Ven'], [6, 'Sam'], [0, 'Dim']];
+const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
+
+const LINKS = {
+  signup: 'https://github.com/signup',
+  repo: 'https://github.com/new?name=muscu-donnees&visibility=private&description=Sauvegarde%20de%20mon%20appli%20muscu',
+  token: 'https://github.com/settings/personal-access-tokens/new?name=Muscu&description=Sauvegarde%20de%20mon%20appli%20muscu&contents=write&expires_in=none',
+};
+const STEPS = ['Bienvenue', 'Toi', 'Objectif', 'Organisation', 'Exercices connus', 'Sport régulier', 'Sauvegarde', 'Terminé'];
+
+function Toggle({ on, onClick, children, testid }) {
+  return <button type="button" onClick={onClick} aria-pressed={on} data-testid={testid} className={chip(on)}>{children}</button>;
+}
+
+export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
+  const [step, setStep] = useState(0);
+  const [a, setA] = useState({
+    name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
+    gymDays: [], sportDays: [], exercises: {},
+  });
+  const [search, setSearch] = useState('');
+  const [gh, setGh] = useState({ owner: '', token: '' });
+  const [showToken, setShowToken] = useState(false);
+  const patch = p => setA(x => ({ ...x, ...p }));
+  const toggleDay = (key, d) => patch({ [key]: a[key].includes(d) ? a[key].filter(x => x !== d) : [...a[key], d] });
+  const setEx = (id, p) => patch({ exercises: { ...a.exercises, [id]: { ...(a.exercises[id] || {}), ...p } } });
+  const toggleEx = id => { const n = { ...a.exercises }; if (n[id]) delete n[id]; else n[id] = {}; patch({ exercises: n }); };
+
+  const found = useMemo(() => {
+    const q = stripAccents(search.trim().toLowerCase());
+    if (q.length < 2) return [];
+    return EXERCISE_CATALOG.filter(c => c.type === 'strength' && !STARTER_EXERCISES.includes(c.id) && stripAccents(c.name.toLowerCase()).includes(q)).slice(0, 6);
+  }, [search]);
+  const listed = [...STARTER_EXERCISES, ...Object.keys(a.exercises).filter(id => !STARTER_EXERCISES.includes(id))].map(byId).filter(Boolean);
+
+  const finish = () => {
+    const today = getTodayISODate();
+    const exercises = Object.entries(a.exercises).map(([catalogId, v]) => ({ catalogId, kg: v.kg, reps: v.reps }));
+    setGameState(prev => applyOnboarding(prev, { ...a, exercises }, today));
+    triggerToast('C’est prêt !', 'Ton coach est réglé. Tu peux tout modifier plus tard.', 0, '✅');
+    onDone();
+  };
+  const skip = () => { setGameState(prev => ({ ...prev, onboarded: true })); onDone(); };
+
+  const connect = () => {
+    sync.setConfig({ ...EMPTY_CONFIG, owner: gh.owner.trim(), repo: 'muscu-donnees', token: gh.token.trim() });
+  };
+  const syncOk = sync.configured && sync.status === 'synced';
+  const statusText = !sync.configured ? '' : sync.status === 'synced' ? '✅ Sauvegarde automatique activée.' : sync.status === 'error' ? `❌ ${sync.error || 'Connexion impossible.'}` : '⏳ Connexion en cours…';
+
+  const needSession = Number(a.sessionsPerWeek) >= 1;
+  const canNext = step === 1 ? Number(a.weightKg) > 0 : step === 3 ? needSession : true;
+
+  return (
+    <div className="fixed inset-0 z-[90] bg-slate-950 overflow-y-auto" role="dialog" aria-label="Assistant d’accueil" data-testid="onboarding">
+      <div className="min-h-full max-w-lg mx-auto p-4 pt-8 pb-24 space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[0.75rem] font-black uppercase tracking-wider text-sky-300">Étape {step + 1} / {STEPS.length} · {STEPS[step]}</p>
+          {step < STEPS.length - 1 && <button type="button" onClick={skip} className="text-[0.75rem] font-bold text-slate-500 underline">Passer l’assistant</button>}
+        </div>
+        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-sky-500 transition-all" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} /></div>
+
+        {step === 0 && (
+          <section className="space-y-3">
+            <h2 className="text-2xl font-black text-white">Bienvenue 👋</h2>
+            <p className="text-sm text-slate-300">Cette appli suit ta musculation : un coach qui prépare tes séances, un journal, tes records et ta progression. Quelques questions (3 minutes) pour tout régler à ton niveau. Tu peux passer ou modifier chaque réponse plus tard.</p>
+            <div><label className={label} htmlFor="ob-name">Ton prénom</label><input id="ob-name" value={a.name} onChange={e => patch({ name: e.target.value })} className={field} placeholder="Léa" autoComplete="given-name" /></div>
+            <p className="text-[0.75rem] text-slate-500">Tes données restent sur ton téléphone (et dans ta sauvegarde personnelle à l’étape 7). Personne d’autre n’y a accès. Les conseils du coach sont des repères généraux, pas un avis médical.</p>
+          </section>
+        )}
+
+        {step === 1 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Toi</h2>
+            <p className="text-xs text-slate-400">Sert à estimer tes dépenses de calories et à adapter les conseils.</p>
+            <div className="flex gap-2"><Toggle on={a.sex === 'm'} onClick={() => patch({ sex: 'm' })}>Homme</Toggle><Toggle on={a.sex === 'f'} onClick={() => patch({ sex: 'f' })}>Femme</Toggle></div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className={label} htmlFor="ob-age">Âge</label><input id="ob-age" inputMode="numeric" value={a.age} onChange={e => patch({ age: e.target.value })} className={field} placeholder="30" /></div>
+              <div><label className={label} htmlFor="ob-h">Taille (cm)</label><input id="ob-h" inputMode="numeric" value={a.heightCm} onChange={e => patch({ heightCm: e.target.value })} className={field} placeholder="175" /></div>
+              <div><label className={label} htmlFor="ob-w">Poids (kg)</label><input id="ob-w" inputMode="decimal" value={a.weightKg} onChange={e => patch({ weightKg: e.target.value })} className={field} placeholder="70" /></div>
+            </div>
+            <div><label className={label} htmlFor="ob-t">Poids visé (kg), si tu en as un</label><input id="ob-t" inputMode="decimal" value={a.targetKg} onChange={e => patch({ targetKg: e.target.value })} className={field} placeholder="même qu’aujourd’hui" /></div>
+          </section>
+        )}
+
+        {step === 2 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Ton objectif principal</h2>
+            <p className="text-xs text-slate-400">Il choisit ton « profil de travail » (nombre de répétitions, charges, repos). Tu pourras le changer dans l’onglet Coach.</p>
+            <div className="space-y-2">{GOALS.map(g => <button key={g.id} type="button" data-testid={`goal-${g.id}`} onClick={() => patch({ goal: g.id })} aria-pressed={a.goal === g.id} className={`${chip(a.goal === g.id)} w-full text-left`}>{g.icon} {g.label}</button>)}</div>
+          </section>
+        )}
+
+        {step === 3 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Ton organisation</h2>
+            <div>
+              <p className={label}>Séances de musculation par semaine</p>
+              <div className="flex gap-2">{[1, 2, 3, 4, 5, 6].map(n => <Toggle key={n} on={a.sessionsPerWeek === n} onClick={() => patch({ sessionsPerWeek: n })}>{n}</Toggle>)}</div>
+            </div>
+            <div>
+              <p className={label}>Durée d’une séance</p>
+              <div className="flex flex-wrap gap-2">{[30, 45, 60, 75, 90].map(n => <Toggle key={n} on={a.sessionMinutes === n} onClick={() => patch({ sessionMinutes: n })}>{n} min</Toggle>)}</div>
+            </div>
+            <div>
+              <p className={label}>Jours où tu peux t’entraîner (laisse vide si tous)</p>
+              <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.gymDays.includes(d)} onClick={() => toggleDay('gymDays', d)}>{n}</Toggle>)}</div>
+            </div>
+          </section>
+        )}
+
+        {step === 4 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Tes exercices et tes records</h2>
+            <p className="text-xs text-slate-400">Coche les exercices que tu fais. Si tu connais une charge, indique-la : « 80 kg pour 5 répétitions » (ou 1 répétition = ton maximum). Sinon laisse vide, le coach proposera un départ prudent.</p>
+            <div className="space-y-2">
+              {listed.map(c => {
+                const on = !!a.exercises[c.id];
+                const v = a.exercises[c.id] || {};
+                return (
+                  <div key={c.id} className={`rounded-xl border p-2.5 ${on ? 'border-sky-500/60 bg-sky-950/20' : 'border-slate-800 bg-slate-900'}`}>
+                    <label className="flex items-center gap-2 text-sm font-bold text-white">
+                      <input type="checkbox" checked={on} onChange={() => toggleEx(c.id)} data-testid={`ex-${c.id}`} className="accent-sky-400 w-4 h-4" />
+                      <span>{c.icon} {c.name}</span>
+                    </label>
+                    {on && c.unit === 'kg' && (
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div><label className={label}>Charge (kg)</label><input inputMode="decimal" value={v.kg || ''} onChange={e => setEx(c.id, { kg: e.target.value })} className={field} placeholder="80" data-testid={`kg-${c.id}`} /></div>
+                        <div><label className={label}>pour combien de répétitions</label><input inputMode="numeric" value={v.reps || ''} onChange={e => setEx(c.id, { reps: e.target.value })} className={field} placeholder="1 = maximum" /></div>
+                      </div>
+                    )}
+                    {on && c.unit === 'reps' && (
+                      <div className="mt-2"><label className={label}>Maximum de répétitions d’affilée</label><input inputMode="numeric" value={v.reps || ''} onChange={e => setEx(c.id, { reps: e.target.value })} className={field} placeholder="12" /></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div>
+              <label className={label} htmlFor="ob-search">Un autre exercice ?</label>
+              <input id="ob-search" value={search} onChange={e => setSearch(e.target.value)} className={field} placeholder="Chercher (ex : hack squat)" />
+              <div className="flex flex-wrap gap-1.5 mt-2">{found.map(c => <button key={c.id} type="button" onClick={() => { toggleEx(c.id); setSearch(''); }} className={chip(false)}>+ {c.name}</button>)}</div>
+            </div>
+          </section>
+        )}
+
+        {step === 5 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Un sport ou une activité régulière ?</h2>
+            <p className="text-xs text-slate-400">Foot, basket, danse, course… Choisis ses jours habituels : le coach évitera de te faire travailler les jambes la veille et placera la musculation au bon moment. Laisse vide si tu n’en as pas.</p>
+            <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.sportDays.includes(d)} onClick={() => toggleDay('sportDays', d)} testid={`sport-${d}`}>{n}</Toggle>)}</div>
+            <p className="text-[0.75rem] text-slate-500">Tes autres activités (vélo, natation, randonnée…) s’ajoutent ensuite avec le bouton « + » → « Activité annexe ».</p>
+          </section>
+        )}
+
+        {step === 6 && (
+          <section className="space-y-3" data-testid="ob-backup">
+            <h2 className="text-xl font-black text-white">Sauvegarde automatique ☁️</h2>
+            <p className="text-sm text-slate-300">Pour ne jamais perdre tes données (téléphone changé, navigateur vidé), elles sont copiées <strong>automatiquement</strong> dans un espace <strong>privé à toi</strong> sur GitHub (gratuit). À faire une seule fois, ~5 minutes. Ensuite tout est automatique.</p>
+            <ol className="list-decimal pl-5 space-y-2.5 text-sm text-slate-300">
+              <li>Crée un compte GitHub gratuit (si tu n’en as pas) : <a href={LINKS.signup} target="_blank" rel="noreferrer" className="text-sky-300 underline">github.com/signup</a>. Retiens ton <em>nom d’utilisateur</em>.</li>
+              <li>Crée ton espace privé : <a href={LINKS.repo} target="_blank" rel="noreferrer" className="text-sky-300 underline">ouvrir la page (déjà remplie)</a>. Coche <strong>« Add a README file »</strong>, laisse <strong>Private</strong>, puis « Create repository ».</li>
+              <li>Crée ta clé d’accès : <a href={LINKS.token} target="_blank" rel="noreferrer" className="text-sky-300 underline">ouvrir la page</a>. Choisis <strong>« Only select repositories »</strong> → <strong>muscu-donnees</strong> ; vérifie <strong>Contents : Read and write</strong> ; « Generate token », puis copie la clé (elle commence par <code>github_pat_</code>).</li>
+              <li>Colle-les ici :</li>
+            </ol>
+            <div className="grid gap-2">
+              <div><label className={label} htmlFor="ob-gh">Nom d’utilisateur GitHub</label><input id="ob-gh" value={gh.owner} onChange={e => setGh(g => ({ ...g, owner: e.target.value }))} autoCapitalize="none" autoCorrect="off" className={field} placeholder="mon-pseudo" data-testid="gh-owner" /></div>
+              <div>
+                <label className={label} htmlFor="ob-tok">Clé d’accès (reste uniquement sur ce téléphone)</label>
+                <div className="flex gap-2">
+                  <input id="ob-tok" type={showToken ? 'text' : 'password'} value={gh.token} onChange={e => setGh(g => ({ ...g, token: e.target.value }))} autoCapitalize="none" autoCorrect="off" autoComplete="off" className={field} placeholder="github_pat_…" data-testid="gh-token" />
+                  <button type="button" onClick={() => setShowToken(s => !s)} className="px-3 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold shrink-0">{showToken ? 'Masquer' : 'Afficher'}</button>
+                </div>
+              </div>
+              <button type="button" onClick={connect} disabled={!gh.owner.trim() || !gh.token.trim()} data-testid="gh-connect" className="px-4 py-2.5 rounded-xl bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-black">Activer la sauvegarde automatique</button>
+              {statusText && <p className={`text-sm font-bold ${syncOk ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="gh-status">{statusText}</p>}
+            </div>
+            <p className="text-[0.75rem] text-slate-500">Tu peux aussi le faire plus tard (⚙️ → Sauvegarde), mais sans cette étape tes données ne sont que sur ce téléphone. Ta clé ne sert qu’à ce dépôt et n’est jamais envoyée ailleurs.</p>
+          </section>
+        )}
+
+        {step === 7 && (
+          <section className="space-y-3" data-testid="ob-done">
+            <h2 className="text-2xl font-black text-white">Tout est prêt{a.name ? `, ${a.name}` : ''} ✅</h2>
+            <ul className="text-sm text-slate-300 list-disc pl-5 space-y-1">
+              <li>{a.sessionsPerWeek} séance(s) par semaine de {a.sessionMinutes} min</li>
+              <li>Profil de travail : {(GOALS.find(g => g.id === a.goal) || {}).label}</li>
+              <li>{Object.keys(a.exercises).length} exercice(s) créé(s) avec ta charge de départ</li>
+              {a.sportDays.length > 0 && <li>Sport régulier pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}
+              <li>{sync.configured ? 'Sauvegarde automatique réglée' : '⚠️ Sauvegarde automatique non réglée : tes données ne sont que sur ce téléphone'}</li>
+            </ul>
+            <p className="text-xs text-slate-400">Ouvre l’onglet Coach pour voir ta première séance. Tout se modifie ensuite dans les onglets Coach, Exercices et Mes maxima.</p>
+          </section>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          {step > 0 && <button type="button" onClick={() => setStep(s => s - 1)} className="px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white text-sm font-bold">← Retour</button>}
+          {step < STEPS.length - 1
+            ? <button type="button" onClick={() => setStep(s => s + 1)} disabled={!canNext} data-testid="ob-next" className="flex-1 px-4 py-3 rounded-xl bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-black">{step === 6 && !sync.configured ? 'Plus tard →' : 'Suivant →'}</button>
+            : <button type="button" onClick={finish} data-testid="ob-finish" className="flex-1 px-4 py-3 rounded-xl bg-emerald-600 text-white text-sm font-black">Commencer</button>}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,130 @@
+// Édition « amis » (neutre) : interface sobre sans Rondoudou, assistant d'accueil, sauvegarde automatique guidée.
+import { afterEach, describe, expect, it } from 'vitest';
+import { DEMO_STATE } from './demo';
+import { advance, clickEl, clickText, fakeGithub, launch, pageText, setInput } from './harness';
+
+const open = [];
+afterEach(() => { while (open.length) open.pop().close(); });
+const TIMEOUT = 120000;
+const NEUTRAL = { 'rondoufit:style': 'neutral' };
+const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
+const ob = h => h.doc.querySelector('[data-testid="onboarding"]');
+const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
+const next = async h => clickEl(h, byTest(h, 'ob-next'));
+const fill = async (h, id, v) => setInput(h, h.doc.getElementById(id), v);
+
+describe('édition neutre pour les amis', () => {
+  it('aucun mot de Rondoudou à l’écran, couleurs et avatar sobres', async () => {
+    const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ onboarded: true, xp: 0, quests: [], weightHistory: [] }) } });
+    open.push(h);
+    await advance(h, 300);
+    const t = pageText(h);
+    for (const mot of ['Rondoudou', 'Grosdoudou', 'Dresseur', 'Arène', 'Pokédex', 'Pokéball']) expect(t, mot).not.toContain(mot);
+    expect(h.doc.documentElement.dataset.style).toBe('neutral');
+    expect(h.doc.title).toBe('Ma musculation');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('l’édition normale (Gabin) reste inchangée et n’affiche pas l’assistant', async () => {
+    const h = await launch({ empty: true });
+    open.push(h);
+    await advance(h, 300);
+    expect(ob(h)).toBeNull();
+    expect(pageText(h)).toContain('From Grosdoudou to Rondoudou');
+    expect(h.doc.documentElement.dataset.style).toBe('fun');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('l’assistant règle le coach, le poids, les exercices, les records et le sport régulier', async () => {
+    const h = await launch({ empty: true, storage: NEUTRAL });
+    open.push(h);
+    await advance(h, 300);
+    expect(ob(h)).toBeTruthy();
+    await fill(h, 'ob-name', 'Léa');
+    await next(h);
+    await fill(h, 'ob-age', '28'); await fill(h, 'ob-h', '168'); await fill(h, 'ob-w', '64'); await fill(h, 'ob-t', '60');
+    await next(h);
+    await clickEl(h, byTest(h, 'goal-force'));
+    await next(h);
+    await next(h); // organisation : valeurs par défaut (3 séances, 60 min)
+    await clickEl(h, byTest(h, 'ex-bench_press'));
+    await setInput(h, byTest(h, 'kg-bench_press'), '60');
+    await clickEl(h, byTest(h, 'ex-squat'));
+    await next(h);
+    await clickEl(h, byTest(h, 'sport-2'));
+    await clickEl(h, byTest(h, 'sport-4'));
+    await next(h);
+    expect(byTest(h, 'ob-backup')).toBeTruthy();
+    await next(h); // « Plus tard »
+    expect(byTest(h, 'ob-done').textContent).toContain('Tout est prêt, Léa');
+    await clickEl(h, byTest(h, 'ob-finish'));
+    await advance(h, 300);
+    expect(ob(h)).toBeNull();
+    const s = saved(h);
+    expect(s.onboarded).toBe(true);
+    expect(s.heroName).toBe('Léa');
+    expect(s.userWeightKg).toBe(64);
+    expect(s.targetWeightKg).toBe(60);
+    expect(s.coach.workProfile).toBe('puissance');
+    expect(s.coach.volleyDays).toEqual([2, 4]);
+    expect(s.coach.profile).toMatchObject({ heightCm: 168, age: 28, sex: 'm' });
+    const bench = s.quests.find(q => q.catalogId === 'bench_press');
+    expect(bench).toBeTruthy();
+    expect(s.maxRecords[bench.id].kg).toBe(60);
+    expect(bench.startValue).toBeGreaterThan(45); // puissance : ~85 % du max
+    expect(bench.startValue).toBeLessThanOrEqual(55);
+    expect(s.quests.find(q => q.catalogId === 'squat')).toBeTruthy();
+    expect(s.weightHistory).toHaveLength(1);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('la sauvegarde GitHub guidée enregistre le compte, le dépôt privé et la clé, puis synchronise', async () => {
+    const srv = fakeGithub(null);
+    const h = await launch({ empty: true, storage: NEUTRAL, fetchImpl: srv.fetch });
+    open.push(h);
+    await advance(h, 300);
+    await next(h);
+    await fill(h, 'ob-w', '70');
+    for (let i = 0; i < 5; i++) await next(h);
+    expect(byTest(h, 'ob-backup').textContent).toContain('muscu-donnees');
+    expect(byTest(h, 'ob-backup').querySelector('a[href*="visibility=private"]')).toBeTruthy();
+    await setInput(h, byTest(h, 'gh-owner'), 'lea-fit');
+    await setInput(h, byTest(h, 'gh-token'), 'github_pat_test123');
+    await clickEl(h, byTest(h, 'gh-connect'));
+    await advance(h, 3000);
+    const cfg = JSON.parse(h.w.localStorage.getItem('rondoufit:github'));
+    expect(cfg).toMatchObject({ owner: 'lea-fit', repo: 'muscu-donnees', token: 'github_pat_test123' });
+    expect(h.w.localStorage.getItem('rondoudou_save_v1') || '').not.toContain('github_pat'); // la clé ne va jamais dans les données
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('le menu ⚙️ propose de refaire l’assistant et de changer d’apparence', async () => {
+    const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ onboarded: true, xp: 0, quests: [], weightHistory: [] }) } });
+    open.push(h);
+    await advance(h, 300);
+    const gear = [...h.doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Réglages et données');
+    await clickEl(h, gear);
+    expect(byTest(h, 'toggle-style').textContent).toContain('Rondoudou');
+    await clickEl(h, byTest(h, 'open-onboarding'));
+    expect(ob(h)).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('avec des données : aucun terme Pokémon / Rondoudou dans aucun onglet ni dans les récompenses', async () => {
+    // données de démonstration, sans les notes qui parlent de Rondoudou (ce sont des données, pas l’interface)
+    const demo = JSON.parse(JSON.stringify(DEMO_STATE).replace(/Dresseur Rondoudou/g, 'moi').replace(/Rondoudou/g, 'moi').replace(/Dresseur/g, 'moi').replace(/Grosdoudou/g, 'moi'));
+    const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify(demo) } });
+    open.push(h);
+    await advance(h, 300);
+    const interdits = /Rondoudou|Grosdoudou|Toudoudou|Grodoudou|Dresseur|Arène|Poké|Pokéball|berceuse|Smash du|Évolution d’Arène/i;
+    for (const onglet of ['Coach', 'Exercices', 'Journal', 'Courbes', 'Mes maxima', 'Poids', 'Souvenirs', 'Bilan', 'Trophées']) {
+      await clickText(h, onglet);
+      await advance(h, 200);
+      { const t = pageText(h).replace('abdos de Rondoudou', ''); const m = t.match(interdits); expect(m && m[0], onglet).toBeNull(); } // (la note de démonstration est une donnée, pas l’interface)
+    }
+    await clickText(h, 'Récompenses');
+    await advance(h, 200);
+    { const t = pageText(h).replace('abdos de Rondoudou', ''); const m = t.match(interdits); expect(m && t.slice(Math.max(0, m.index - 50), m.index + 50), 'récompenses').toBeNull(); }
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

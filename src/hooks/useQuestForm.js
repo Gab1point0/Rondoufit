@@ -7,6 +7,7 @@ import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { playGameSound } from '../lib/sound';
 import { useState } from 'react';
 import { computeXp } from '../lib/xp';
+import { pick } from '../edition';
 
 export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId, triggerToast }) {
   // Modale "Ajouter / Ajuster un Objectif"
@@ -290,7 +291,7 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
         quests: [newQuest, ...prev.quests]
       }));
       setSelectedChartQuestId(newQuest.id);
-      triggerToast('Nouvel exercice créé !', `${cleanName} ajouté au Pokédex.`, 40, formIcon);
+      triggerToast('Nouvel exercice créé !', pick(`${cleanName} ajouté au Pokédex.`, `${cleanName} ajouté à ta liste.`), 40, formIcon);
     }
 
     setQuestModalOpen(false);

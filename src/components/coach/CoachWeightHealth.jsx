@@ -1,5 +1,6 @@
 import { coachDateFR, coachFmt } from '../../coach/labels';
 import { card } from './ui';
+import { SPORT } from '../../edition';
 
 export function CoachWeightHealth({
   activity, coach, gameState, nutrition, onQuickCardio, pace, protein, setGameState, strengthTrend,
@@ -69,7 +70,7 @@ export function CoachWeightHealth({
       <div className="grid sm:grid-cols-2 gap-2 text-xs">
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1">
           <p className="font-bold text-slate-200">Cette semaine</p>
-          <p className="text-slate-300">Endurance (volley et cardio) : <b>{activity.aerobicMin} min</b> / 150 min minimum</p>
+          <p className="text-slate-300">Endurance ({SPORT} et cardio) : <b>{activity.aerobicMin} min</b> / 150 min minimum</p>
           <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-sky-500" style={{ width: `${Math.min(100, (activity.aerobicMin / 150) * 100)}%` }} /></div>
           <p className="text-slate-300">Renforcement : <b>{activity.strengthDays} jour(s)</b> / 2 minimum</p>
           {activity.aerobicMin < 150 && (
@@ -83,7 +84,7 @@ export function CoachWeightHealth({
         </div>
       </div>
       <p className="text-[0.75rem] text-slate-500">
-        Conseil cardio : en phase de perte de poids, vise 150 à 250 minutes d’endurance par semaine ; ton volley compte. Une marche inclinée ou un vélo en intensité modérée un jour sans muscu est une bonne option (ACSM 2009).
+        Conseil cardio : en phase de perte de poids, vise 150 à 250 minutes d’endurance par semaine ; ton {SPORT} compte. Une marche inclinée ou un vélo en intensité modérée un jour sans muscu est une bonne option (ACSM 2009).
       </p>
     </section>
   );

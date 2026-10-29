@@ -1,3 +1,4 @@
+@import './palette.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,4 +11,4 @@ body {
 }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
-::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 9999px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--pink-500)); border-radius: 9999px; }

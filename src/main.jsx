@@ -3,8 +3,10 @@ import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { startUpdateCheck } from './lib/updateCheck';
 import { applyUiPrefs, readUiPrefs } from './lib/uiPrefs';
+import { applyEdition } from './edition';
 import './styles.css';
 
+applyEdition();
 applyUiPrefs(readUiPrefs());
 createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
 

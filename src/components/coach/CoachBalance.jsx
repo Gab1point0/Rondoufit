@@ -1,11 +1,12 @@
 import { coachFmt } from '../../coach/labels';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { card } from './ui';
+import { pick } from '../../edition';
 
 export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">⚖️ Équilibre des arènes <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
+      <h3 className="font-black text-white">⚖️ Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
       <div className="space-y-2">
         {balance.rows.map(r => {
           const color = r.status === 'good' ? 'bg-emerald-500' : r.status === 'mid' ? 'bg-amber-400' : 'bg-rose-500';

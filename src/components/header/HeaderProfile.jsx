@@ -2,6 +2,8 @@ import { Flame } from '../../icons';
 import { RANK_FRAMES, activeCosmetics } from '../../data/rewards';
 import { RPG_RANKS } from '../../data/gamification';
 import { JigglypuffAvatar } from '../JigglypuffAvatar';
+import { NeutralAvatar } from '../NeutralAvatar';
+import { NEUTRAL, pick } from '../../edition';
 
 const chip = 'px-2 py-0.5 rounded-full text-[0.75rem] sm:text-xs font-bold border flex items-center gap-1';
 
@@ -10,6 +12,7 @@ export function HeaderProfile({
   onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank,
 }) {
   const { theme, accessory, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
+  const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
   const rankIndex = Math.max(0, RPG_RANKS.findIndex(r => r.title === levelInfo.rank.title));
   return (
     <div className="space-y-2.5">
@@ -20,7 +23,7 @@ export function HeaderProfile({
           className={`cursor-pointer relative w-[76px] h-[76px] sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br ${theme.ring} ${RANK_FRAMES[rankIndex]} shrink-0 group transition-transform hover:scale-105`}
         >
           <div className="w-full h-full bg-slate-950/95 rounded-[14px] flex flex-col items-center justify-center relative overflow-hidden">
-            <JigglypuffAvatar currentWeightKg={gameState.userWeightKg} targetWeightKg={gameState.targetWeightKg} size={64} />
+            {NEUTRAL ? <NeutralAvatar name={hero} size={64} /> : <JigglypuffAvatar currentWeightKg={gameState.userWeightKg} targetWeightKg={gameState.targetWeightKg} size={64} />}
             <span className="absolute bottom-0.5 px-2 py-0.2 rounded-full bg-slate-900/90 border border-pink-400/50 text-[9px] font-black uppercase tracking-widest text-pink-300">
               Niv. {levelInfo.level}
             </span>
@@ -45,7 +48,7 @@ export function HeaderProfile({
                 )}
               </div>
               <h1 className="mt-1 text-base sm:text-2xl font-black tracking-tight leading-tight bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">
-                From Grosdoudou to Rondoudou
+                {pick('From Grosdoudou to Rondoudou', hero ? `Salut ${hero}` : 'Ma musculation')}
               </h1>
             </div>
             <button

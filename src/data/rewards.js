@@ -1,7 +1,9 @@
+import { NEUTRAL } from '../edition';
 // Récompenses cosmétiques débloquées avec le niveau : thèmes de couleur, accessoires de Rondoudou, titres.
 // (Les noms de classes sont écrits en entier : Tailwind ne génère pas celles qu'on assemble à la volée.)
 
-export const THEMES = [
+const THEMES_ALL = [
+  { id: 'ardoise', label: 'Ardoise', level: 1, bar: 'from-sky-500 via-blue-500 to-slate-300', ring: 'from-sky-400 via-blue-500 to-slate-600' },
   { id: 'rose', label: 'Rose Rondoudou', level: 1, bar: 'from-pink-500 via-fuchsia-500 to-amber-400', ring: 'from-pink-400 via-rose-500 to-indigo-600' },
   { id: 'ocean', label: 'Océan', level: 5, bar: 'from-sky-400 via-cyan-400 to-emerald-300', ring: 'from-sky-400 via-cyan-500 to-blue-700' },
   { id: 'foret', label: 'Forêt', level: 10, bar: 'from-emerald-400 via-lime-400 to-yellow-300', ring: 'from-emerald-400 via-green-500 to-teal-700' },
@@ -9,7 +11,7 @@ export const THEMES = [
   { id: 'galaxie', label: 'Galaxie', level: 35, bar: 'from-violet-400 via-fuchsia-500 to-indigo-500', ring: 'from-violet-500 via-purple-600 to-slate-900' },
 ];
 
-export const ACCESSORIES = [
+const ACCESSORIES_ALL = [
   { id: 'none', label: 'Aucun', level: 1, icon: '∅', pos: '' },
   { id: 'casque', label: 'Casque audio', level: 6, icon: '🎧', pos: '-top-3 left-1/2 -translate-x-1/2 text-2xl' },
   { id: 'lunettes', label: 'Lunettes de soleil', level: 12, icon: '🕶️', pos: 'top-[38%] left-1/2 -translate-x-1/2 text-2xl' },
@@ -52,3 +54,7 @@ export function activeCosmetics(cosmetics, level) {
     title: pick(TITLES, c.title, level),
   };
 }
+
+// Édition neutre : couleurs sobres, aucun accessoire ; l'édition fun garde sa liste d'origine (le thème « ardoise » n'y apparaît pas).
+export const THEMES = NEUTRAL ? THEMES_ALL.filter(t => t.id !== 'rose' && t.id !== 'galaxie') : THEMES_ALL.filter(t => t.id !== 'ardoise');
+export const ACCESSORIES = NEUTRAL ? ACCESSORIES_ALL.filter(a => a.id === 'none') : ACCESSORIES_ALL;
