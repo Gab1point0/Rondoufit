@@ -1,6 +1,7 @@
 // Résumé de profil partagé avec les amis (jamais le poids, les photos, les notes ni la sauvegarde complète).
 // Construit sur l'appareil à partir des données, puis publié dans `profiles.summary` (voir docs/supabase-amis.sql).
 import { arenaOf } from '../data/muscles';
+import { RPG_RANKS } from '../data/gamification';
 import { levelFromXp } from './levels';
 import { estimateQuestMax } from './maxima';
 import { computeCurrentStreak } from './stats';
@@ -42,13 +43,17 @@ export function buildFriendProfile(state, today) {
   const entries = getAllEntries(state).filter(e => e.date);
   const dates = [...new Set(entries.map(e => e.date))].sort();
   const lastDate = dates[dates.length - 1] || null;
-  const level = levelFromXp(Number(state.xp) || 0, { passed: state.rankTrials || [] }).level;
+  const info = levelFromXp(Number(state.xp) || 0, { passed: state.rankTrials || [] });
+  const level = info.level;
+  // Rang partagé par sa position (0 à 6), pas par son nom : chacun le lit avec les noms de SON édition
+  const rank = Math.max(0, RPG_RANKS.findIndex(r => r.title === info.rank.title));
   const wk = getWeekStart(today);
   const quests = (state.quests || []).filter(q => q.type === 'strength' || q.type === 'cardio');
   return {
     v: 1,
     name: /^dresseur/i.test(state.heroName || '') ? '' : clip(state.heroName, 30), // le nom par défaut de l'édition Rondoudou n'est pas un prénom
     level,
+    rank,
     streak: computeCurrentStreak(state.quests),
     sessionDays: dates.length,
     weekDays: dates.filter(d => d >= wk).length,

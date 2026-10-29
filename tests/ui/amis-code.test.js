@@ -68,6 +68,37 @@ describe('amis : code à 7 caractères', () => {
     expect(b.errors).toEqual([]);
   }, TIMEOUT);
 
+  it('le rang de l’ami s’affiche à côté de son nom, et son pseudo se change dans « Mon compte » en direct chez les amis', async () => {
+    const srv = fakeSupabase();
+    const a = await logIn(srv, srv.addUser('a@x.fr'), 'Léa');
+    const b = await logIn(srv, srv.addUser('b@x.fr'), 'Max');
+    await addFriend(b, myCode(a));
+    const row = () => [...b.doc.querySelectorAll('[data-testid^="friend-u"]')][0];
+    const shared = [...srv.profiles.values()][0].summary;
+    expect(Number.isInteger(shared.rank)).toBe(true);
+    expect(JSON.stringify(shared)).not.toMatch(/Rondoudou|Débutant|Initié/); // on partage la position du rang, pas son nom
+    expect(byTest(b, 'friend-rank').textContent).toMatch(/\S/);
+    expect(row().textContent).toMatch(/^Léa\s*\S/);
+    await clickEl(b, row());
+    expect(byTest(b, 'friend-profile-rank').textContent).toMatch(/\S/);
+    await clickText(b, 'Mes amis');
+    expect(row()).toBeTruthy();
+
+    // Léa change son pseudo dans ⚙️ → Mon compte ; Max le voit sans rien toucher
+    const gear = [...a.doc.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Réglages et données');
+    await clickEl(a, gear);
+    await clickEl(a, [...a.doc.querySelectorAll('button')].find(x => x.textContent.includes('Mon compte et ma sauvegarde')));
+    await setInput(a, byTest(a, 'hero-name-input'), 'Lélé la Fusée');
+    await clickEl(a, byTest(a, 'hero-name-save'));
+    await advance(a, 3000);
+    expect(JSON.stringify([...srv.profiles.values()])).toContain('Lélé la Fusée');
+    expect(row().textContent).toContain('Léa');
+    await advance(b, 9000);
+    expect(row().textContent).toContain('Lélé la Fusée');
+    expect(a.errors).toEqual([]);
+    expect(b.errors).toEqual([]);
+  }, TIMEOUT);
+
   it('code inconnu, son propre code, et trop d’essais ratés', async () => {
     const srv = fakeSupabase();
     const a = await logIn(srv, srv.addUser('a@x.fr'), 'Léa');

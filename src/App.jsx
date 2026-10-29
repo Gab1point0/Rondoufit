@@ -59,12 +59,12 @@ import { hasArena } from './data/muscles';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
-  const friends = useFriends({ gameState, user: sync.user });
   const [accountOpen, setAccountOpen] = useState(false);
   const [recovery, setRecovery] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('quests');
+  const friends = useFriends({ gameState, user: sync.user, active: activeTab === 'friends' });
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
   // pour ne pas avoir à descendre à la main.
   const tabsRef = useRef(null);
@@ -362,7 +362,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
-      {accountOpen && <AccountModal sync={sync} recovery={recovery} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
+      {accountOpen && <AccountModal sync={sync} recovery={recovery} heroName={gameState.heroName} onRenameHero={name => setGameState(prev => ({ ...prev, heroName: name }))} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />

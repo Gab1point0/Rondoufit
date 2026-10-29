@@ -17,6 +17,12 @@ describe('résumé de profil partagé avec les amis', () => {
     expect(p.maxima.every(m => m.text)).toBe(true);
   });
 
+  it('partage le rang par sa position (0 à 6), jamais par son nom', () => {
+    expect(Number.isInteger(p.rank) && p.rank >= 0 && p.rank <= 6).toBe(true);
+    expect(buildFriendProfile({ ...state, xp: 0, rankTrials: [] }, TODAY).rank).toBe(0);
+    expect(buildFriendProfile({ ...state, xp: 200000, rankTrials: [4, 8, 14, 22, 35, 50] }, TODAY).rank).toBe(6);
+  });
+
   it('ne contient jamais le poids, les photos ni les notes', () => {
     const json = JSON.stringify(p);
     expect(json).not.toMatch(/weight|poids|photo|note/i);

@@ -4,14 +4,15 @@ import { getTodayISODate } from '../lib/dates';
 import { buildFriendProfile } from '../lib/friendProfile';
 import { friends as api } from '../sync/supabase';
 
-const PUBLISH_DEBOUNCE_MS = 4000;
+const PUBLISH_DEBOUNCE_MS = 2000; // mon profil part 2 s après un changement
+const LIVE_REFRESH_MS = 8000; // la liste d'amis est relue toutes les 8 s quand l'onglet Amis est ouvert
 const msg = e => (e && e.message) || 'Erreur du service d’amis.';
 
 /**
  * Amis : mon code à 7 caractères, ma liste d'amis et leur résumé de profil. Nécessite un compte connecté.
  * Mon résumé (sans poids ni photos) est publié automatiquement quand mes données changent, sauf si j'ai coupé le partage.
  */
-export function useFriends({ gameState, user }) {
+export function useFriends({ gameState, user, active = false }) {
   const cfg = SUPABASE;
   const connected = supabaseReady(cfg) && !!user;
   // Rien n'est publié tant que la personne n'a pas activé les amis (bouton dans l'onglet) : choix explicite, mémorisé sur l'appareil
@@ -26,14 +27,27 @@ export function useFriends({ gameState, user }) {
   const shareRef = useRef(true);
   shareRef.current = share;
 
-  const refresh = useCallback(async () => {
+  // `silent` : mise à jour automatique en arrière-plan (pas de « Mise à jour… », pas d'erreur affichée, pas de changement si rien de neuf)
+  const refresh = useCallback(async (silent = false) => {
     if (!on) return;
-    setLoading(true);
+    if (silent !== true) setLoading(true);
     try {
-      setList(await api.list(cfg));
+      const next = await api.list(cfg);
+      setList(prev => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
       setError('');
-    } catch (e) { setError(msg(e)); } finally { setLoading(false); }
+    } catch (e) { if (silent !== true) setError(msg(e)); } finally { if (silent !== true) setLoading(false); }
   }, [on, cfg]);
+
+  // En direct : tant que l'onglet Amis est ouvert, la liste se met à jour toute seule ; elle se met aussi à jour au retour sur l'appli
+  useEffect(() => {
+    if (!on) return undefined;
+    const tick = () => { if (typeof document === 'undefined' || !document.hidden) refresh(true); };
+    const timer = active ? setInterval(tick, LIVE_REFRESH_MS) : null;
+    if (active) tick();
+    document.addEventListener('visibilitychange', tick);
+    window.addEventListener('focus', tick);
+    return () => { if (timer) clearInterval(timer); document.removeEventListener('visibilitychange', tick); window.removeEventListener('focus', tick); };
+  }, [on, active, refresh]);
 
   // Première ouverture : profil (crée mon code) puis liste
   const userId = user && user.id;
@@ -66,7 +80,7 @@ export function useFriends({ gameState, user }) {
     }, PUBLISH_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on, code, gameState.quests, gameState.xp, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
+  }, [on, code, gameState.quests, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
 
   const enable = () => { try { localStorage.setItem('rondoufit:friends', '1'); } catch { /* sans mémoire : valable pour cette session */ } setEnabled(true); };
 

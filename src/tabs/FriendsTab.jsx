@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { cleanText } from '../edition';
+import { RPG_RANKS } from '../data/gamification';
 import { FRIEND_CODE_LENGTH, normalizeFriendCode } from '../sync/supabase';
 
 const card = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3';
@@ -9,6 +10,11 @@ const dateFr = iso => {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 const nameOf = f => cleanText((f.summary && f.summary.name) || '') || 'Ami sans prénom';
+// Rang de l'ami lu avec les noms de MON édition (son profil ne contient que la position du rang)
+const rankOf = f => {
+  const r = f.summary && Number.isInteger(f.summary.rank) ? RPG_RANKS[f.summary.rank] : null;
+  return r ? `${r.badge} ${r.title}` : '';
+};
 
 // Onglet « Amis » : mon code à 7 caractères, ajouter un ami avec le sien, consulter son profil (dernière séance, maxima, exercices).
 export function FriendsTab({ friends, onOpenAccount }) {
@@ -33,7 +39,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
     return (
       <section className={card} data-testid="friends-intro">
         <h3 className="font-black text-white">👥 Amis</h3>
-        <p className="text-sm text-slate-300">Reçois un code à 7 caractères à donner à tes amis. Celui qui le saisit peut voir ton profil : prénom, niveau, dernière séance, maxima et liste d’exercices.</p>
+        <p className="text-sm text-slate-300">Reçois un code à 7 caractères à donner à tes amis. Celui qui le saisit peut voir ton profil : prénom ou pseudo, rang, niveau, dernière séance, maxima et liste d’exercices.</p>
         <p className="text-xs text-slate-400">Jamais ton poids, tes photos ni tes notes. Tu peux couper le partage ou changer de code quand tu veux. Rien n’est partagé tant que tu n’as pas activé.</p>
         <button type="button" data-testid="friends-enable" onClick={friends.enable} className="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black">Activer les amis</button>
       </section>
@@ -59,7 +65,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
     <div className="space-y-4" data-testid="friends-tab">
       <section className={card}>
         <h3 className="font-black text-white">👥 Mon code d’ami</h3>
-        <p className="text-xs text-slate-400">Donne ce code à quelqu’un : s’il le saisit, il pourra voir ton profil (prénom, niveau, dernière séance, maxima, exercices). Jamais ton poids, tes photos ni tes notes.</p>
+        <p className="text-xs text-slate-400">Donne ce code à quelqu’un : s’il le saisit, il pourra voir ton profil (prénom ou pseudo, rang, niveau, dernière séance, maxima, exercices). Jamais ton poids, tes photos ni tes notes.</p>
         <div className="flex items-center gap-3 flex-wrap">
           <span data-testid="my-code" className="font-mono text-3xl font-black tracking-[0.3em] text-pink-300 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2">{friends.code || '·······'}</span>
           <button type="button" onClick={copy} disabled={!friends.code} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-sm font-bold text-white">{copied ? '✓ Copié' : '📋 Copier'}</button>
@@ -105,7 +111,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
             return (
               <button key={f.user_id} type="button" onClick={() => setOpenId(f.user_id)} data-testid={`friend-${f.user_id}`} className="w-full text-left bg-slate-950 border border-slate-800 hover:border-slate-600 rounded-xl p-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="font-black text-white truncate">{nameOf(f)}</div>
+                  <div className="font-black text-white truncate">{nameOf(f)}{rankOf(f) && <span data-testid="friend-rank" className="ml-1.5 text-pink-300">{rankOf(f)}</span>}</div>
                   <div className="text-xs text-slate-400">{s.lastSession ? `Dernière séance : ${dateFr(s.lastSession.date)}` : 'Pas encore de séance'}</div>
                 </div>
                 <div className="flex gap-1.5 shrink-0"><span className={chip}>Niv. {s.level || 1}</span>{s.streak > 0 && <span className={chip}>🔥 {s.streak} j</span>}</div>
@@ -126,7 +132,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
     <div className="space-y-4" data-testid="friend-profile">
       <button type="button" onClick={onBack} className="text-sm font-bold text-slate-300">← Mes amis</button>
       <section className={card}>
-        <h3 className="text-xl font-black text-white">{nameOf(friend)}</h3>
+        <h3 className="text-xl font-black text-white">{nameOf(friend)}{rankOf(friend) && <span data-testid="friend-profile-rank" className="ml-2 text-base text-pink-300">{rankOf(friend)}</span>}</h3>
         <div className="flex flex-wrap gap-1.5">
           <span className={chip}>Niveau {s.level || 1}</span>
           <span className={chip}>🔥 Série : {s.streak || 0} j</span>
