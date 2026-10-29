@@ -1,4 +1,5 @@
 import { pick } from '../edition';
+import { SPORT_EVIDENCE } from './sportSources';
 
 // Sport régulier (collectif ou non) de l'utilisateur : le coach évite les jambes lourdes la veille, garde de l'énergie le jour J,
 // compte l'endurance, et propose une préparation physique adaptée. `coach.sport` = identifiant ci-dessous ('' = sport non précisé).
@@ -9,7 +10,7 @@ import { pick } from '../edition';
 const VOLLEY_NOTE = 'Attention : les preuves de réduction des blessures chez les volleyeurs restent limitées.';
 const GENERAL_NOTE = 'Ce sont des repères généraux de préparation physique (pratique courante), pas un protocole validé : adapte-les à tes sensations et à tes blessures éventuelles.';
 
-export const SPORTS = [
+const SPORTS_BASE = [
   {
     id: 'volley', label: 'volley', cap: 'Volley', de: 'de volley', poss: 'ton volley', icon: '🏐', shoulders: true,
     title: 'épaules et gainage', note: VOLLEY_NOTE,
@@ -101,6 +102,9 @@ export const SPORTS = [
     exercises: ['fp_plank', 'fp_face_pull', 'fp_rdl'],
   },
 ];
+
+/** Fiches complètes : textes de préparation + phrase « preuves » honnête + sources (data/sportSources.js). */
+export const SPORTS = SPORTS_BASE.map(s => ({ sources: [], ...s, ...(SPORT_EVIDENCE[s.id] || {}) }));
 
 const GENERIC = SPORTS.find(s => s.id === 'autre');
 

@@ -10,6 +10,9 @@ describe('sport régulier adapté', () => {
     for (const s of SPORTS) {
       for (const k of ['id', 'label', 'cap', 'de', 'poss', 'icon', 'title', 'intro', 'note']) expect(s[k], `${s.id}.${k}`).toBeTruthy();
       expect(s.exercises.length, s.id).toBeGreaterThanOrEqual(3);
+      expect(Array.isArray(s.sources), `${s.id}.sources`).toBe(true);
+      if (s.id !== 'autre') expect(s.sources.length, `${s.id}: au moins une étude`).toBeGreaterThanOrEqual(1);
+      for (const src of s.sources) { expect(src.text && src.use, s.id).toBeTruthy(); expect(typeof src.ok).toBe('boolean'); if (src.url) expect(src.url).toMatch(/^https:\/\//); }
       for (const id of s.exercises) expect(EXERCISE_CATALOG.some(c => c.id === id), `${s.id} → ${id}`).toBe(true);
     }
   });

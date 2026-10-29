@@ -129,4 +129,20 @@ describe('édition neutre pour les amis', () => {
     { const t = pageText(h).replace('abdos de Rondoudou', ''); const m = t.match(interdits); expect(m && t.slice(Math.max(0, m.index - 50), m.index + 50), 'récompenses').toBeNull(); }
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
+
+  it('le coach affiche la phrase « preuves » et les études du sport choisi', async () => {
+    const save = { onboarded: true, xp: 0, quests: [], weightHistory: [], coach: { sport: 'handball', volleyDays: [4], sessionsPerWeek: 3 } };
+    const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify(save) } });
+    open.push(h);
+    await advance(h, 300);
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Ouvrir le Coach')));
+    await advance(h, 300);
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach')));
+    await advance(h, 300);
+    expect(byTest(h, 'sport-evidence').textContent).toContain('Preuves mitigées');
+    await clickEl(h, byTest(h, 'sport-sources-toggle'));
+    expect(byTest(h, 'sport-sources').textContent).toContain('Andersson');
+    expect(byTest(h, 'sport-sources').querySelector('a[href^="https://"]')).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
 });
