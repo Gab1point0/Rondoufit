@@ -21,6 +21,8 @@ import { QuickCardioModal } from './modals/QuickCardioModal';
 import { ResetModal } from './modals/ResetModal';
 import { BottomNav, SubTabs, TabBar } from './components/TabBar';
 import { MoreSheet } from './modals/MoreSheet';
+import { FriendsTab } from './tabs/FriendsTab';
+import { useFriends } from './hooks/useFriends';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
 import { MovementHost } from './components/MovementHost';
@@ -57,6 +59,7 @@ import { hasArena } from './data/muscles';
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
+  const friends = useFriends({ gameState, user: sync.user });
   const [accountOpen, setAccountOpen] = useState(false);
   const [recovery, setRecovery] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -290,6 +293,8 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {activeTab === 'bilan' && (
           <BilanTab gameState={gameState} levelInfo={levelInfo} records={records} weekData={weekData} />
         )}
+
+        {activeTab === 'friends' && <FriendsTab friends={friends} onOpenAccount={openSync} />}
 
         {/* ONGLET 5 : TROPHÉES */}
         {activeTab === 'trophies' && (

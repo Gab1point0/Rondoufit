@@ -12,6 +12,7 @@ export const TABS = [
   { id: 'photos', icon: '📸', label: 'Souvenirs', group: 'plus' },
   { id: 'bilan', icon: '📊', label: 'Bilan', group: 'plus' },
   { id: 'trophies', icon: '🏆', label: 'Trophées', group: 'plus' },
+  { id: 'friends', icon: '👥', label: 'Amis', group: 'plus' },
 ];
 export const SUIVI_TABS = TABS.filter(t => t.group === 'suivi');
 export const PLUS_TABS = TABS.filter(t => t.group === 'plus');

@@ -188,7 +188,7 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
   const users = new Map(); // email -> { id, password }
   const tokens = new Map(); // access_token -> user id
   const saves = new Map(); // user id -> { data, version }
-  const srv = { users, saves, photos: new Map(), history: new Map(), calls: [], offline: false, expireAll: false, n: 0 };
+  const srv = { users, saves, photos: new Map(), history: new Map(), profiles: new Map(), friendships: new Map(), attempts: new Map(), calls: [], offline: false, expireAll: false, n: 0 };
   const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) });
   const session = (email, id) => {
     const access_token = `at_${id}_${++srv.n}`;
@@ -286,7 +286,55 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       }
       if (method === 'DELETE') { mine.delete(id); return res(204, null); }
     }
+    // ---- Amis (reproduit docs/supabase-amis.sql) ----
+    if (u.pathname === '/rest/v1/profiles' || u.pathname.startsWith('/rest/v1/rpc/friend_')) {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      const bad = message => res(400, { code: 'P0001', message });
+      const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const makeCode = () => { let n = ++srv.n * 7919 + 12345; let c = ''; for (let i = 0; i < 7; i++) { c += ALPHA[n % 32]; n = Math.floor(n / 32) + 31 * (i + 1); } return c; };
+      if (u.pathname === '/rest/v1/profiles') {
+        if (method === 'GET') {
+          const p = srv.profiles.get(uid);
+          return res(200, p && u.searchParams.get('user_id') === `eq.${uid}` ? [{ friend_code: p.friend_code, share: p.share }] : []);
+        }
+        if (body.user_id !== uid) return res(403, { message: 'new row violates row-level security policy' });
+        const prev = srv.profiles.get(uid);
+        const p = { friend_code: prev ? prev.friend_code : makeCode(), share: body.share !== false, summary: body.summary, updated_at: body.updated_at || new Date().toISOString() };
+        srv.profiles.set(uid, p);
+        return res(201, [{ friend_code: p.friend_code, share: p.share }]);
+      }
+      const fn = u.pathname.replace('/rest/v1/rpc/', '');
+      if (fn === 'friend_add') {
+        const att = srv.attempts.get(uid) || 0;
+        if (att >= 8) return bad('FRIEND_LOCKED');
+        const code = String(body.p_code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const hit = [...srv.profiles.entries()].find(([, p]) => p.friend_code === code && p.share);
+        if (!hit) { srv.attempts.set(uid, att + 1); return bad('FRIEND_NOT_FOUND'); }
+        if (hit[0] === uid) return bad('FRIEND_SELF');
+        const mine = srv.friendships.get(uid) || new Set();
+        mine.add(hit[0]);
+        srv.friendships.set(uid, mine);
+        return res(200, { user_id: hit[0], summary: hit[1].summary, updated_at: hit[1].updated_at });
+      }
+      if (fn === 'friend_list') {
+        const mine = srv.friendships.get(uid) || new Set();
+        return res(200, [...mine].map(id => srv.profiles.get(id) && srv.profiles.get(id).share ? { user_id: id, summary: srv.profiles.get(id).summary, updated_at: srv.profiles.get(id).updated_at, added_at: '2026-10-21T10:00:00Z' } : null).filter(Boolean));
+      }
+      if (fn === 'friend_remove') { (srv.friendships.get(uid) || new Set()).delete(body.p_user); return res(204, null); }
+      if (fn === 'friend_regenerate_code') {
+        const p = srv.profiles.get(uid);
+        if (p) p.friend_code = makeCode();
+        for (const set of srv.friendships.values()) set.delete(uid);
+        return res(200, p ? p.friend_code : null);
+      }
+    }
     return res(404, {});
+  };
+  srv.addUser = (email, password = 'motdepasse1') => {
+    const id = `u${users.size + 1}`;
+    users.set(email, { id, password });
+    return { id, session: session(email, id) };
   };
   return srv;
 }

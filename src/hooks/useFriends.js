@@ -1,0 +1,93 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { SUPABASE, supabaseReady } from '../config';
+import { getTodayISODate } from '../lib/dates';
+import { buildFriendProfile } from '../lib/friendProfile';
+import { friends as api } from '../sync/supabase';
+
+const PUBLISH_DEBOUNCE_MS = 4000;
+const msg = e => (e && e.message) || 'Erreur du service d’amis.';
+
+/**
+ * Amis : mon code à 7 caractères, ma liste d'amis et leur résumé de profil. Nécessite un compte connecté.
+ * Mon résumé (sans poids ni photos) est publié automatiquement quand mes données changent, sauf si j'ai coupé le partage.
+ */
+export function useFriends({ gameState, user }) {
+  const cfg = SUPABASE;
+  const connected = supabaseReady(cfg) && !!user;
+  // Rien n'est publié tant que la personne n'a pas activé les amis (bouton dans l'onglet) : choix explicite, mémorisé sur l'appareil
+  const [enabled, setEnabled] = useState(() => { try { return localStorage.getItem('rondoufit:friends') === '1'; } catch { return false; } });
+  const on = connected && enabled;
+  const [code, setCode] = useState('');
+  const [share, setShareState] = useState(true);
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const lastSent = useRef('');
+  const shareRef = useRef(true);
+  shareRef.current = share;
+
+  const refresh = useCallback(async () => {
+    if (!on) return;
+    setLoading(true);
+    try {
+      setList(await api.list(cfg));
+      setError('');
+    } catch (e) { setError(msg(e)); } finally { setLoading(false); }
+  }, [on, cfg]);
+
+  // Première ouverture : profil (crée mon code) puis liste
+  const userId = user && user.id;
+  useEffect(() => {
+    if (!on) { setCode(''); setList([]); return undefined; }
+    let alive = true;
+    (async () => {
+      try {
+        let mine = await api.mine(cfg);
+        if (!mine) mine = await api.publish(cfg, buildFriendProfile(gameState, getTodayISODate()), true);
+        if (!alive) return;
+        if (mine) { setCode(mine.friend_code || ''); setShareState(mine.share !== false); }
+        const l = await api.list(cfg);
+        if (alive) { setList(l); setError(''); }
+      } catch (e) { if (alive) setError(msg(e)); }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on, userId]);
+
+  // Mon résumé se met à jour tout seul quand mes séances / exercices changent
+  useEffect(() => {
+    if (!on || !code) return undefined;
+    const t = setTimeout(async () => {
+      if (!shareRef.current) return;
+      const summary = buildFriendProfile(gameState, getTodayISODate());
+      const key = JSON.stringify(summary);
+      if (key === lastSent.current) return;
+      try { await api.publish(cfg, summary, true); lastSent.current = key; } catch (e) { setError(msg(e)); }
+    }, PUBLISH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on, code, gameState.quests, gameState.xp, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
+
+  const enable = () => { try { localStorage.setItem('rondoufit:friends', '1'); } catch { /* sans mémoire : valable pour cette session */ } setEnabled(true); };
+
+  const addFriend = async c => {
+    setError('');
+    try {
+      await api.add(cfg, c);
+      await refresh();
+      return { ok: true };
+    } catch (e) { return { ok: false, message: msg(e) }; }
+  };
+  const removeFriend = async id => {
+    try { await api.remove(cfg, id); setList(l => l.filter(f => f.user_id !== id)); } catch (e) { setError(msg(e)); }
+  };
+  const setShare = async v => {
+    setShareState(v);
+    try { await api.publish(cfg, buildFriendProfile(gameState, getTodayISODate()), v); lastSent.current = ''; } catch (e) { setError(msg(e)); setShareState(!v); }
+  };
+  const regenerateCode = async () => {
+    try { setCode(await api.regenerateCode(cfg)); setError(''); return true; } catch (e) { setError(msg(e)); return false; }
+  };
+
+  return { available: connected, enabled, enable, code, share, list, loading, error, refresh, addFriend, removeFriend, setShare, regenerateCode };
+}

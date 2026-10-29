@@ -54,7 +54,11 @@ async function call(cfg, method, path, { token, body, headers, query } = {}) {
   }
   let json = null;
   try { json = await res.json(); } catch { /* corps vide */ }
-  if (!res.ok) throw new AccountError(friendly(res.status, json), res.status, json && (json.error_code || json.code));
+  if (!res.ok) {
+    const err = new AccountError(friendly(res.status, json), res.status, json && (json.error_code || json.code));
+    err.raw = String((json && (json.message || json.msg || json.error)) || '');
+    throw err;
+  }
   return json;
 }
 
@@ -203,5 +207,70 @@ export const photos = {
   async deleteFile(cfg) {
     const s = await freshSession(cfg);
     await call(cfg, 'DELETE', '/rest/v1/photos', { token: s.access_token, query: `?user_id=eq.${uid(s)}&id=eq.${encodeURIComponent(photoId(cfg.path))}` });
+  },
+};
+
+// ---- Amis : code à 7 caractères (voir docs/supabase-amis.sql). Tout passe par des fonctions du serveur ----
+export const FRIEND_CODE_LENGTH = 7;
+export const normalizeFriendCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+const FRIEND_ERRORS = {
+  FRIEND_NOT_FOUND: 'Code introuvable. Vérifie-le avec ton ami (7 caractères, ou la personne ne partage plus son profil).',
+  FRIEND_SELF: 'C’est ton propre code : donne-le plutôt à quelqu’un d’autre.',
+  FRIEND_LOCKED: 'Trop d’essais ratés. Réessaie dans un quart d’heure.',
+  FRIEND_FULL: 'Tu as atteint la limite de 100 amis.',
+};
+function friendError(e) {
+  if (!(e instanceof AccountError)) return e;
+  const key = Object.keys(FRIEND_ERRORS).find(k => (e.raw || '').includes(k));
+  if (key) return new AccountError(FRIEND_ERRORS[key], e.status, key);
+  if (/relation .*(profiles|friendships)|function .*friend_|schema cache|404/i.test(e.raw || '') || e.status === 404) {
+    return new AccountError('La fonction « amis » n’est pas encore installée sur le serveur.', e.status, 'not_installed');
+  }
+  return e;
+}
+
+export const friends = {
+  /** Publie mon résumé de profil et mon réglage de partage ; renvoie { friend_code, share }. */
+  async publish(cfg, summary, share = true) {
+    const s = await freshSession(cfg);
+    try {
+      const rows = await call(cfg, 'POST', '/rest/v1/profiles', {
+        token: s.access_token,
+        headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+        query: '?on_conflict=user_id',
+        body: { user_id: s.user.id, summary, share, updated_at: new Date().toISOString() },
+      });
+      return Array.isArray(rows) && rows[0] ? { friend_code: rows[0].friend_code, share: rows[0].share } : null;
+    } catch (e) { throw friendError(e); }
+  },
+  /** Mon code et mon réglage de partage (null si pas encore de profil). */
+  async mine(cfg) {
+    const s = await freshSession(cfg);
+    try {
+      const rows = await call(cfg, 'GET', '/rest/v1/profiles', { token: s.access_token, query: `?select=friend_code,share&user_id=eq.${uid(s)}` });
+      return Array.isArray(rows) && rows[0] ? rows[0] : null;
+    } catch (e) { throw friendError(e); }
+  },
+  async add(cfg, code) {
+    const s = await freshSession(cfg);
+    try { return await call(cfg, 'POST', '/rest/v1/rpc/friend_add', { token: s.access_token, body: { p_code: normalizeFriendCode(code) } }); } catch (e) { throw friendError(e); }
+  },
+  /** [{ user_id, summary, updated_at, added_at }] */
+  async list(cfg) {
+    const s = await freshSession(cfg);
+    try {
+      const rows = await call(cfg, 'POST', '/rest/v1/rpc/friend_list', { token: s.access_token, body: {} });
+      return Array.isArray(rows) ? rows : [];
+    } catch (e) { throw friendError(e); }
+  },
+  async remove(cfg, userId) {
+    const s = await freshSession(cfg);
+    try { await call(cfg, 'POST', '/rest/v1/rpc/friend_remove', { token: s.access_token, body: { p_user: userId } }); } catch (e) { throw friendError(e); }
+  },
+  /** Nouveau code ; retire aussi tous ceux qui m'avaient ajouté. Renvoie le nouveau code. */
+  async regenerateCode(cfg) {
+    const s = await freshSession(cfg);
+    try { return await call(cfg, 'POST', '/rest/v1/rpc/friend_regenerate_code', { token: s.access_token, body: {} }); } catch (e) { throw friendError(e); }
   },
 };
