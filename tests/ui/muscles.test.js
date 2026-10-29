@@ -119,3 +119,32 @@ describe('mini silhouette en haut de page', () => {
     expect(opt.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('changer d’exercice : tous les exercices du muscle', () => {
+  it('Lombaires : tous listés, même d’une autre unité ; un exercice d’une autre unité devient un nouvel exercice', async () => {
+    const { EXERCISE_CATALOG } = await import('../../src/data/catalog');
+    const { fineGroupOf } = await import('../../src/data/muscles');
+    const lombaires = EXERCISE_CATALOG.filter(c => c.type === 'strength' && fineGroupOf({ ...c, catalogId: c.id }) === 'Lombaires');
+    expect(lombaires.length).toBeGreaterThan(1);
+    const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
+    open.push(h);
+    await advance(h, 400);
+    await clickText(h, 'Ajuster'); // 1er exercice : Tractions (répétitions)
+    await advance(h, 300);
+    await clickText(h, 'Changer d’exercice');
+    await advance(h, 300);
+    const chip = [...h.doc.querySelectorAll('button')].filter(b => /Lombaires/.test(b.textContent) && b.className.includes('rounded-full') && !b.className.includes('Niv'))
+      .find(b => b.closest('[data-testid]') === null || true);
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim() === '🧱 Lombaires'));
+    for (const c of lombaires) expect(byTest(h, `pick-${c.id}`), c.id).toBeTruthy();
+    // un exercice en kg alors que Tractions se mesure en répétitions : proposé comme nouvel exercice
+    const kg = lombaires.find(c => c.unit === 'kg');
+    expect(kg).toBeTruthy();
+    await clickEl(h, byTest(h, `pick-${kg.id}`));
+    expect(byTest(h, 'swap-other').textContent).toContain('nouvel exercice');
+    await clickEl(h, byTest(h, 'swap-other-create'));
+    await advance(h, 300);
+    expect(h.doc.body.textContent).toContain(kg.name);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

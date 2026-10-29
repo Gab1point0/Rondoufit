@@ -171,7 +171,10 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
   // Seuls les exercices de même type et de même unité (kg / répétitions / durée) sont proposés.
   const [formSwapNote, setFormSwapNote] = useState('');
   const isSwapCompatible = c => c.type === formType && c.unit === formUnit && isTimedCatalog(c) === formTimed;
+  // Exercice d'une autre unité (ex. répétitions au lieu de kg) : l'historique ne peut pas suivre, on propose d'en faire un NOUVEL exercice
+  const [swapOther, setSwapOther] = useState(null);
   const handleReplaceExercise = catId => {
+    setSwapOther(null);
     const found = EXERCISE_CATALOG.find(item => item.id === catId);
     if (!found || !isSwapCompatible(found)) return;
     setFormCatalogId(catId);
@@ -312,5 +315,5 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon };
+  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon, swapOther, setSwapOther };
 }

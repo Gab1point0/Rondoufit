@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExercisePicker } from '../components/ExercisePicker';
+import { ExercisePicker, unitLabel } from '../components/ExercisePicker';
 import { ARENA_GROUPS } from '../data/arenas';
 import { FINE_GROUPS, coarseOf, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 import { SETS_REPS_PRESETS, TIMED_PRESETS } from '../data/presets';
@@ -8,7 +8,7 @@ import { timedAdvice } from '../lib/quests';
 import { pick } from '../edition';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
+  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, swapOther, setSwapOther, openCreateQuestModal, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
@@ -46,8 +46,17 @@ export function QuestFormModal({
                       {formSwapNote && <p className="text-[0.75rem] text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">✅ {formSwapNote}</p>}
                       {swapOpen && (
                         <div className="space-y-1.5">
-                          <p className="text-[0.75rem] text-slate-400">Seuls les exercices de même type et de même unité sont proposés (charge en kg avec charge en kg, etc.). Ta charge actuelle, ton objectif et tes séances ne changent pas.</p>
-                          <ExercisePicker value={formCatalogId} onSelect={handleReplaceExercise} accept={isSwapCompatible} allowCustom={false} />
+                          <p className="text-[0.75rem] text-slate-400">Tous les exercices du muscle choisi sont listés. Avec un exercice qui se mesure pareil (charge en kg avec charge en kg, etc.), ta charge, ton objectif et tes séances sont conservés. Les autres sont marqués « Autre unité ».</p>
+                          <ExercisePicker value={formCatalogId} onSelect={handleReplaceExercise} compat={isSwapCompatible} onSelectOther={c => setSwapOther(c)} allowCustom={false} />
+                          {swapOther && (
+                            <div className="text-[0.75rem] text-amber-200 bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 space-y-1.5" data-testid="swap-other">
+                              <p>« {swapOther.name} » se mesure en {unitLabel(swapOther)}, alors que cet exercice se mesure en {formTimed ? 'durée' : formUnit === 'kg' ? 'charge en kg' : 'répétitions'} : l’historique ne peut pas être gardé. Je peux l’ajouter comme <b>nouvel exercice</b> (tu pourras supprimer l’ancien ensuite).</p>
+                              <div className="flex gap-2">
+                                <button type="button" data-testid="swap-other-create" onClick={() => { const id = swapOther.id; setSwapOther(null); openCreateQuestModal(); handleSelectCatalogExercise(id); }} className="px-3 py-1.5 rounded-lg bg-pink-600 text-white font-black">Ajouter « {swapOther.name} »</button>
+                                <button type="button" onClick={() => setSwapOther(null)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 font-bold">Annuler</button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

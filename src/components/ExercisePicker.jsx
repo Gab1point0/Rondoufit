@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
 import { FINE_GROUPS, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
+import { isTimedCatalog } from '../lib/quests';
 
 // Sélecteur d'exercice avec barre de recherche
-export function ExercisePicker({ value, onSelect, accept, allowCustom = true }) {
+// `compat` + `onSelectOther` (changement d'exercice) : TOUS les exercices du muscle sont listés ; ceux qui ne se mesurent pas comme l'exercice actuel
+// (kg / répétitions / durée) sont marqués et passent par `onSelectOther`.
+export const unitLabel = c => (isTimedCatalog(c) ? 'durée' : c.unit === 'kg' ? 'charge en kg' : 'répétitions');
+
+export function ExercisePicker({ value, onSelect, accept, allowCustom = true, compat, onSelectOther }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const optimized = isOptimized();
@@ -56,13 +61,14 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true }) 
           <button
             key={c.id}
             type="button"
-            onClick={() => onSelect(c.id)}
-            className={`w-full text-left px-2.5 py-2 rounded-lg text-sm flex items-center justify-between gap-2 border ${
+            onClick={() => (compat && !compat(c) ? onSelectOther(c) : onSelect(c.id))}
+            data-testid={`pick-${c.id}`}
+            className={`w-full text-left px-2.5 py-2 rounded-lg text-sm flex items-center justify-between gap-2 border ${compat && !compat(c) ? 'opacity-75 ' : ''}${
               c.id === value ? 'bg-pink-600/20 border-pink-500 text-white' : 'border-transparent hover:bg-slate-800 text-slate-200'
             }`}
           >
             <span className="font-semibold truncate">{c.icon} {c.name}</span>
-            <span className="shrink-0 text-[0.7rem] font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
+            <span className="shrink-0 text-[0.7rem] font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{compat && !compat(c) ? `Autre unité : ${unitLabel(c)}` : c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
           </button>
         ))}
         {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}
