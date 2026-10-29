@@ -25,10 +25,9 @@ export function applyEdition() {
     document.title = 'Road2Fit';
     apple.content = 'Road2Fit';
   } else {
-    document.title = 'From Grosdoudou to Rondoudou';
+    // Onglet, favoris et icône de favori restent NEUTRES (Road2Fit + haltère) même sur le lien privé ; seule l'icône installée sur l'écran d'accueil est Rondoudou.
+    document.title = 'Road2Fit';
     set('link[rel="manifest"]', 'href', './manifest.webmanifest');
-    set('link[rel="icon"]', 'href', './icon-192.png');
-    set('link[rel="apple-touch-icon"]', 'href', './apple-touch-icon.png');
     set('meta[name="theme-color"]', 'content', '#020617');
     apple.content = 'RondouFit';
   }

@@ -156,7 +156,7 @@ describe('édition neutre pour les amis', () => {
     open.push(prive);
     await advance(prive, 300);
     expect(prive.doc.documentElement.dataset.style).toBe('fun');
-    expect(prive.doc.title).toBe('From Grosdoudou to Rondoudou');
+    expect(prive.doc.title).toBe('Road2Fit'); // onglet / favoris neutres même sur le lien privé
     expect(prive.w.localStorage.getItem('rondoufit:style')).toBeNull();
     expect(prive.errors).toEqual([]);
     expect(classique.errors).toEqual([]);

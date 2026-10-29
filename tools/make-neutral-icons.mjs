@@ -40,6 +40,8 @@ function icon(size, pad = 0.18, round = true) {
   return PNG.sync.write(png);
 }
 
+fs.writeFileSync(path.join(OUT, 'favicon-32.png'), icon(32, 0.1));
+fs.writeFileSync(path.join(OUT, 'favicon-48.png'), icon(48, 0.1));
 fs.writeFileSync(path.join(OUT, 'icon-192.png'), icon(192));
 fs.writeFileSync(path.join(OUT, 'icon-512.png'), icon(512));
 fs.writeFileSync(path.join(OUT, 'icon-maskable-512.png'), icon(512, 0.28, false));
