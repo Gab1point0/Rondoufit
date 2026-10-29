@@ -119,3 +119,17 @@ describe('précision des animations (validateur automatique)', () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe('muscles colorés', () => {
+  it('chaque exercice animé a au moins un muscle reconnu, le premier cité est le principal', async () => {
+    const { musclesOf } = await import('./muscles');
+    const { movementFor } = await import('./resolve');
+    expect(musclesOf('Pectoraux, triceps, avant des épaules')[0]).toEqual({ z: 'chest', lvl: 1 });
+    const sans = [];
+    for (const s of ALL_SCENES) {
+      const info = movementFor(s.id)?.info;
+      if (info && musclesOf(info.m).length === 0) sans.push(`${s.id}: ${info.m}`);
+    }
+    expect(sans).toEqual([]);
+  });
+});

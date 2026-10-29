@@ -92,7 +92,7 @@ export function MovementPreview() {
               </div>
             )}
             <div className="rounded-xl overflow-hidden border border-slate-800">
-              <Figure scene={scene} pose={poseAt(scene.keys, u)} />
+              <Figure scene={scene} pose={poseAt(scene.keys, u)} muscleText={info ? info.m : ''} />
             </div>
             <p className="text-center text-sm font-black text-amber-300" aria-live="polite">{phaseLabel}</p>
 

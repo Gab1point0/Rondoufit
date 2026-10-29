@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Figure } from '../src/anim/Figure';
 import { poseAt } from '../src/anim/skeleton';
 import { ALL_SCENES } from '../src/anim/registry';
+import { movementFor } from '../src/anim/resolve';
 import '../src/styles.css';
 
 const params = new URLSearchParams(location.search);
@@ -19,8 +20,8 @@ function App() {
         <div key={s.id} className="border border-slate-700 rounded p-1">
           <p className="text-[11px] font-bold">{s.id} · {s.name}</p>
           <div className="grid grid-cols-2 gap-1">
-            <Figure scene={s.scene} pose={poseAt(s.scene.keys, 0)} />
-            <Figure scene={s.scene} pose={poseAt(s.scene.keys, 1)} />
+            <Figure scene={s.scene} pose={poseAt(s.scene.keys, 0)} muscleText={(movementFor(s.id.split('#')[0]) || {info: {}}).info?.m || ''} />
+            <Figure scene={s.scene} pose={poseAt(s.scene.keys, 1)} muscleText={(movementFor(s.id.split('#')[0]) || {info: {}}).info?.m || ''} />
           </div>
         </div>
       ))}
