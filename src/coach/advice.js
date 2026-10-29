@@ -11,7 +11,7 @@ import { getAllEntries, isStartEntry, isTimedQuest } from '../lib/quests';
 import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoads';
 import { stripAccents } from '../lib/text';
 import { sportInfo } from '../data/sports';
-import { arenaOf, arenasOf, arenaBand, pushPullSide } from '../data/muscles';
+import { arenaOf, arenasOf, arenaBand, isOptimized, pushPullSide } from '../data/muscles';
 
 // ---- Conseils du jour (volley / match) ----
 export function coachDayAdvice(state, today) {
@@ -187,31 +187,46 @@ export function coachOverview(state, today, extra = {}) {
   return { coach, weeks, templates, plannedAll, first, session, hasExercises, nextIdx };
 }
 
-// Volume hebdomadaire par arène (moyenne des 28 derniers jours) et équilibre poussée/tirage
+// Volume hebdomadaire par arène (moyenne des 28 derniers jours) et équilibre poussée/tirage.
+// Mode optimisé : un exercice à deux muscles compte une série pour le muscle principal et une DEMI-série pour le second
+// (séries « indirectes » comptées pour moitié : Pelland 2024). Les repères dépendent de l'objectif du moment et du niveau (débutant < 12 semaines).
 export function coachBalance(state, today) {
   const from = addDaysISO(today, -27);
   const sets = {}, days = {};
   COACH_ARENAS.forEach(a => { sets[a] = 0; days[a] = new Set(); });
   let push = 0, pull = 0;
-  getAllEntries(state).forEach(e => {
-    if (e.quest.type !== 'strength' || e.date < from || e.date > today) return;
+  const all = getAllEntries(state).filter(e => e.quest.type === 'strength');
+  all.forEach(e => {
+    if (e.date < from || e.date > today) return;
     const a = arenaOf(e.quest);
     const n = Array.isArray(e.setDetails) ? e.setDetails.length : Number(e.sets) || 0;
     if (sets[a] === undefined) return;
-    // un exercice à deux muscles compte une série pour chacun
-    arenasOf(e.quest).forEach(x => { if (sets[x] === undefined) return; sets[x] += n; days[x].add(e.date); });
+    arenasOf(e.quest).forEach((x, i) => { if (sets[x] === undefined) return; sets[x] += i === 0 ? n : n / 2; days[x].add(e.date); });
     const side = pushPullSide(a, e.quest.name);
     if (side === 'pull') pull += n;
     else if (side === 'push') push += n;
   });
+  const first = all.map(e => e.date).sort()[0];
+  const beginner = !first || coachDaysBetween(first, today) < 84;
+  const profile = profileOpts(state, today).profile;
   const rows = COACH_ARENAS.map(a => {
-    const band = arenaBand(a);
+    const band = arenaBand(a, { profile, beginner });
     const avg = Math.round((sets[a] / 4) * 10) / 10;
-    const status = avg < band.min ? 'low' : avg < band.good ? 'mid' : 'good';
-    return { arena: a, avg, perWeekFreq: Math.round((days[a].size / 4) * 10) / 10, band, status };
+    const status = avg < band.min ? 'low' : avg < band.good ? 'mid' : isOptimized() && avg > band.max ? 'high' : 'good';
+    const missing = status === 'low' || status === 'mid' ? Math.max(1, Math.ceil(band.good - avg)) : 0;
+    return { arena: a, avg, perWeekFreq: Math.round((days[a].size / 4) * 10) / 10, band, status, missing };
   });
   const ratio = push > 0 ? Math.round((pull / push) * 100) / 100 : null;
-  return { rows, push, pull, ratio };
+  // Alertes d'équilibre (mode optimisé) : conseils, pas des seuils médicaux
+  const alerts = [];
+  if (isOptimized()) {
+    const v = id => (rows.find(r => r.arena === id) || {}).avg || 0;
+    if (v('Quadriceps') >= 6 && v('Ischio-jambiers') < v('Quadriceps') * 0.5) alerts.push({ id: 'hq', arenas: ['Ischio-jambiers'], text: 'Tes ischio-jambiers sont nettement moins travaillés que tes quadriceps. Un peu plus d’ischios (leg curl, soulevé de terre roumain) équilibre la cuisse et protège les ischios, surtout si tu fais du sport avec des sprints.' });
+    if (v('Triceps') >= 4 && v('Biceps') < v('Triceps') * 0.4) alerts.push({ id: 'bt', arenas: ['Biceps'], text: 'Beaucoup plus de triceps que de biceps : ajoute un peu de curl pour équilibrer le bras.' });
+    if (v('Biceps') >= 4 && v('Triceps') < v('Biceps') * 0.4) alerts.push({ id: 'tb', arenas: ['Triceps'], text: 'Beaucoup plus de biceps que de triceps : le triceps fait pourtant les deux tiers du bras, ajoute-lui des séries.' });
+    if (v('Abdominaux') + v('Obliques') > 0 && v('Lombaires') === 0 && v('Abdominaux') >= 4) alerts.push({ id: 'ab-lo', arenas: ['Lombaires'], text: 'Tu travailles les abdos mais pas le bas du dos : quelques séries de lombaires (extensions, superman) équilibrent le tronc.' });
+  }
+  return { rows, push, pull, ratio, alerts, beginner, profile };
 }
 
 // Stagnation : aucune amélioration sur les 3 dernières séances

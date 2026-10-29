@@ -1,10 +1,11 @@
 import { coachSlotFor } from './planning';
-import { COACH_ARENAS, COACH_TYPES, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
+import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { profileOpts } from './profiles';
 import { calculateStrengthCalories } from '../lib/calories';
+import { getAllEntries } from '../lib/quests';
 import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, typeArenas } from '../data/muscles';
 
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
@@ -91,10 +92,27 @@ function coachTargetMinutes(coach, iso, opts) {
 }
 
 // Assemble une séance à partir d'une liste d'exercices
+// Mode optimisé : un muscle travaillé hier est laissé au repos (repère d'environ 48 h entre deux séances d'un même muscle).
+// On ne retire rien si la séance deviendrait trop courte (moins de 3 exercices).
+function restMuscles(state, quests, iso, notes) {
+  if (!isOptimized()) return quests;
+  const tired = new Set();
+  getAllEntries(state).forEach(e => {
+    if (e.quest.type === 'strength' && e.date < iso && coachDaysBetween(e.date, iso) <= 1) tired.add(arenaOf(e.quest));
+  });
+  if (!tired.size) return quests;
+  const kept = quests.filter(q => !tired.has(arenaOf(q)));
+  if (kept.length < 3 || kept.length === quests.length) return quests;
+  const left = [...new Set(quests.filter(q => tired.has(arenaOf(q))).map(arenaOf))];
+  notes.push(`Repos musculaire : ${left.join(', ')} ${left.length > 1 ? 'ont été travaillés' : 'a été travaillé'} hier, laissé${left.length > 1 ? 's' : ''} de côté aujourd’hui (environ 48 h entre deux séances d’un même muscle).`);
+  return kept;
+}
+
 function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   const coach = getCoachSettings(state);
   const eff = { ...opts, deload: !!opts.deload || !!opts.tired, allowedArenas };
   if (opts.tired && !opts.deload) notes.push('Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.');
+  quests = restMuscles(state, quests, di.iso, notes);
   let exercises = quests.map(q =>
     computeExerciseTarget(q, {
       ...profileOpts(state, di.iso),

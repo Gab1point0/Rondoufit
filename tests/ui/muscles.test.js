@@ -80,3 +80,27 @@ describe('suivi des muscles : deux modes', () => {
     expect(saved(h).muscleMode).toBe('simple');
   }, TIMEOUT);
 });
+
+describe('bilan du coach en mode optimisé', () => {
+  it('silhouette, cibles par muscle et études derrière les repères', async () => {
+    const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
+    open.push(h);
+    await advance(h, 400);
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => /^🧠\s*Coach$/.test(b.textContent.trim())));
+    await advance(h, 1000);
+    await clickText(h, 'Réglages et détails du coach');
+    expect(byTest(h, 'muscle-map')).toBeTruthy();
+    expect(pageText(h)).toContain('Équilibre des groupes musculaires');
+    await clickEl(h, byTest(h, 'toggle-sources'));
+    expect(byTest(h, 'sources-list').textContent).toContain('Schoenfeld 2017');
+    expect(byTest(h, 'sources-list').textContent).toContain('estimations prudentes');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('en mode simplifié : pas de silhouette', async () => {
+    const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }) } });
+    open.push(h);
+    await advance(h, 400);
+    expect(byTest(h, 'muscle-map')).toBeNull();
+  }, TIMEOUT);
+});

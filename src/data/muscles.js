@@ -17,20 +17,20 @@ export { fineFromText };
 
 /** Muscles précis du mode optimisé. `coarse` = grand groupe d'origine ; `tier` : 1 = dans (presque) chaque séance, 2 = dans chaque séance si la durée le permet, 3 = en rotation. */
 export const FINE_GROUPS = [
-  { id: 'Pectoraux', label: 'Pectoraux', icon: '🛡️', coarse: 'Pectoraux', tier: 1, band: { min: 6, good: 10 }, color: 'from-pink-500 to-rose-600' },
-  { id: 'Dos', label: 'Dos (grand dorsal, trapèzes)', icon: '🦅', coarse: 'Dos', tier: 1, band: { min: 6, good: 10 }, color: 'from-violet-500 to-indigo-600' },
-  { id: 'Épaules', label: 'Épaules', icon: '🎯', coarse: 'Épaules & Bras', tier: 1, band: { min: 6, good: 10 }, color: 'from-cyan-500 to-blue-600' },
-  { id: 'Quadriceps', label: 'Quadriceps', icon: '🦵', coarse: 'Jambes', tier: 1, band: { min: 6, good: 10 }, color: 'from-amber-500 to-orange-600' },
-  { id: 'Ischio-jambiers', label: 'Ischio-jambiers', icon: '🦿', coarse: 'Jambes', tier: 1, band: { min: 5, good: 9 }, color: 'from-orange-500 to-red-600' },
-  { id: 'Fessiers', label: 'Fessiers', icon: '🍑', coarse: 'Jambes', tier: 2, band: { min: 5, good: 9 }, color: 'from-rose-500 to-pink-600' },
-  { id: 'Biceps', label: 'Biceps', icon: '💪', coarse: 'Épaules & Bras', tier: 2, band: { min: 4, good: 8 }, color: 'from-sky-500 to-cyan-600' },
-  { id: 'Triceps', label: 'Triceps', icon: '🔱', coarse: 'Épaules & Bras', tier: 2, band: { min: 4, good: 8 }, color: 'from-teal-500 to-emerald-600' },
-  { id: 'Abdominaux', label: 'Abdominaux', icon: '🍫', coarse: 'Abdominaux', tier: 2, band: { min: 4, good: 8 }, color: 'from-fuchsia-500 to-purple-600' },
-  { id: 'Lombaires', label: 'Lombaires', icon: '🧱', coarse: 'Dos', tier: 3, band: { min: 3, good: 6 }, color: 'from-indigo-500 to-violet-600' },
-  { id: 'Mollets', label: 'Mollets', icon: '🦶', coarse: 'Jambes', tier: 3, band: { min: 3, good: 8 }, color: 'from-yellow-500 to-amber-600' },
-  { id: 'Avant-bras', label: 'Avant-bras', icon: '✊', coarse: 'Épaules & Bras', tier: 3, band: { min: 2, good: 6 }, color: 'from-blue-500 to-sky-600' },
-  { id: 'Hanches', label: 'Adducteurs & abducteurs', icon: '🦋', coarse: 'Jambes', tier: 3, band: { min: 2, good: 6 }, color: 'from-lime-500 to-green-600' },
-  { id: 'Obliques', label: 'Obliques', icon: '🌀', coarse: 'Abdominaux', tier: 3, band: { min: 2, good: 6 }, color: 'from-purple-500 to-fuchsia-600' },
+  { id: 'Pectoraux', label: 'Pectoraux', icon: '🛡️', coarse: 'Pectoraux', tier: 1, band: { min: 6, good: 10, max: 20 }, evidence: 'forte', color: 'from-pink-500 to-rose-600' },
+  { id: 'Dos', label: 'Dos (grand dorsal, trapèzes)', icon: '🦅', coarse: 'Dos', tier: 1, band: { min: 8, good: 12, max: 22 }, evidence: 'forte', color: 'from-violet-500 to-indigo-600' },
+  { id: 'Épaules', label: 'Épaules', icon: '🎯', coarse: 'Épaules & Bras', tier: 1, band: { min: 6, good: 10, max: 20 }, evidence: 'forte', color: 'from-cyan-500 to-blue-600' },
+  { id: 'Quadriceps', label: 'Quadriceps', icon: '🦵', coarse: 'Jambes', tier: 1, band: { min: 6, good: 10, max: 20 }, evidence: 'forte', color: 'from-amber-500 to-orange-600' },
+  { id: 'Ischio-jambiers', label: 'Ischio-jambiers', icon: '🦿', coarse: 'Jambes', tier: 1, band: { min: 5, good: 9, max: 16 }, evidence: 'moyenne', color: 'from-orange-500 to-red-600' },
+  { id: 'Fessiers', label: 'Fessiers', icon: '🍑', coarse: 'Jambes', tier: 2, band: { min: 4, good: 8, max: 16 }, evidence: 'moyenne', color: 'from-rose-500 to-pink-600' },
+  { id: 'Biceps', label: 'Biceps', icon: '💪', coarse: 'Épaules & Bras', tier: 2, band: { min: 4, good: 8, max: 18 }, evidence: 'forte', color: 'from-sky-500 to-cyan-600' },
+  { id: 'Triceps', label: 'Triceps', icon: '🔱', coarse: 'Épaules & Bras', tier: 2, band: { min: 4, good: 9, max: 20 }, evidence: 'forte', color: 'from-teal-500 to-emerald-600' },
+  { id: 'Abdominaux', label: 'Abdominaux', icon: '🍫', coarse: 'Abdominaux', tier: 2, band: { min: 4, good: 8, max: 16 }, evidence: 'estimation', color: 'from-fuchsia-500 to-purple-600' },
+  { id: 'Lombaires', label: 'Lombaires', icon: '🧱', coarse: 'Dos', tier: 3, band: { min: 2, good: 4, max: 8 }, evidence: 'estimation', color: 'from-indigo-500 to-violet-600' },
+  { id: 'Mollets', label: 'Mollets', icon: '🦶', coarse: 'Jambes', tier: 3, band: { min: 6, good: 10, max: 18 }, evidence: 'estimation', color: 'from-yellow-500 to-amber-600' },
+  { id: 'Avant-bras', label: 'Avant-bras', icon: '✊', coarse: 'Épaules & Bras', tier: 3, band: { min: 2, good: 4, max: 10 }, evidence: 'estimation', color: 'from-blue-500 to-sky-600' },
+  { id: 'Hanches', label: 'Adducteurs & abducteurs', icon: '🦋', coarse: 'Jambes', tier: 3, band: { min: 2, good: 4, max: 10 }, evidence: 'estimation', color: 'from-lime-500 to-green-600' },
+  { id: 'Obliques', label: 'Obliques', icon: '🌀', coarse: 'Abdominaux', tier: 3, band: { min: 2, good: 4, max: 10 }, evidence: 'estimation', color: 'from-purple-500 to-fuchsia-600' },
 ];
 const FINE_IDS = new Set(FINE_GROUPS.map(g => g.id));
 const fineInfo = id => FINE_GROUPS.find(g => g.id === id);
@@ -102,11 +102,24 @@ export const isAbsArena = a => coarseOf(a) === 'Abdominaux';
 export const isUpperArena = a => ['Dos', 'Pectoraux', 'Épaules & Bras'].includes(coarseOf(a));
 /** 1 = grands muscles (dans chaque séance), 2 = dans chaque séance si la durée le permet, 3 = en rotation. En mode simple : 1 partout. */
 export const arenaTier = a => (fineInfo(a) ? fineInfo(a).tier : 1);
-/** Repère de séries par semaine pour un groupe (mode simple : les valeurs d'avant). */
-export function arenaBand(a) {
+/**
+ * Repère de séries par semaine pour un groupe : { min, good, max, evidence }.
+ *  - min : en dessous, le progrès est faible ; good : cible confortable ; max : au-delà, rendement décroissant (et fatigue) ;
+ *  - mode simple : les valeurs d'avant (6-10, abdos 4-8) ; mode optimisé : repères par muscle (voir src/data/volumeSources.js) ;
+ *  - opts.profile (puissance / hypertrophie / endurance) et opts.beginner ajustent les repères (la force sature plus vite avec le volume ; un débutant progresse avec moins).
+ */
+const PROFILE_FACTOR = { puissance: { min: 1, good: 0.9, max: 0.75 }, endurance: { min: 1, good: 0.9, max: 0.9 } };
+const BEGINNER_FACTOR = { min: 0.7, good: 0.75, max: 0.7 };
+export function arenaBand(a, opts = {}) {
   const f = fineInfo(a);
-  if (f && mode === 'optimized') return f.band;
-  return a === 'Abdominaux' ? { min: 4, good: 8 } : { min: 6, good: 10 };
+  if (!(f && mode === 'optimized')) return a === 'Abdominaux' ? { min: 4, good: 8, max: 16 } : { min: 6, good: 10, max: 20 };
+  const p = PROFILE_FACTOR[opts.profile] || { min: 1, good: 1, max: 1 };
+  const bg = opts.beginner ? BEGINNER_FACTOR : { min: 1, good: 1, max: 1 };
+  const r = x => Math.max(1, Math.round(x));
+  const min = r(f.band.min * p.min * bg.min);
+  const good = Math.max(min + 1, r(f.band.good * p.good * bg.good));
+  const max = Math.max(good + 2, r(f.band.max * p.max * bg.max));
+  return { min, good, max, evidence: f.evidence };
 }
 /** Les groupes sont-ils « poussée » ou « tirage » ? (équilibre du haut du corps) */
 export function pushPullSide(arena, name) {

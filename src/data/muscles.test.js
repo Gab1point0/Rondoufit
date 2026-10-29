@@ -11,7 +11,7 @@ import { EXERCISE_CATALOG } from './catalog';
 import { INITIAL_STATE } from './initialState';
 import { FINE_BY_CATALOG_ID } from './fineGroups.generated';
 import { fineFromText } from './fineRules';
-import { FINE_GROUPS, arenaLabel, arenasOf, hasArena, secondGroupOf, arenaOf, arenaTier, fineGroupOf, isLegArena, setMuscleMode, typeArenas } from './muscles';
+import { FINE_GROUPS, arenaBand, arenaLabel, arenasOf, hasArena, secondGroupOf, arenaOf, arenaTier, fineGroupOf, isLegArena, setMuscleMode, typeArenas } from './muscles';
 
 afterEach(() => setMuscleMode('simple'));
 
@@ -170,7 +170,70 @@ describe('exercices à deux muscles', () => {
     const q = { ...cat('fp_hip_thrust_bar'), id: 'q_ht', type: 'strength', history: [{ date: '2026-10-20', sets: 4, setDetails: [8, 8, 8, 8], value: 60 }] };
     const rows = coachBalance({ ...base, quests: [q] }, '2026-10-21').rows;
     expect(rows.find(r => r.arena === 'Fessiers').avg).toBe(1);
-    expect(rows.find(r => r.arena === 'Ischio-jambiers').avg).toBe(1);
+    expect(rows.find(r => r.arena === 'Ischio-jambiers').avg).toBe(0.5); // 2e muscle = demi-série
     expect(rows.find(r => r.arena === 'Quadriceps').avg).toBe(0);
+  });
+});
+
+describe('repères de séries sourcés', () => {
+  it('chaque muscle a des repères cohérents (min < cible < max), quel que soit l’objectif et le niveau', () => {
+    setMuscleMode('optimized');
+    for (const g of FINE_GROUPS) for (const profile of [null, 'puissance', 'hypertrophie', 'endurance']) for (const beginner of [false, true]) {
+      const b = arenaBand(g.id, { profile, beginner });
+      expect(b.min, g.id).toBeGreaterThan(0);
+      expect(b.good, g.id).toBeGreaterThan(b.min);
+      expect(b.max, g.id).toBeGreaterThan(b.good);
+      expect(['forte', 'moyenne', 'estimation']).toContain(b.evidence);
+    }
+  });
+
+  it('valeurs de référence : biceps 4-8-18, triceps plus haut (Baz-Valle), force et débutant plus bas', () => {
+    setMuscleMode('optimized');
+    expect(arenaBand('Biceps')).toMatchObject({ min: 4, good: 8, max: 18 });
+    expect(arenaBand('Triceps').max).toBeGreaterThan(arenaBand('Biceps').max);
+    expect(arenaBand('Pectoraux', { profile: 'puissance' }).max).toBeLessThan(arenaBand('Pectoraux').max);
+    expect(arenaBand('Pectoraux', { beginner: true }).good).toBeLessThan(arenaBand('Pectoraux').good);
+    expect(arenaBand('Avant-bras').evidence).toBe('estimation');
+    setMuscleMode('simple');
+    expect(arenaBand('Jambes')).toMatchObject({ min: 6, good: 10 });
+  });
+
+  const withHistory = (id, sets, date = '2026-10-10') => {
+    const base = stateWith();
+    return { ...base, quests: base.quests.map(q => (q.catalogId === id ? { ...q, history: [...(q.history || []), ...[0, 1, 2, 3].map(i => ({ date: '2026-10-1' + i, sets, setDetails: Array(sets).fill(8), value: 60 }))] } : q)) };
+  };
+
+  it('trop de séries : statut « high » ; trop peu : « missing » (combien de séries il manque)', () => {
+    setMuscleMode('optimized');
+    const rows = coachBalance(withHistory('squat', 20), '2026-10-21').rows;
+    const q = rows.find(r => r.arena === 'Quadriceps');
+    expect(q.status).toBe('high');
+    const low = rows.find(r => r.arena === 'Biceps');
+    expect(low.status).toBe('low');
+    expect(low.missing).toBeGreaterThan(0);
+  });
+
+  it('alerte d’équilibre : beaucoup de quadriceps, peu d’ischios', () => {
+    setMuscleMode('optimized');
+    const st = withHistory('squat', 6);
+    const alerts = coachBalance({ ...st, quests: st.quests.filter(q => !['fp_leg_curl_lying', 'fp_hip_thrust_bar'].includes(q.catalogId)) }, '2026-10-21').alerts;
+    expect(alerts.map(a => a.id)).toContain('hq');
+    setMuscleMode('simple');
+    expect(coachBalance(st, '2026-10-21').alerts).toEqual([]);
+  });
+});
+
+describe('repos par muscle', () => {
+  it('un muscle travaillé hier est laissé de côté (mode optimisé), mais pas en mode simplifié', () => {
+    const base = stateWith();
+    const st = { ...base, quests: base.quests.map(q => (q.catalogId === 'bench_press' ? { ...q, history: [{ date: '2026-10-20', sets: 3, setDetails: [8, 8, 8], value: 40 }] } : q)) };
+    const coach = getCoachSettings(st);
+    setMuscleMode('optimized');
+    const opt = coachBuildPlanned(st, { templateIdx: 0 }, coachDayInfo('2026-10-21', coach), {});
+    expect(opt.exercises.some(e => e.arena === 'Pectoraux' && e.questId === st.quests.find(q => q.catalogId === 'bench_press').id)).toBe(false);
+    expect(opt.notes.join(' ')).toContain('Repos musculaire');
+    setMuscleMode('simple');
+    const sim = coachBuildPlanned(st, { templateIdx: 0 }, coachDayInfo('2026-10-21', coach), {});
+    expect(sim.notes.join(' ')).not.toContain('Repos musculaire');
   });
 });
