@@ -33,7 +33,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Progression</p>
           <button onClick={close(onOpenRewards)} className={row}>
             <span className="text-lg">🎁</span>
-            <span>🎁 Récompenses</span>
+            <span>Récompenses</span>
           </button>
           {trialRank && (
             <button onClick={close(onOpenTrial)} className={row}>

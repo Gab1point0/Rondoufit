@@ -94,7 +94,7 @@ describe('bonus de régularité', () => {
 describe('récompenses de niveau', () => {
   it('permet de choisir ce qui est débloqué et bloque le reste', async () => {
     const h = await start(save(xpForLevel(6) + 10, { rankTrials: [4] }));
-    await clickText(h, '🎁 Récompenses');
+    await clickText(h, 'Récompenses');
     expect(pageText(h)).toContain('niveau 10'); // thème Forêt encore verrouillé
     const foret = findByText(h, 'Forêt')[0].closest('button');
     expect(foret.disabled).toBe(true);
