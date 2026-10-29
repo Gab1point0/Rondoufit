@@ -4,7 +4,7 @@ import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons
 import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
-import { pick } from '../edition';
+import { cleanText, pick } from '../edition';
 import { arenaLabel } from '../data/muscles';
 
 export function QuestsTab({
@@ -395,7 +395,7 @@ export function QuestsTab({
                         <span className="px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-300 font-bold border border-orange-500/30">
                           🔥 {lastEntry.calories || 45} kcal
                         </span>
-                        <span className="truncate">{lastEntry.note}</span>
+                        <span className="truncate">{cleanText(lastEntry.note)}</span>
                       </span>
                     ) : (
                       <span>Aucune séance notée</span>

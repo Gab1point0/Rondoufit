@@ -1,3 +1,4 @@
+import { cleanText } from '../edition';
 import { Scale, Trash2 } from '../icons';
 
 export function WeightTab({
@@ -265,7 +266,7 @@ export function WeightTab({
                 <span className="font-black text-pink-300 text-sm">
                   {item.weightKg} kg
                 </span>
-                <span className="text-slate-400">{item.note}</span>
+                <span className="text-slate-400">{cleanText(item.note)}</span>
               </div>
               <button
                 onClick={() => handleDeleteWeightEntry(item.id)}

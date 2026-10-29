@@ -173,3 +173,26 @@ describe('en-tête', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('version neutre : plus aucune trace de Rondoudou, même dans les anciennes notes', () => {
+  it('pesée initiale, notes de séance et de journal nettoyées à l’affichage', async () => {
+    const state = {
+      onboarded: true, heroName: 'Léa', xp: 0, userWeightKg: 82, targetWeightKg: 75, startWeightKg: 84,
+      weightHistory: [
+        { id: 'w_1', date: '2026-10-20', weightKg: 84.0, note: 'Pesée initiale (Mode Grosdoudou)' },
+        { id: 'w_2', date: '2026-10-21', weightKg: 82.0, note: 'Premiers kilos perdus, en route vers Rondoudou Fit !' },
+      ],
+      quests: [],
+    };
+    const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify(state) } });
+    open.push(h);
+    await advance(h, 300);
+    await clickText(h, 'Poids');
+    await advance(h, 300);
+    const t = pageText(h);
+    expect(t).toContain('Pesée initiale');
+    expect(t).toContain('Premiers kilos perdus');
+    expect(t).not.toMatch(/rondou|doudou|pok[eé]|dresseur/i);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

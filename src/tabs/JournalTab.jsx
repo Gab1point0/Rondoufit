@@ -1,3 +1,4 @@
+import { cleanText } from '../edition';
 import { cardioHasElevation } from '../lib/calories';
 import { useState } from 'react';
 import { EntryEditor } from '../components/EntryEditor';
@@ -114,7 +115,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{entry.note}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{cleanText(entry.note)}</p>
                       </div>
                     </div>
 
