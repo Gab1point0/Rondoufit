@@ -167,7 +167,7 @@ export function shrugs({ bar = false }) {
   const c = 160;
   const mk = lift => ({ c, hipY: 112, lift, hand: [c + 24, 112 - 52 - lift + 4 + 54], handBend: 1 });
   return {
-    view: 'front', keys: [mk(0), mk(14)], trace: false, loop: 'pingpong',
+    view: 'front', box: [70, 0, 180, 137], keys: [mk(0), mk(18)], trace: 'shoulder', loop: 'pingpong',
     equip: [],
     follow: bar ? [{ k: 'db', at: 'wrist', r: 6 }] : [{ k: 'db', at: 'wrist', r: 8 }],
   };

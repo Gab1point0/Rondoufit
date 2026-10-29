@@ -147,14 +147,14 @@ export function calfRaise({ machine = false, seated = false }) {
     const hip = [124, 138];
     const mk = (ankleY, toe) => P(hip, -90, { foot: [166, ankleY], footBend: -1, arm: [90, 30], toe });
     return {
-      keys: [mk(ANKLE_Y, 0), mk(ANKLE_Y - 9, 45)], trace: 'ankle', loop: 'pingpong',
+      box: [70, 96, 160, 122], keys: [mk(ANKLE_Y, 0), mk(ANKLE_Y - 12, 50)], trace: 'ankle', loop: 'pingpong',
       equip: [pad([hip[0] - 18, hip[1] + 6], [hip[0] + 24, hip[1] + 6], 10), line([hip[0], hip[1] + 12], [hip[0], G - 4], 4, '#334155'), rect(90, G - 6, 120, 6, '#334155', 2), pad([hip[0] + 24, hip[1] - 12], [hip[0] + 46, hip[1] - 12], 12, true)],
       follow: [{ k: 'padAt', at: 'knee', dx: -8, dy: -10, w: 22, h: 8 }],
     };
   }
   const mk = (dy, toe) => P([HIP[0], HIP[1] - dy], -90, { foot: [150, ANKLE_Y - dy], footBend: -1, arm: [90, 90], toe });
   return {
-    keys: [mk(0, 0), mk(12, 62)], trace: 'ankle', loop: 'pingpong',
+    box: [90, 96, 160, 122], keys: [mk(0, 0), mk(16, 62)], trace: 'ankle', loop: 'pingpong',
     equip: machine ? [rect(120, G - 4, 60, 4, '#334155', 1), plates(240, 40, 18, 120, 4)] : [rect(140, G - 4, 40, 4, '#334155', 1)],
     follow: machine ? [{ k: 'padAt', at: 'shoulder', dx: -12, dy: -8, w: 24, h: 10 }] : [],
   };

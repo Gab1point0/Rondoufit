@@ -187,7 +187,6 @@ alt(['deadlift', 'fp_rdl', 'fp_trapbar'], 'front', 'Vue de face', deadliftFront(
 alt('fp_sumo', 'front', 'Vue de face', deadliftFront({ sumo: true }));
 alt(['barbell_curl', 'fp_cable_curl'], 'front', 'Vue de face', curlFront({}));
 alt(['fp_db_curl', 'fp_hammer_curl'], 'front', 'Vue de face', curlFront({ alternate: true }));
-alt(['fp_shrugs_db', 'fp_shrugs_bar', 'fp_shrug_machine'], 'front', 'Vue de face', shrugFront());
 alt('fp_rotary_torso', 'top', 'Vue de dessus', rotaryTop());
 alt('fp_woodchop', 'top', 'Vue de dessus', woodchopTop());
 alt('fp_pallof', 'top', 'Vue de dessus', pallofTop());

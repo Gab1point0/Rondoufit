@@ -10,7 +10,7 @@ export function crunch({ sitUp = false, decline = false, reverse = false, legRai
     return { keys: [mk(186, [-95, 5]), mk(172, [-112, -30])], trace: 'knee', loop: 'pingpong', equip: [], follow: [] };
   }
   if (legRaise) {
-    const mk = a => P(FLOOR_HIP, 180, { leg: [a, a], toe: 80, arm: [150, 150] });
+    const mk = a => P(FLOOR_HIP, 180, { leg: [a, a], toe: 30, arm: [150, 150] });
     return { keys: [mk(-6), mk(-90)], trace: 'ankle', loop: 'pingpong', equip: [], follow: [] };
   }
   if (decline) {
@@ -96,13 +96,13 @@ export function abMachine() {
   };
 }
 
-// Hammer Strength « Abdominal / Oblique Crunch » (à plaques) : siège pivotant verrouillable à gauche / au centre / à droite,
-// longues poignées qui passent par-dessus les épaules, plaques sur des cornes (pas de pile à goupille).
+// Hammer Strength « Abdominal / Oblique Crunch » (à plaques) : DOUBLE ACTION. Le buste s'enroule vers l'avant (longues poignées par-dessus les épaules)
+// ET les genoux montent vers la poitrine (coussin de jambes sur les tibias, qui pivote avec le levier). Siège pivotant verrouillable G / centre / D.
 export function hsObliqueCrunch() {
   const hip = [172, 154];
-  const mk = torso => P(hip, torso, { foot: [212, ANKLE_Y], footBend: -1, hand: pt(shoulderOf(hip, torso), 6, -4), handBend: 1 });
+  const mk = (torso, foot) => P(hip, torso, { foot, footBend: -1, hand: pt(shoulderOf(hip, torso), 6, -4), handBend: 1 });
   return {
-    keys: [mk(-97), mk(-52)], trace: 'shoulder', loop: 'pingpong',
+    keys: [mk(-97, [214, ANKLE_Y]), mk(-52, [212, 164])], trace: 'shoulder', loop: 'pingpong',
     equip: [
       // siège pivotant : plateau rond sur un pied, avec ses trois verrouillages
       pad([hip[0] - 18, hip[1] + 6], [hip[0] + 30, hip[1] + 6], 10),
@@ -111,10 +111,14 @@ export function hsObliqueCrunch() {
       rect(hip[0] - 40, G - 6, 120, 6, '#334155', 2),
       txt([hip[0] - 34, G - 18], 'siège pivotant', 8, '#94a3b8'),
       txt([hip[0] - 34, G - 28], 'G · centre · D', 8, '#38bdf8'),
-      pad([hip[0] + 34, hip[1] + 24], [hip[0] + 34, hip[1] + 44], 8, true),
+      txt([hip[0] + 40, hip[1] - 78], 'les genoux montent', 8, '#38bdf8'),
+      txt([hip[0] + 40, hip[1] - 68], 'en même temps', 8, '#38bdf8'),
       ...horn(hip[0] - 96, hip[1] - 52),
     ],
-    follow: [{ k: 'padAt', at: 'shoulder', dx: -2, dy: -8, w: 16, h: 8 }, lever([hip[0] - 60, hip[1] - 52], 'shoulder', 5), handle('wrist')],
+    follow: [
+      { k: 'padAt', at: 'shoulder', dx: -2, dy: -8, w: 16, h: 8 }, lever([hip[0] - 60, hip[1] - 52], 'shoulder', 5), handle('wrist'),
+      lever([hip[0] + 66, G - 30], 'ankle', 5), { k: 'padAt', at: 'ankle', dx: -8, dy: -12, w: 16, h: 8 }, // coussin de jambes
+    ],
   };
 }
 

@@ -181,10 +181,10 @@ export function multiHipFront() {
 
 // ---------------- Soulevé de terre : vue de face (barre contre les cuisses, genoux alignés sur les pieds) ----------------
 export function deadliftFront({ sumo = false } = {}) {
-  const fx = sumo ? 44 : 16;
-  const hx = sumo ? 12 : 24;
-  const bottom = F(150, { bend: 0.6, foot: [C + fx, 194], hand: [C + hx, 172], handBend: 1 });
-  const top = F(112, { foot: [C + fx, 194], hand: [C + hx, 118], handBend: 1 });
+  const kx = C + (sumo ? 46 : 18); // genou : tibias verticaux (les cuisses partent vers la caméra, donc raccourcies)
+  const hx = C + (sumo ? 14 : 24);
+  const bottom = F(134, { bend: 0.8, knee: [kx, 152], hand: [hx, 168], handBend: 1 });
+  const top = F(112, { knee: [kx, 152], hand: [hx, 118], handBend: 1 });
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys: [bottom, top],
     equip: [floorRect(sumo ? 150 : 110)],

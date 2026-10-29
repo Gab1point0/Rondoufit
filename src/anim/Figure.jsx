@@ -158,6 +158,12 @@ function TopFigure({ scene, pose, showTrace, muscles = [], ghost = false, bad = 
       {!ghost && (scene.equip || []).map((e, i) => <Fixed key={i} e={e} i={i} />)}
       {traces && traces.map((tr, k) => <polyline key={k} points={pol(tr)} fill="none" stroke={C.trace} strokeWidth="2" strokeDasharray="4 4" opacity="0.9" />)}
       {traces && traces.map((tr, k) => <circle key={'s' + k} cx={tr[0][0]} cy={tr[0][1]} r="3" fill="none" stroke={C.trace} strokeWidth="1.5" />)}
+      {!ghost && (
+        <g>
+          <line x1={t.c - 52} y1={t.s0[1]} x2={t.c + 52} y2={t.s0[1]} stroke="#64748b" strokeWidth="1" strokeDasharray="3 3" />
+          <line x1={t.s0[0] - Math.cos(((pose.twist || 0) * Math.PI) / 180) * 56} y1={t.s0[1] - Math.sin(((pose.twist || 0) * Math.PI) / 180) * 56} x2={t.s0[0] + Math.cos(((pose.twist || 0) * Math.PI) / 180) * 56} y2={t.s0[1] + Math.sin(((pose.twist || 0) * Math.PI) / 180) * 56} stroke={C.accent} strokeWidth="1.6" />
+        </g>
+      )}
       {scene.legs === 'seated' && [t.hipL, t.hipR].map((h, k) => <Taper key={'t' + k} a={h} b={[h[0] + (k === 0 ? -3 : 3), h[1] - 40]} ra={6.4} rb={4.6} c={K.body} />)}
       {scene.legs === 'standing' && [-18, 18].map((dx, k) => <ellipse key={'f' + k} cx={t.c + dx} cy={t.y + 12} rx="5" ry="10" fill={K.body} />)}
       <polygon points={pol([t.L.shoulder, t.R.shoulder, t.hipR, t.hipL])} fill={K.body} stroke={K.body} strokeWidth="6" strokeLinejoin="round" />

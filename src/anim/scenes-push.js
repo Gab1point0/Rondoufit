@@ -90,8 +90,8 @@ export function dips({ benchDips = false, machine = false }) {
     };
   }
   // barres parallèles : bras tendus en haut, coudes à 90° en bas, jambes pliées derrière
-  const up = P([146, 120], -72, { foot: [118, 186], footBend: -1, hand: [160, 124], handBend: 1 });
-  const down = P([142, 146], -72, { foot: [114, 192], footBend: -1, hand: [160, 124], handBend: 1 });
+  const up = P([146, 120], -72, { foot: [106, 158], footBend: -1, hand: [160, 124], handBend: 1 });
+  const down = P([142, 146], -72, { foot: [102, 176], footBend: -1, hand: [160, 124], handBend: 1 });
   return {
     keys: [up, down], trace: 'shoulder', loop: 'pingpong',
     equip: [pad([146, 128], [186, 128], 6), line([184, 128], [184, G], 4), line([150, 128], [150, G], 4)], follow: [],

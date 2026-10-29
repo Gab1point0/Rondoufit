@@ -717,21 +717,21 @@ export const FAMILIES = {
     p: ['Enroule le buste', 'Reviens en contrôle'],
   },
   abMachineOblique: {
-    m: 'Obliques et grand droit (selon le verrouillage du siège)',
+    m: 'Obliques et grand droit (selon le verrouillage du siège), fléchisseurs de hanche',
     s: [
       'Machine à plaques libres Hammer Strength : charge les disques sur les cornes de chaque côté. Résistance de départ indiquée par le fabricant : environ 11 kg + 10 % du poids du corps, puis les disques s’ajoutent.',
       'Le siège est pivotant : verrouille-le au centre pour des crunchs droits, ou à gauche / à droite pour cibler les obliques.',
       'Passe les longues poignées par-dessus les épaules (elles sont fixes) : elles maintiennent le haut du corps pendant que le ventre travaille.',
-      'Bassin bien calé sur le siège, pieds posés sur les appuis.',
+      'Bassin bien calé sur le siège, tibias sous le coussin de jambes : le coussin pivote avec les poignées et fait travailler les jambes en même temps que le buste.',
     ],
     g: [
-      'Enroule le buste vers l’avant en rapprochant les côtes du bassin : le mouvement part des abdominaux, pas des bras.',
+      'Double action : enroule le buste vers l’avant (côtes vers le bassin) ET ramène les genoux vers la poitrine en poussant sur le coussin de jambes. Le mouvement part des abdominaux, pas des bras.',
       'Siège verrouillé de côté, le crunch devient diagonal : fais le même nombre de répétitions des deux côtés.',
-      'Reviens lentement jusqu’au départ sans reposer les plaques.',
+      'Reviens lentement jusqu’au départ (buste et jambes ensemble) sans reposer les plaques.',
     ],
-    e: ['Tirer avec les bras sur les poignées.', 'Forcer la rotation à la main : laisse le siège guider la trajectoire.', 'Charge trop lourde : la colonne ne doit pas se tordre de façon brusque.'],
-    p: ['Enroule le buste', 'Reviens en contrôle'],
-    safe: 'L’animation montre l’enroulement de profil ; l’orientation exacte du mouvement dépend du verrouillage du siège (gauche, centre ou droite).',
+    e: ['Tirer avec les bras sur les poignées.', 'Ne faire travailler que les bras, que le buste ou que les jambes : les deux mouvements doivent partir ensemble.', 'Forcer la rotation à la main : laisse le siège guider la trajectoire.', 'Charge trop lourde : la colonne ne doit pas se tordre de façon brusque.'],
+    p: ['Enroule le buste et monte les genoux', 'Reviens en contrôle'],
+    safe: 'L’animation montre l’enroulement de profil ; l’orientation exacte dépend du verrouillage du siège (gauche, centre ou droite). Le coussin de jambes est décrit d’après la machine Hammer Strength « seated leg raise oblique crunch » : si ta machine diffère, dis-le-moi pour que je la corrige.',
   },
   abMachineTotal: {
     m: 'Paroi abdominale complète (grand droit, obliques), fléchisseurs de hanche',
