@@ -22,11 +22,13 @@ describe('changer d’exercice depuis Ajuster', () => {
     await clickText(h, 'Ajuster');
     expect(pageText(h)).toContain('Changer d’exercice');
     await clickText(h, 'Changer d’exercice');
-    // seuls les exercices de même type / unité (kg) sont proposés : pas de tractions, pas de cardio
+    // tous les exercices de musculation sont listés (ceux d'une autre unité sont marqués « Autre unité »), mais pas le cardio
     const fenetre = h.doc.querySelector('.fixed.inset-0');
     const boutons = [...fenetre.querySelectorAll('button')].map(b => b.textContent);
     expect(boutons.some(t => t.includes('Presse à Cuisses 45°'))).toBe(true);
-    expect(boutons.some(t => t.includes('Tractions Pronation'))).toBe(false);
+    const tractions = boutons.find(t => t.includes('Tractions Pronation'));
+    expect(tractions).toContain('Autre unité');
+    expect(boutons.find(t => t.includes('Presse à Cuisses 45°'))).not.toContain('Autre unité');
     expect(boutons.some(t => t.includes('Course à pied'))).toBe(false);
     expect(boutons.some(t => t.includes('personnalisé'))).toBe(false);
     await clickEl(h, [...fenetre.querySelectorAll('button')].find(b => b.textContent.includes('Presse à Cuisses 45°')));
@@ -53,7 +55,8 @@ describe('changer d’exercice depuis Ajuster', () => {
     const fenetre = h.doc.querySelector('.fixed.inset-0');
     const boutons = [...fenetre.querySelectorAll('button')].map(b => b.textContent);
     expect(boutons.some(t => t.includes('Tractions Supination'))).toBe(true);
-    expect(boutons.some(t => t.includes('Squat Barre'))).toBe(false);
+    expect(boutons.find(t => t.includes('Squat Barre'))).toContain('Autre unité'); // listé, mais il faudra l'ajouter comme nouvel exercice
+    expect(boutons.some(t => t.includes('Course à pied'))).toBe(false);
     expect(findByText(h, 'Créer la Quête')).toHaveLength(0);
   }, TIMEOUT);
 });
